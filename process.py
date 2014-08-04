@@ -1,5 +1,5 @@
 class Process(object):
-    def __init__ (self, name=None, pid=None, ppid=None, uid=None, start_tme=0, exit_tme=none, error_code=None, signal=None, gpid=None, job_id=None):
+    def __init__ (self, name=None, pid=None, ppid=None, uid=None, start_tme=None, exit_tme=None, error_code=None, signal=None, gpid=None, job_id=None):
         self.name = name
         self.pid = pid
         self.ppid = ppid
