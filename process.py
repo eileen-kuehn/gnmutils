@@ -1,6 +1,7 @@
 class Process(object):
-    def __init__ (self, name=None, pid=None, ppid=None, uid=None, start_tme=None, exit_tme=None, error_code=None, signal=None, gpid=None, job_id=None):
+    def __init__ (self, name=None, cmd=None, pid=None, ppid=None, uid=None, start_tme=None, exit_tme=None, error_code=None, signal=None, gpid=None, job_id=None):
         self.name = name
+        self.cmd = cmd
         self.pid = pid
         self.ppid = ppid
         self.uid = uid
@@ -10,14 +11,24 @@ class Process(object):
         self.signal = signal
         self.gpid = gpid
         self.job_id = job_id
+        self._valid = True
+
+    def setValid(self, valid):
+        self._valid = valid
 
     def getDuration(self):
-        return self.exit_tme - self.start_tme
+        return self._valid and (self.exit_tme - self.start_tme)
 
     def setExitCode(self, exitCode):
         self.error_code = exitCode >> 8
         self.signal = exitCode & 255
 
     def isComplete(self):
-        return self.start_tme and self.exit_tme
+        return self._valid and (self.start_tme and self.exit_tme)
+
+    def getRow(self):
+        return "%d,%d,%d,%d,%d,%d,%s,%s,%d,%d,%d" %(self.start_tme, self.exit_tme, self.pid, self.ppid, self.gpid, self.uid, self.name, self.cmd, self.error_code, self.signal, int(self.isComplete()))
+
+    def getHeader(self):
+        return "start_tme,exit_tme,pid,ppid,gpid,uid,name,cmd,error_code,signal,valid"
 
