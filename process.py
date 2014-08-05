@@ -20,6 +20,7 @@ class Process(object):
         return self._valid and (self.exit_tme - self.start_tme)
 
     def setExitCode(self, exitCode):
+        exitCode = int(exitCode)
         self.error_code = exitCode >> 8
         self.signal = exitCode & 255
 
@@ -27,7 +28,7 @@ class Process(object):
         return self._valid and (self.start_tme and self.exit_tme)
 
     def getRow(self):
-        return "%d,%d,%d,%d,%d,%d,%s,%s,%d,%d,%d" %(self.start_tme, self.exit_tme, self.pid, self.ppid, self.gpid, self.uid, self.name, self.cmd, self.error_code, self.signal, int(self.isComplete()))
+        return "%d,%d,%d,%d,%d,%d,%s,%s,%d,%d,%d" %(int(self.start_tme), int(self.exit_tme), int(self.pid), int(self.ppid), int(self.gpid), int(self.uid), self.name, self.cmd, self.error_code, self.signal, int(self.isComplete()))
 
     def getHeader(self):
         return "start_tme,exit_tme,pid,ppid,gpid,uid,name,cmd,error_code,signal,valid"
