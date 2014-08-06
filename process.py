@@ -25,7 +25,7 @@ class Process(object):
         self.signal = exitCode & 255
 
     def isComplete(self):
-        return self._valid and (self.start_tme and self.exit_tme)
+        return self._valid and (self.start_tme and self.exit_tme) > 0
 
     def getRow(self):
         return "%d,%d,%d,%d,%d,%d,%s,%s,%d,%d,%d" %(int(self.start_tme), int(self.exit_tme), int(self.pid), int(self.ppid), int(self.gpid), int(self.uid), self.name, self.cmd, self.error_code, self.signal, int(self.isComplete()))
