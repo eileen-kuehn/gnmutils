@@ -1,3 +1,5 @@
+from evenmoreutils import string as stringutils
+
 class Process(object):
     def __init__ (self, name=None, cmd=None, pid=None, ppid=None, uid=None, start_tme=None, exit_tme=None, error_code=None, signal=None, gpid=None, job_id=None):
         self.name = name
@@ -28,7 +30,7 @@ class Process(object):
         return self._valid and (self.start_tme and self.exit_tme) > 0
 
     def getRow(self):
-        return "%d,%d,%d,%d,%d,%d,%s,%s,%d,%d,%d" %(int(self.start_tme), int(self.exit_tme), int(self.pid), int(self.ppid), int(self.gpid), int(self.uid), self.name, self.cmd, self.error_code, self.signal, int(self.isComplete()))
+        return "%s,%s,%d,%d,%d,%d,%s,%s,%s,%s,%d" %(stringutils.xstr(self.start_tme), stringutils.xstr(self.exit_tme), int(self.pid), int(self.ppid), int(self.gpid), int(self.uid), self.name, self.cmd, stringutils.xstr(self.error_code), stringutils.xstr(self.signal), int(self.isComplete()))
 
     def getHeader(self):
         return "start_tme,exit_tme,pid,ppid,gpid,uid,name,cmd,error_code,signal,valid"
