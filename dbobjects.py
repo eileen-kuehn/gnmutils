@@ -13,7 +13,9 @@ class DBConfigurationObject(DBObject):
     self.config_name = config_name
 
 class DBJobObject(DBObject):
-  def __init__ (self, id=None, job_id=None, run=None, completed=None, valid=None, uid=None, gpid=None, start_tme=None, exit_tme=None, last_tme=None, workernode_id=None, configuration_id=None):
+  def __init__ (self, id=None, job_id=None, run=None, completed=None,
+          valid=None, uid=None, gpid=None, start_tme=None, exit_tme=None,
+          last_tme=None, workernode_id=None, configuration_id=None):
     super(DBJobObject, self).__init__("job", {"id": id})
     self.job_id = job_id
     self.run = run
