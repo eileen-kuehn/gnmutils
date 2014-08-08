@@ -1,4 +1,4 @@
-from dbutils.dbobjects import DBJobObject
+from dbobjects import DBJobObject
 
 class Job(object):
     def __init__ (self, id=None, job_id=None, run=None, gpid=None, start_tme=None, exit_tme=None, last_tme=None, uid=None, workernode_id=None, configuration_id=None):
