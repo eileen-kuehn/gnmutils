@@ -14,13 +14,13 @@ class DBConfigurationObject(DBObject):
 
 class DBJobObject(DBObject):
   def __init__ (self, id=None, job_id=None, run=None, completed=None,
-          valid=None, uid=None, gpid=None, start_tme=None, exit_tme=None,
+          valid=None, uid=None, gpid=None, tme=None, exit_tme=None,
           last_tme=None, workernode_id=None, configuration_id=None):
     super(DBJobObject, self).__init__("job", {"id": id})
     self.job_id = job_id
     self.run = run
     self.gpid = gpid
-    self.start_tme = start_tme
+    self.tme = tme
     self.exit_tme = exit_tme
     self.last_tme = last_tme
     self.completed = completed
