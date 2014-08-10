@@ -7,7 +7,7 @@ class Traffic(object):
     def __init__ (self, conn=None, pid=None, ppid=None, uid=None, tme=None,
             in_rate=None, out_rate=None, in_cnt=None, out_cnt=None, gpid=None,
             source_ip=None, dest_ip=None, source_port=None, dest_port=None,
-            conn_cat=None, workernode=None):
+            conn_cat=None, workernode=None, interval=20):
         self.tme = tme
         self.pid = pid
         self.ppid = ppid
@@ -22,6 +22,7 @@ class Traffic(object):
         self.out_rate = out_rate
         self.in_cnt = in_cnt
         self.out_cnt = out_cnt
+        self.interval = interval
         if conn:
           self.setConnection(conn=conn, workernode=workernode)
 
