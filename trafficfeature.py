@@ -5,7 +5,7 @@ class TrafficFeature(object):
         self.id = id
         self.uid = uid
         self.tme = tme
-        self.exit_tme
+        self.exit_tme = exit_tme
         self.int_in_volume = int_in_volume
         self.int_in_rate = int_in_rate
         self.int_out_volume = int_out_volume
@@ -18,12 +18,12 @@ class TrafficFeature(object):
     def addTraffic(self, traffic):
         if "int" in traffic.conn_cat:
             # internal interface
-            int_in_volume += traffic.in_rate * traffic.interval
-            int_out_volume += traffic.out_rate * traffic.interval
+            self.int_in_volume += float(traffic.in_rate) * int(traffic.interval)
+            self.int_out_volume += float(traffic.out_rate) * int(traffic.interval)
         elif "ext" in traffic.conn_cat:
             # external interface
-            ext_in_volume += traffic.int_rate * traffic.interval
-            ext_out_volume += traffic.out_rate * traffic.interval
+            self.ext_in_volume += float(traffic.in_rate) * int(traffic.interval)
+            self.ext_out_volume += float(traffic.out_rate) * int(traffic.interval)
 
     def _getDuration(self):
         return self.exit_tme and self.tme and (self.exit_tme - self.tme) or 0
@@ -46,14 +46,14 @@ class TrafficFeature(object):
         except ZeroDivisionError:
             return self.ext_in_rate
 
-    def _getExtOurRate(self):
+    def _getExtOutRate(self):
         try:
             return self.ext_out_volume / self._getDuration()
         except ZeroDivisionError:
             return self.ext_out_rate
 
     def getRow(self):
-        return ("%d\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d"
+        return ("%d\t%s\t%s\t%s\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%f"
                 %(self.id, self.tme, self.exit_tme, self.uid,
                     self.int_in_volume, self._getIntInRate(),
                     self.int_out_volume, self._getIntOutRate(),
