@@ -7,12 +7,12 @@ class Feature(object):
         self.uid = uid
 
     def _getDegrees(self):
-        return "c(%s)" %(str.join(",", [str(obj) for obj in degrees]))
+        return "c(%s)" %(str.join(",", [str(obj) for obj in self.degrees]))
 
     def getRow(self):
-        return ("%d,%s,%d,%d,%d,%d" %(self.id, self._getDegrees(),
+        return ("%d\t%s\t%d\t%d\t%d\t%s" %(self.id, self._getDegrees(),
             self.height, self.count, self.leaves, self.uid))
 
     def getHeader(self):
-        return "id,degrees,height,count,leaves,uid"
+        return "id\tdegrees\theight\tcount\tleaves\tuid"
 
