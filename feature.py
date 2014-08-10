@@ -1,5 +1,6 @@
 class Feature(object):
-    def __init__(self, degrees=None, height=None, count=None, leaves=None, uid=None):
+    def __init__(self, id=None, degrees=None, height=None, count=None, leaves=None, uid=None):
+        self.id = id
         self.degrees = degrees
         self.height = height
         self.count = count
