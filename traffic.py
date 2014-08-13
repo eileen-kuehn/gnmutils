@@ -38,7 +38,7 @@ class Traffic(object):
                 pass
             elif internalIP in splittedTarget[0]:
                 # splitted values need to be exchanged
-                logging.warn("exchanging traffic values for %s and %s" %(splittedSource, splittedTarget))
+                logging.info("exchanging traffic values for %s and %s" %(splittedSource, splittedTarget))
                 tmp = splittedSource
                 splittedSource = splittedTarget
                 splittedTarget = tmp
