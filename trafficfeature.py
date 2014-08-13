@@ -1,4 +1,6 @@
-class TrafficFeature(object):
+from feature import *
+
+class TrafficFeature(Feature):
     def __init__(self, uid=None, id=None, exit_tme=None, tme=None,
             int_in_volume=0, int_in_rate=0, int_out_volume=0, int_out_rate=0,
             ext_in_volume=0, ext_in_rate=0, ext_out_volume=0, ext_out_rate=0):
@@ -64,4 +66,7 @@ class TrafficFeature(object):
         return ("id\ttme\texit_tme\tuid\tint_in_volume\tint_in_rate\t"
                 "int_out_volume\tint_out_rate\text_in_volume\t"
                 "ext_in_rate\text_out_volume\text_out_rate")
+
+    class Factory:
+        def create(self, **kwargs): return TrafficFeature(**kwargs)
 

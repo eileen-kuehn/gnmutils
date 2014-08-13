@@ -1,19 +1,15 @@
-class Feature(object):
-    def __init__(self, id=None, degrees=None, height=None, count=None, leaves=None, uid=None):
-        self.id = id
-        self.degrees = degrees
-        self.height = height
-        self.count = count
-        self.leaves = leaves
-        self.uid = uid
+class FeatureFactory:
+    factories = {}
 
-    def _getDegrees(self):
-        return "c(%s)" %(str.join(",", [str(obj) for obj in self.degrees]))
+    @staticmethod
+    def addFactory(id, featureFactory):
+        FeatureFactory.factories[id] = featureFactory
 
-    def getRow(self):
-        return ("%d\t%s\t%d\t%d\t%d\t%s" %(self.id, self._getDegrees(),
-            self.height, self.count, self.leaves, self.uid))
+    @staticmethod
+    def createFeature(id, **kwargs):
+        if (not FeatureFactory.factories.has_key(id)):
+            FeatureFactory.factories[id] = eval(id + '.Factory()')
+        return FeatureFactory.factories[id].craete(**kwargs)
 
-    def getHeader(self):
-        return "id\tdegrees\theight\tcount\tleaves\tuid"
+class Feature(object): pass
 
