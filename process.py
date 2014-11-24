@@ -21,7 +21,7 @@ class Process(object):
         self.valid = valid
 
     def getDuration(self):
-        return self._valid and (self.exit_tme - self.tme)
+        return self.valid and (int(self.exit_tme) - int(self.tme))
 
     def setExitCode(self, exitCode):
         exitCode = int(exitCode)
