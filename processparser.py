@@ -12,6 +12,9 @@ class ProcessParser(object):
         self._processCache = {}
         self._faultyNodes = set()
         self._treeInitialized = False
+        
+    def defaultHeader(self):
+        return {"tme":0, "exit_tme": 1 ,"pid": 2, "ppid": 3, "gpid": 4, "uid": 5, "name": 6, "cmd": 7, "error_code": 8, "signal": 9, "valid": 10, "int_in_volume": 11, "int_out_volume": 12, "ext_in_volume": 13, "ext_out_volume":14}
 
     def clearCaches(self):
         logging.info("clearing caches of process parser")
@@ -41,7 +44,7 @@ class ProcessParser(object):
             return Tree(self._root)
         logging.info("faulty nodes: %s" %self._faultyNodes)
         return None
-        
+
     def _addProcess(self, processObject, isRoot):
         newNode = Node(value=processObject)
         if isRoot: self._root = newNode
@@ -52,7 +55,7 @@ class ProcessParser(object):
             self._processCache[processObject.pid].insert(index, newNode)
         except KeyError:
             self._processCache[processObject.pid] = [newNode]
-        
+
     def _getNodeForTME(self, tme, pid):
         tme = int(tme)
         try:

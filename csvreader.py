@@ -17,7 +17,8 @@ class CSVReader(object):
     def clearCaches(self):
         del self._headerCache
         self._headerCache = {}
-        self._parser.clearCaches()
+        if self._parser:
+            self._parser.clearCaches()
         
     def processCSV(self, filename):
         with open(filename, 'r') as csvfile:
@@ -40,7 +41,7 @@ class CSVReader(object):
                     row = line.split(",")
                     # check if maybe no header is included
                     if "tme" not in row[0]:
-                        self._headerCache[self.parserName()] = {"tme":0, "exit_tme": 1 ,"pid": 2, "ppid": 3, "gpid": 4, "uid": 5, "name": 6, "cmd": 7, "error_code": 8, "signal": 9, "valid": 10, "int_in_volume": 11, "int_out_volume": 12, "ext_in_volume": 13, "ext_out_volume":14}
+                        self._headerCache[self.parserName()] = self._parser.defaultHeader()
                     else:
                         headerCache = {}
                         for index, item in enumerate(line.split(",")):
