@@ -1,5 +1,6 @@
 import sys
 import os
+import logging
 
 class CSVReader(object):
     def __init__(self, parser=None):
@@ -51,7 +52,7 @@ class CSVReader(object):
                             row = line.split(",")
                             # check if there are too many header fields than expected
                             if len(row) > len(self._headerCache[self.parserName()]):
-                                print("row %d vs. header %d" %(len(row), len(self._headerCache[self.parserName()])))
+                                logging.info("Trying to fix wrong row length: row %d vs. header %d" %(len(row), len(self._headerCache[self.parserName()])))
                                 # check if additional "," is in the command and remove
                                 if len(row) == len(self._headerCache[self.parserName()])+1:
                                     # there seems to be a "," inside the cmd
@@ -60,14 +61,14 @@ class CSVReader(object):
                                     del row[cmdIndex+1]
                                     row[cmdIndex] = cmdString
                                 else:
-                                    print("wrong length of row")
+                                    logging.error("wrong length of row")
                                     sys.exit(1)
                             # finally add the valid row to the parser
                             self._parser.parseRow(row=row, headerCache=self._headerCache[self.parserName()], tme=int(tme))
                         except IndexError as e:
                             line = (line + csvfile.next())[:-1]
                         except StopIteration as e:
-                            print("there seems to be a wrong ending in the file for line %d (%s) in file (%s)" %(idx, line, filename))
+                            logging.warn("there seems to be a wrong ending in the file for line %d (%s) in file %s" %(idx, line, filename))
                         else:
                             break;
                             
