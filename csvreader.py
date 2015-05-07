@@ -15,7 +15,7 @@ class CSVReader(object):
         
     @parser.setter
     def parser(self, value):
-        self._parser = parser
+        self._parser = value
         
     # prepare for next CSV file to be read
     def clearCaches(self):
