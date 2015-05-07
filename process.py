@@ -2,7 +2,7 @@ from evenmoreutils import string as stringutils
 
 class Process(object):
     def __init__ (self, name=None, cmd=None, pid=None, ppid=None, uid=None,
-            tme=None, exit_code=None, gpid=None, state=None, exit_tme=None):
+            tme=None, exit_code=None, gpid=None, state=None):
         self.name = name
         self.cmd = cmd
         self.pid = int(pid)
@@ -12,26 +12,11 @@ class Process(object):
         self.exit_code = stringutils.xint(exit_code)
         self.gpid = int(gpid)
         self.state = stringutils.xstr(state)
-        self.exit_tme = exit_tme
-
-    def setValid(self, valid):
-        self.valid = valid
-
-    def getDuration(self):
-        return self.valid and (int(self.exit_tme) - int(self.tme))
-
-    def setExitCode(self, exitCode):
-        exitCode = int(exitCode)
-        self.error_code = exitCode >> 8
-        self.signal = exitCode & 255
-
-    def isComplete(self):
-        return self.valid and (self.tme and self.exit_tme) > 0
 
     def getRow(self):
         return ("%s,%d,%d,%d,%s,%s,%s,%s,%d"
-                %(stringutils.xstr(self.tme), self.pid, self.ppid, self.uid, 
-                self.name, self.cmd, stringutils.xint(self.exit_code), 
+                %(stringutils.xstr(self.tme), self.pid, self.ppid, self.uid,
+                self.name, self.cmd, stringutils.xint(self.exit_code),
                 stringutils.xstr(self.state), self.gpid))
 
     def getHeader(self):
