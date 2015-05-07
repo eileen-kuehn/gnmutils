@@ -7,6 +7,7 @@ class CSVReader(object):
         # caches the different header fields
         self._headerCache = {}
         self._parser = parser
+        self._tme = None
         
     # allow access to parser
     @property
@@ -21,6 +22,7 @@ class CSVReader(object):
     def clearCaches(self):
         del self._headerCache
         self._headerCache = {}
+        self._tme = None
         if self._parser:
             self._parser.clearCaches()
         
@@ -39,7 +41,8 @@ class CSVReader(object):
                     # as long as the header has not been initialized,
                     # an exception is thrown and the header row is deteced
                     # otherwise the usual processing process starts
-                    tme = line.split(",")[(self._headerCache[self.parserName()])['tme']]
+                    tme = line.split(",")[(self._headerCache[self.parserName()])['tme']] or self._tme
+                    self._tme = tme
                 except KeyError:
                     # initialize the header cache
                     row = line.split(",")
