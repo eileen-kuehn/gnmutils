@@ -13,6 +13,10 @@ class CSVReader(object):
     def parser(self):
         return self._parser
         
+    @parser.setter
+    def parser(self, value):
+        self._parser = parser
+        
     # prepare for next CSV file to be read
     def clearCaches(self):
         del self._headerCache
