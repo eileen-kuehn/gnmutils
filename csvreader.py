@@ -1,6 +1,8 @@
 import sys
 import os
 import logging
+import re
+import gzip
 
 class CSVReader(object):
     def __init__(self, parser=None):
@@ -27,7 +29,10 @@ class CSVReader(object):
             self._parser.clearCaches()
         
     def processCSV(self, filename):
-        with open(filename, 'r') as csvfile:
+        openFunction = open
+        if re.match(".*.gz$", filename):
+          openFunction = gzip.open
+        with openFunction(filename, 'r') as csvfile:
             tme = 0
             # process every line in csvfile
             for idx, line in enumerate(csvfile):
