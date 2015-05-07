@@ -9,9 +9,9 @@ class Process(object):
         self.ppid = int(ppid)
         self.uid = int(uid)
         self.tme = tme
-        self.exit_code = exit_code
+        self.exit_code = stringutils.xint(exit_code)
         self.gpid = int(gpid)
-        self.state = state
+        self.state = stringutils.xstr(state)
         self.exit_tme = exit_tme
 
     def setValid(self, valid):
@@ -30,9 +30,9 @@ class Process(object):
 
     def getRow(self):
         return ("%s,%d,%d,%d,%s,%s,%s,%s,%d"
-                %(stringutils.xstr(self.tme),
-                self.pid, self.ppid, self.uid, self.name, self.cmd,
-                self.exit_code, self.state, self.gpid))
+                %(stringutils.xstr(self.tme), self.pid, self.ppid, self.uid, 
+                self.name, self.cmd, stringutils.xint(self.exit_code), 
+                stringutils.xstr(self.state), self.gpid))
 
     def getHeader(self):
         return ("tme,pid,ppid,uid,name,cmd,exit_code,state,gpid")
