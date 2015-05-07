@@ -6,7 +6,7 @@ class Job(object):
     def __init__ (self, name=None, cmd=None, pid=None, ppid=None, uid=None,
             tme=None, exit_tme=None, error_code=None, signal=None,
             gpid=None, job_id=None, valid=True, int_in_volume=None, int_out_volume=None,
-            ext_in_volume=None, ext_out_volume=None, tree_depth=None, process_type=None, color=None):
+            ext_in_volume=None, ext_out_volume=None, tree_depth=None, process_type=None, color=None, state=None):
         self.name = name
         self.cmd = cmd
         self.pid = int(pid)
@@ -26,6 +26,7 @@ class Job(object):
         self.tree_depth = tree_depth
         self.process_type = process_type
         self.color = color
+        self.state = stringutils.xstr(state)
 
     def setValid(self, valid):
         self.valid = valid
@@ -59,7 +60,7 @@ class Job(object):
                 "ext_out_volume,tree_depth,process_type,color")
 
     def toProcess(self):
-        return new Process(name=self.name, cmd=self.cmd, pid=self.pid, ppid=self.ppid,
-                uid=self.uid, tme=self.tme, exit_code=(self.error_code << 8) + signal,
-                gpid=self.gpid, state=self.state)
+        return Process(name=self.name, cmd=self.cmd, pid=self.pid, ppid=self.ppid,
+                uid=self.uid, tme=self.tme, gpid=self.gpid, state=self.state,
+                exit_code=self.error_code and self.signal and ((self.error_code << 8) + signal))
 
