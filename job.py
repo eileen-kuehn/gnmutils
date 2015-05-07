@@ -1,5 +1,7 @@
 from evenmoreutils import string as stringutils
 
+from process import Process
+
 class Job(object):
     def __init__ (self, name=None, cmd=None, pid=None, ppid=None, uid=None,
             tme=None, exit_tme=None, error_code=None, signal=None,
@@ -55,4 +57,9 @@ class Job(object):
         return ("tme,exit_tme,pid,ppid,gpid,uid,name,cmd,error_code,"\
                 "signal,valid,int_in_volume,int_out_volume,ext_in_volume,"\
                 "ext_out_volume,tree_depth,process_type,color")
+
+    def toProcess(self):
+        return new Process(name=self.name, cmd=self.cmd, pid=self.pid, ppid=self.ppid,
+                uid=self.uid, tme=self.tme, exit_code=(self.error_code << 8) + signal,
+                gpid=self.gpid, state=self.state)
 
