@@ -45,7 +45,7 @@ class JobParser(object):
         self._processCache.addNodeObject(processNode)
 
     def isValid(self):
-        if len(self._processCache.faultyNodes > 1):
+        if len(self._processCache.faultyNodes) > 1:
             return False
         processCache = self._processCache.objectCache
         for process in processCache:
