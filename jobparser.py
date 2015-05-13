@@ -4,6 +4,7 @@ import logging
 from evenmoreutils.tree import Node
 from evenmoreutils.tree import Tree
 
+from exceptions import *
 from process import *
 from objectcache import ObjectCache
 
@@ -42,7 +43,7 @@ class JobParser(object):
         
     def _addProcess(self, processNode=None):
         if "sge_shepherd" in processNode.value.name: 
-            if self._root is not None: raise BaseException
+            if self._root is not None: raise NonUniqueRootException
             self._root = processNode
         self._processCache.addNodeObject(processNode)
 

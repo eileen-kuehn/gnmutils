@@ -2,6 +2,7 @@ import unittest
 
 from gnmutils.jobparser import JobParser
 from gnmutils.process import Process
+from gnmutils.exceptions import *
 
 class TestObjectCacheFunctions(unittest.TestCase):
     def setUp(self):
@@ -38,7 +39,7 @@ class TestObjectCacheFunctions(unittest.TestCase):
         self.jobParser.addProcess(process=tree1_process3)
         self.jobParser.addProcess(process=tree1_process4)
         
-        self.assertRaises(BaseException, lambda : self.jobParser.addProcess(process=tree2_process1))
+        self.assertRaises(NonUniqueRootException, lambda : self.jobParser.addProcess(process=tree2_process1))
         self.jobParser.addProcess(process=tree2_process2)
         self.jobParser.addProcess(process=tree2_process3)
         
