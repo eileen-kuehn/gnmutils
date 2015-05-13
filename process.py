@@ -76,7 +76,7 @@ class Process(object):
                 %(stringutils.xint(self._tme), stringutils.xint(self._pid),
                 stringutils.xint(self._ppid), stringutils.xint(self._uid),
                 self.name, self.cmd,
-                self.exit_code(), self.state, stringutils.xint(self._gpid)))
+                self.exit_code(), self._state, stringutils.xint(self._gpid)))
 
     def getProcessEventHeader(self):
         return ("tme,pid,ppid,uid,name,cmd,exit_code,state,gpid")
@@ -101,16 +101,16 @@ class Process(object):
     def addProcessEvent(self, name=None, cmd=None, pid=None, ppid=None, 
             uid=None, tme=None, exit_code=None, gpid=None, state=None):
         if "exit" == state:
-            if self.state != ".":
+            if self._state != ".":
                 self.valid = True
             self._setExitCode(exit_code)
             self._exit_tme = tme
         else:
             # maybe exit process event arrives first...
-            if "exit" == self.state and state != ".":
+            if "exit" == self._state and state != ".":
                 self.valid = True
             self._tme = self._tme or tme
-        self.state = self.state or state
+        self._state = self._state or state
         self.name = self.name or name
         self.cmd = self.cmd or cmd
         self._pid = self._pid or pid
