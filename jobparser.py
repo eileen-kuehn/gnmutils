@@ -41,11 +41,13 @@ class JobParser(object):
         self._addProcess(processNode=newNode)
         
     def _addProcess(self, processNode=None):
-        if "sge_shepherd" in processNode.value.name: self._root = processNode
+        if "sge_shepherd" in processNode.value.name: 
+            if self._root is not None: raise BaseException
+            self._root = processNode
         self._processCache.addNodeObject(processNode)
 
     def isValid(self):
-        if len(self._processCache.faultyNodes) > 1:
+        if len(self._processCache.faultyNodes) > 1 or self._root is None:
             return False
         processCache = self._processCache.objectCache
         for pid in processCache:
@@ -60,7 +62,8 @@ class JobParser(object):
         if not self._treeInitialized:
             self._initializeTree()
             self._treeInitialized = True
-        if len(self._processCache.faultyNodes) <= 1 and self._root:
+        if (len(self._processCache.faultyNodes) <= 1 and self._root and 
+                (Tree(self._root).getVertexCount() == self._processCount())):
             return Tree(self._root)
         logging.info("faulty nodes: %s" %self._processCache.faultyNodes)
         return None
@@ -76,11 +79,17 @@ class JobParser(object):
                                                           rememberError=True)
                 if parent:
                     parent.add(node)
-                else:
-                    logging.error("no parent was found for node %s (%s)" 
-                        %(node.value.pid, node.value.tme))
+        logging.info("no parents found for %d nodes" %(len(self._processCache.faultyNodes)))
                     
         if len(self._processCache.faultyNodes) <= 1 and self._root:
             # set depth
             for node, depth in Tree(self._root).walkDFS():
                 node.value.tree_depth = depth
+
+    def _processCount(self):
+        count = 0
+        processCache = self._processCache.objectCache
+        for pid in processCache:
+            for node in processCache[pid]:
+                count = count + 1
+        return count
