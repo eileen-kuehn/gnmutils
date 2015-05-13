@@ -87,6 +87,18 @@ class TestObjectCacheFunctions(unittest.TestCase):
 		newProcess = self.objectCache.getObject(tme=process.tme, pid=process.pid)
 		self.assertEqual("test", newProcess.name, "name is not identical")
 		
+	def test_updateIndex(self):
+		process = Process(tme=1, pid=2, name="old")
+		process2 = Process(tme=1, pid=2, name="new")
+		
+		self.objectCache.addObject(object=process)
+		
+		index = self.objectCache.getObjectIndex(tme=process.tme, pid=process.pid)
+		self.objectCache.objectCache[process.pid][index] = process2
+		
+		newProcess = self.objectCache.getObject(tme=process.tme, pid=process.pid)
+		self.assertEqual(process2.name, newProcess.name)
+		
 	def test_getNullObject(self):
 		object = self.objectCache.getObject(tme=1, pid=1)
 		self.assertIsNone(object, "object cache did not return None")

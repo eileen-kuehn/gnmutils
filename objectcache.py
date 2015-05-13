@@ -39,8 +39,9 @@ class ObjectCache(object):
             index = bisect.bisect_right(tmeArray, tme) - 1
             return index
         except KeyError:
-            if rememberError: self._faultyNodes.add(pid)
-            logging.error("ObjectCache: error for %s (%d)" %(pid, tme))
+            if rememberError: 
+                self._faultyNodes.add(pid)
+                logging.info("ObjectCache: error for %s (%d)" %(pid, tme))
         
     def addNodeObject(self, nodeObject):
         try:
@@ -57,9 +58,9 @@ class ObjectCache(object):
             index = bisect.bisect_right(tmeArray, tme) - 1
             return processArray[index]
         except KeyError:
-            if rememberError: self._faultyNodes.add(pid)
-            logging.error("ObjectCache: error for %s (%d)" %(pid, tme))
-            return None
+            if rememberError: 
+                self._faultyNodes.add(pid)
+                logging.info("ObjectCache: error for %s (%d)" %(pid, tme))
             
     def clear(self):
         del self._objectCache
