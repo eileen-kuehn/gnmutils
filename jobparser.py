@@ -49,8 +49,8 @@ class JobParser(object):
             return False
         processCache = self._processCache.objectCache
         for pid in processCache:
-            for process in processCache[pid]:
-                if not process.valid:
+            for node in processCache[pid]:
+                if not node.value.valid:
                     return False
         return True
 
