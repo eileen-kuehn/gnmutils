@@ -33,15 +33,16 @@ class JobParser(object):
             dataDict[key] = row[headerCache[key]]
         
         process = Process(**dataDict)
-        
         newNode = Node(value=process)
-        if "sge_shepherd" in row[headerCache['name']]: self._root = newNode
-        self._processCache.addNodeObject(newNode)
+        self._addProcess(processNode=newNode)
         
     def addProcess(self, process=None):
         newNode = Node(value=process)
-        if "sge_shepherd" == process.name: self._root = newNode
-        self._processCache.addNodeObject(newNode)
+        self._addProcess(processNode=newNode)
+        
+    def _addProcess(self, processNode=None):
+        if "sge_shepherd" in processNode.value.name: self._root = processNode
+        self._processCache.addNodeObject(processNode)
 
     def isValid(self):
         if len(self._processCache.faultyNodes > 1):
@@ -57,7 +58,7 @@ class JobParser(object):
         if not self._treeInitialized:
             self._initializeTree()
             self._treeInitialized = True
-        if len(self._processCache.faultyNodes) <= 1:
+        if len(self._processCache.faultyNodes) <= 1 and self._root:
             return Tree(self._root)
         logging.info("faulty nodes: %s" %self._processCache.faultyNodes)
         return None
@@ -75,7 +76,7 @@ class JobParser(object):
                     logging.error("no parent was found for node %s (%s)" 
                         %(node.value.pid, node.value.tme))
                     
-        if len(self._processCache.faultyNodes) <= 1:
+        if len(self._processCache.faultyNodes) <= 1 and self._root:
             # set depth
             for node, depth in Tree(self._root).walkDFS():
                 node.value.tree_depth = depth
