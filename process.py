@@ -6,7 +6,7 @@ class Process(object):
             gpid=None, state=None, job_id=None, int_in_volume=None, int_out_volume=None,
             ext_in_volume=None, ext_out_volume=None, tree_depth=None,
             process_type=None, color=None, valid=False):
-        self.name = name
+        self.name = stringutils.xstr(name)
         self.cmd = cmd
         self._pid = pid
         self._ppid = ppid
