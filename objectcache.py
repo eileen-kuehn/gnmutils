@@ -8,8 +8,8 @@ class ObjectCache(object):
         self._unfound = set()
         
     def addObject(self, object=None, pid=None, tme=None):
-        if not pid: pid=object.pid
-        if not tme: tme=object.tme
+        if pid is None: pid=object.pid
+        if tme is None: tme=object.tme
         try:
             tmeList = [process.tme for process in self._objectCache[pid]]
             index = bisect.bisect_left(tmeList, int(tme))
@@ -22,7 +22,7 @@ class ObjectCache(object):
         if index is not None: return self._objectCache[pid][index]
         
     def removeObject(self, object=None, pid=None):
-        if not pid: pid = object.pid
+        if pid is None: pid = object.pid
         try:
             objectArray = self._objectCache[pid]
             objectArray.remove(object)
