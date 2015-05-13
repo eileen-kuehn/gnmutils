@@ -1,5 +1,18 @@
 from evenmoreutils import string as stringutils
 
+class ProcessEvent(object):
+    def __init__ (self, process=None):
+        self._process = process
+        
+    def getRow(self):
+        return ("%d,%d,%d,%d,%s,%s,%d,%s,%d"
+                %(process.tme, process.pid, process.ppid, process.uid,
+                process.name, process.cmd, process.exit_code(), 
+                process.state, process.gpid))
+    
+    def getProcessEventHeader(self):
+        return ("tme,pid,ppid,uid,name,cmd,exit_code,state,gpid")
+
 class Process(object):
     def __init__ (self, name=None, cmd=None, pid=None, ppid=None, uid=None,
             tme=None, exit_tme=None, error_code=None, signal=None, exit_code=0,
@@ -74,16 +87,6 @@ class Process(object):
     
     def getDuration(self):
         return self.valid and (self.exit_tme - self.tme)
-    
-    def getProcessEventRow(self):
-        return ("%s,%s,%s,%s,%s,%s,%d,%s,%s"
-                %(stringutils.xint(self._tme), stringutils.xint(self._pid),
-                stringutils.xint(self._ppid), stringutils.xint(self._uid),
-                self.name, self.cmd,
-                self.exit_code(), self._state, stringutils.xint(self._gpid)))
-
-    def getProcessEventHeader(self):
-        return ("tme,pid,ppid,uid,name,cmd,exit_code,state,gpid")
         
     def getRow(self):
         return ("%s,%s,%d,%d,%d,%d,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s"
@@ -96,6 +99,9 @@ class Process(object):
                     self.valid, self.int_out_volume, self.ext_in_volume,
                     self.ext_out_volume, stringutils.xint(self.tree_depth),
                     stringutils.xstr(self.process_type), stringutils.xstr(self.color)))
+                    
+    def toProcessEvent(self):
+        return ProcessEvent(process=self)
     
     def getHeader(self):
         return ("tme,exit_tme,pid,ppid,gpid,uid,name,cmd,error_code,"\
