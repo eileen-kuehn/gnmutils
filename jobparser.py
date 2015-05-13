@@ -48,9 +48,10 @@ class JobParser(object):
         if len(self._processCache.faultyNodes) > 1:
             return False
         processCache = self._processCache.objectCache
-        for process in processCache:
-            if not process.valid:
-                return False
+        for pid in processCache:
+            for process in processCache[pid]:
+                if not process.valid:
+                    return False
         return True
 
     # access to tree
