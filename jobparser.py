@@ -46,11 +46,11 @@ class JobParser(object):
 
     def isValid(self):
         if len(self._processCache.faultyNodes > 1):
-            return false
+            return False
         for process in self._processCache:
             if not process.valid:
-                return false
-        return true
+                return False
+        return True
 
     # access to tree
     @property
