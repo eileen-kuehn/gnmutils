@@ -65,9 +65,10 @@ class JobParser(object):
     def _initializeTree(self):
         logging.info("Initializing tree structure")
         # sort the keys first to get the correct ordering in the final tree
-        for pid in sorted(self._processCache.keys(), key=lambda item: int(item)):
-            for node in self._processCache[pid]:
-                parent = self._processCache.getNodeObjectForTME(tme=node.value.tme, pid=node.value.ppid)
+        processCache = self._processCache.objectCache
+        for pid in sorted(processCache.keys(), key=lambda item: int(item)):
+            for node in processCache[pid]:
+                parent = processCache.getNodeObjectForTME(tme=node.value.tme, pid=node.value.ppid)
                 if parent:
                     parent.add(node)
                 else:
