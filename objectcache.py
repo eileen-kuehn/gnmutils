@@ -7,12 +7,11 @@ class ObjectCache(object):
         self._faultyNodes = set()
         self._unfound = set()
         
-    def addObject(self, object=None, pid=None, tme=None):
+    def addObject(self, object=None, pid=None):
         if pid is None: pid=object.pid
-        if tme is None: tme=object.tme
         try:
             tmeList = [process.tme for process in self._objectCache[pid]]
-            index = bisect.bisect_left(tmeList, int(tme))
+            index = bisect.bisect_left(tmeList, int(object.tme))
             self._objectCache[pid].insert(index, object)
         except KeyError:
             self._objectCache[pid] = [object]
