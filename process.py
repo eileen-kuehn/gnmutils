@@ -46,6 +46,10 @@ class Process(object):
         self.ext_out_volume = stringutils.xfloat(ext_out_volume)
     
     @property
+    def state(self):
+        return stringutils.xstr(self._state)
+    
+    @property
     def name(self):
         return stringutils.xstr(self._name)
         
