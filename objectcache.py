@@ -16,8 +16,8 @@ class ObjectCache(object):
         except KeyError:
             self._objectCache[pid] = [object]
         
-    def getObject(self, tme, pid):
-        index = self.getObjectIndex(tme, pid)
+    def getObject(self, tme=None, pid=None, rememberError=False):
+        index = self.getObjectIndex(tme, pid, rememberError)
         if index is not None: return self._objectCache[pid][index]
         
     def removeObject(self, object=None, pid=None):
@@ -32,16 +32,15 @@ class ObjectCache(object):
             pass
         return False
             
-    def getObjectIndex(self, tme, pid):
+    def getObjectIndex(self, tme=None, pid=None, rememberError=False):
         try:
             processArray = self._objectCache[pid]
             tmeArray = [node.tme for node in processArray]
             index = bisect.bisect_right(tmeArray, tme) - 1
             return index
         except KeyError:
-            self._faultyNodes.add(pid)
-            logging.error("error for %s (%d)" %(pid, tme))
-            return None
+            if rememberError: self._faultyNodes.add(pid)
+            logging.error("ObjectCache: error for %s (%d)" %(pid, tme))
         
     def addNodeObject(self, nodeObject):
         try:
@@ -51,15 +50,16 @@ class ObjectCache(object):
         except KeyError:
             self._objectCache[nodeObject.value.pid] = [nodeObject]
             
-    def getNodeObjectForTME(self, tme, pid):
+    def getNodeObject(self, tme=None, pid=None, rememberError=False):
         try:
             processArray = self._objectCache[pid]
             tmeArray = [node.value.tme for node in processArray]
             index = bisect.bisect_right(tmeArray, tme) - 1
             return processArray[index]
         except KeyError:
-            self._faultyNodes.add(pid)
-            logging.error("error for %s (%d)" %(pid, tme))
+            if rememberError: self._faultyNodes.add(pid)
+            logging.error("ObjectCache: error for %s (%d)" %(pid, tme))
+            return None
             
     def clear(self):
         del self._objectCache
