@@ -11,7 +11,7 @@ class ProcessEvent(object):
                 self._process.name, self._process.cmd, stringutils.xint(self._process.exit_code), 
                 self._process.state, stringutils.xint(self._process.gpid)))
     
-    def getProcessEventHeader(self):
+    def getHeader(self):
         return ("tme,pid,ppid,uid,name,cmd,exit_code,state,gpid")
 
 class Process(object):
