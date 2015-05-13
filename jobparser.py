@@ -68,7 +68,7 @@ class JobParser(object):
         processCache = self._processCache.objectCache
         for pid in sorted(processCache.keys(), key=lambda item: int(item)):
             for node in processCache[pid]:
-                parent = processCache.getNodeObjectForTME(tme=node.value.tme, pid=node.value.ppid)
+                parent = self._processCache.getNodeObjectForTME(tme=node.value.tme, pid=node.value.ppid)
                 if parent:
                     parent.add(node)
                 else:
