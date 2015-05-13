@@ -7,7 +7,7 @@ class ProcessEvent(object):
     def getRow(self):
         return ("%d,%d,%d,%d,%s,%s,%d,%s,%d"
                 %(self._process.tme, self._process.pid, self._process.ppid, self._process.uid,
-                self._process.name, self._process.cmd, self._process.exit_code(), 
+                self._process.name, self._process.cmd, self._process.exit_code, 
                 self._process.state, self._process.gpid))
     
     def getProcessEventHeader(self):
