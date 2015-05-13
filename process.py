@@ -6,7 +6,7 @@ class Process(object):
             gpid=None, state=None, job_id=None, int_in_volume=None, int_out_volume=None,
             ext_in_volume=None, ext_out_volume=None, tree_depth=None,
             process_type=None, color=None, valid=False):
-        self.name = stringutils.xstr(name)
+        self._name = name
         self.cmd = cmd
         self._pid = pid
         self._ppid = ppid
@@ -31,6 +31,10 @@ class Process(object):
         self.int_out_volume = stringutils.xfloat(int_out_volume)
         self.ext_in_volume = stringutils.xfloat(ext_in_volume)
         self.ext_out_volume = stringutils.xfloat(ext_out_volume)
+    
+    @property
+    def name(self):
+        return stringutils.xstr(self._name)
         
     @property
     def pid(self):
@@ -111,7 +115,7 @@ class Process(object):
                 self.valid = True
             self._tme = self._tme or tme
         self._state = self._state or state
-        self.name = self.name or name
+        self._name = self._name or name
         self.cmd = self.cmd or cmd
         self._pid = self._pid or pid
         self._ppid = self._ppid or ppid
