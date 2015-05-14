@@ -94,7 +94,7 @@ class Process(object):
         return self.valid and (self.exit_tme - self.tme)
         
     def getRow(self):
-        return ("%s,%s,%d,%d,%d,%d,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s"
+        return ("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s"
                 %(stringutils.xint(self._tme),
                     stringutils.xint(self._exit_tme), stringutils.xint(self._pid),
                     stringutils.xint(self._ppid), stringutils.xint(self._gpid),
