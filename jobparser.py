@@ -14,6 +14,10 @@ class JobParser(object):
         self._processCache = ObjectCache()
         self._treeInitialized = False
         
+    @property
+    def processCache(self):
+        return self._processCache
+        
     def defaultHeader(self):
         return {"tme":0, "exit_tme": 1 ,"pid": 2, "ppid": 3, "gpid": 4,
             "uid": 5, "name": 6, "cmd": 7, "error_code": 8, "signal": 9,
@@ -64,7 +68,7 @@ class JobParser(object):
             self._initializeTree()
             self._treeInitialized = True
         if (len(self._processCache.faultyNodes) <= 1 and self._root and 
-                (Tree(self._root).getVertexCount() == self._processCount())):
+                (Tree(self._root).getVertexCount() == self.processCount())):
             return Tree(self._root)
         logging.info("faulty nodes: %s" %self._processCache.faultyNodes)
         return None
@@ -87,7 +91,7 @@ class JobParser(object):
             for node, depth in Tree(self._root).walkDFS():
                 node.value.tree_depth = depth
 
-    def _processCount(self):
+    def processCount(self):
         count = 0
         processCache = self._processCache.objectCache
         for pid in processCache:
