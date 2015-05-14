@@ -10,16 +10,16 @@ class CSVReader(object):
         self._headerCache = {}
         self._parser = parser
         self._tme = None
-        
+
     # allow access to parser
     @property
     def parser(self):
         return self._parser
-        
+
     @parser.setter
     def parser(self, value):
         self._parser = value
-        
+
     # prepare for next CSV file to be read
     def clearCaches(self):
         del self._headerCache
@@ -27,7 +27,7 @@ class CSVReader(object):
         self._tme = None
         if self._parser:
             self._parser.clearCaches()
-        
+
     def processCSV(self, filename):
         openFunction = open
         if re.match(".*.gz$", filename):
@@ -39,7 +39,7 @@ class CSVReader(object):
                 # first check for comments in CSV line and skip
                 if line[0] == "#":
                     continue
-                
+
                 # remove newline character from line
                 line = line[:-1]
                 try:
@@ -47,7 +47,7 @@ class CSVReader(object):
                     # an exception is thrown and the header row is deteced
                     # otherwise the usual processing process starts
                     tme = line.split(",")[(self._headerCache[self.parserName()])['tme']] or self._tme
-                    self._tme = tme
+                    self._tme = int(tme)
                 except KeyError:
                     # initialize the header cache
                     row = line.split(",")
@@ -60,6 +60,13 @@ class CSVReader(object):
                             headerCache[item] = index
                         self._headerCache[self.parserName()] = headerCache
                         continue
+                except ValueError:
+                    # current line is header line
+                    headerCache = {}
+                    for index, item in enumerate(line.split(",")):
+                        headerCache[item] = index
+                    self._headerCache[self.parserName()] = headerCache
+                    continue
                 while True:
                     try:
                         row = line.split(",")
@@ -84,6 +91,6 @@ class CSVReader(object):
                         logging.warn("there seems to be a wrong ending in the file for line %d (%s) in file %s" %(idx, line, filename))
                     else:
                         break;
-                            
+
     def parserName(self):
         return self._parser.__class__.__name__

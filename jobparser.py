@@ -13,14 +13,14 @@ class JobParser(object):
         self._root = None
         self._processCache = ObjectCache()
         self._treeInitialized = False
-        
+
     @property
     def processCache(self):
         return self._processCache.objectCache
     @property
     def faultyNodes(self):
         return self._processCache.faultyNodes
-        
+
     def defaultHeader(self):
         return {"tme":0, "exit_tme": 1 ,"pid": 2, "ppid": 3, "gpid": 4,
             "uid": 5, "name": 6, "cmd": 7, "error_code": 8, "signal": 9,
@@ -39,17 +39,17 @@ class JobParser(object):
         dataDict = {}
         for key in headerCache:
             dataDict[key] = row[headerCache[key]]
-        
+
         process = Process(**dataDict)
         newNode = Node(value=process)
         self._addProcess(processNode=newNode)
-        
+
     def addProcess(self, process=None):
         newNode = Node(value=process)
         self._addProcess(processNode=newNode)
-        
+
     def _addProcess(self, processNode=None):
-        if "sge_shepherd" in processNode.value.name: 
+        if "sge_shepherd" in processNode.value.name:
             if self._root is not None: raise NonUniqueRootException
             self._root = processNode
         self._processCache.addNodeObject(processNode)
@@ -68,10 +68,10 @@ class JobParser(object):
     @property
     def tree(self):
         return self._getTree()
-        
+
     def regenerateTree(self):
         return self._getTree(reinitialize=True)
-    
+
     def _getTree(self, reinitialize=False):
         if reinitialize or not self._treeInitialized:
             if reinitialize:
@@ -79,10 +79,9 @@ class JobParser(object):
                 for pid in self._processCache.objectCache:
                     for node in self._processCache.objectCache[pid]:
                         node.children = []
-                        node.parent = None
             self._initializeTree()
             self._treeInitialized = True
-        if (len(self._processCache.faultyNodes) <= 1 and self._root and 
+        if (len(self._processCache.faultyNodes) <= 1 and self._root and
                 (Tree(self._root).getVertexCount() == self.processCount())):
             return Tree(self._root)
         logging.info("faulty nodes: %s" %self._processCache.faultyNodes)
@@ -94,13 +93,13 @@ class JobParser(object):
         # sort the keys first to get the correct ordering in the final tree
         for pid in sorted(processCache.keys(), key=lambda item: int(item)):
             for node in processCache[pid]:
-                parent = self._processCache.getNodeObject(tme=node.value.tme, 
-                                                          pid=node.value.ppid, 
+                parent = self._processCache.getNodeObject(tme=node.value.tme,
+                                                          pid=node.value.ppid,
                                                           rememberError=True)
                 if parent:
                     parent.add(node)
         logging.info("no parents found for %d nodes" %(len(self._processCache.faultyNodes)))
-                    
+
         if len(self._processCache.faultyNodes) <= 1 and self._root:
             # set depth
             for node, depth in Tree(self._root).walkDFS():

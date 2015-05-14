@@ -60,7 +60,7 @@ class ObjectCache(object):
         except KeyError:
             if rememberError:
                 self._faultyNodes.add(pid)
-                logging.error("ObjectCache: error for %s (%d)" %(pid, tme))
+                logging.info("ObjectCache: error for %s (%d)" %(pid, tme))
 
     def clear(self):
         del self._objectCache
