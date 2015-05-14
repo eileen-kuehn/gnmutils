@@ -6,7 +6,7 @@ class ObjectCache(object):
         self._objectCache = {}
         self._faultyNodes = set()
         self._unfound = set()
-        
+
     def addObject(self, object=None, pid=None):
         if pid is None: pid=object.pid
         try:
@@ -15,11 +15,11 @@ class ObjectCache(object):
             self._objectCache[pid].insert(index, object)
         except KeyError:
             self._objectCache[pid] = [object]
-        
+
     def getObject(self, tme=None, pid=None, rememberError=False):
         index = self.getObjectIndex(tme, pid, rememberError)
         if index is not None: return self._objectCache[pid][index]
-        
+
     def removeObject(self, object=None, pid=None):
         if pid is None: pid = object.pid
         try:
@@ -31,7 +31,7 @@ class ObjectCache(object):
         except KeyError:
             pass
         return False
-            
+
     def getObjectIndex(self, tme=None, pid=None, rememberError=False):
         try:
             processArray = self._objectCache[pid]
@@ -39,10 +39,10 @@ class ObjectCache(object):
             index = bisect.bisect_right(tmeArray, tme) - 1
             return index
         except KeyError:
-            if rememberError: 
+            if rememberError:
                 self._faultyNodes.add(pid)
                 logging.info("ObjectCache: error for %s (%d)" %(pid, tme))
-        
+
     def addNodeObject(self, nodeObject):
         try:
             tmeList = [process.value.tme for process in self._objectCache[nodeObject.value.pid]]
@@ -50,7 +50,7 @@ class ObjectCache(object):
             self._objectCache[nodeObject.value.pid].insert(index, nodeObject)
         except KeyError:
             self._objectCache[nodeObject.value.pid] = [nodeObject]
-            
+
     def getNodeObject(self, tme=None, pid=None, rememberError=False):
         try:
             processArray = self._objectCache[pid]
@@ -58,10 +58,10 @@ class ObjectCache(object):
             index = bisect.bisect_right(tmeArray, tme) - 1
             return processArray[index]
         except KeyError:
-            if rememberError: 
+            if rememberError:
                 self._faultyNodes.add(pid)
                 logging.info("ObjectCache: error for %s (%d)" %(pid, tme))
-            
+
     def clear(self):
         del self._objectCache
         self._objectCache = {}
@@ -69,19 +69,19 @@ class ObjectCache(object):
         self._faultyNodes = set()
         del self._unfound
         self._unfound = set()
-            
+
     @property
     def unfound(self):
         return self._unfound
-            
+
     @property
     def faultyNodes(self):
         return self._faultyNodes
-        
+
     @faultyNodes.setter
-    def faultyNodes(self, value=None)
+    def faultyNodes(self, value=None):
         self._faultNodes = value
-        
+
     @property
     def objectCache(self):
         return self._objectCache
