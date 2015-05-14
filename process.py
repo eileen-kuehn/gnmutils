@@ -19,7 +19,7 @@ class Process(object):
         self._state = stringutils.xstr(state)
         
         # set exit_code first, but can be overwritten by error_code and signal
-        if self._checkIsNone(value=exit_code) is not None:
+        if self._checkIsNone(value=str(exit_code)) is not None:
             self._setExitCode(exit_code)
         else:
             self._error_code = self._checkIsNone(value=error_code)

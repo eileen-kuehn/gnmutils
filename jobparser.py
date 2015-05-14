@@ -66,8 +66,8 @@ class JobParser(object):
     def tree(self):
         return self._getTree()
         
-    def tree(self, reinitialize=False):
-        return self._getTree(reinitialize=reinitialize)
+    def regenerateTree(self):
+        return self._getTree(reinitialize=True)
     
     def _getTree(self, reinitialize=False):
         if reinitialize or not self._treeInitialized:
