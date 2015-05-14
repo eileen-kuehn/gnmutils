@@ -14,7 +14,8 @@ class Process(object):
         self._gpid = self._checkIsNone(value=gpid)
         self.valid = valid
         
-        self._exit_tme = self._checkIsNone(value=exit_tme)
+        self._exit_tme = None
+        self._tme = None
         if state is not None and len(state) > 0:
             if "exit" in state:
                 # set exit_tme
@@ -24,6 +25,7 @@ class Process(object):
                 self._tme = self._checkIsNone(value=tme)
             elif ".":
                 self._tme = self._checkIsNone(value=tme)
+                self._exit_tme = self._checkIsNone(value=exit_tme)
                 self.valid = False
         else:
             self._tme = self._checkIsNone(value=tme)
@@ -96,9 +98,9 @@ class Process(object):
         
     def getRow(self):
         return ("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%s,%s"
-                %(stringutils.xint(self.tme), stringutils.xint(self.exit_tme),
-                    stringutils.xint(self.pid), stringutils.xint(self.ppid),
-                    stringutils.xint(self.gpid), stringutils.xint(self.uid), 
+                %(stringutils.xint(self._tme), stringutils.xint(self._exit_tme),
+                    stringutils.xint(self._pid), stringutils.xint(self._ppid),
+                    stringutils.xint(self._gpid), stringutils.xint(self._uid), 
                     self.name, self.cmd, stringutils.xint(self._error_code), 
                     stringutils.xint(self._signal), self.valid, self.int_in_volume,
                     self.int_out_volume, self.ext_in_volume, self.ext_out_volume,
