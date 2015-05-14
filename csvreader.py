@@ -91,6 +91,7 @@ class CSVReader(object):
                         logging.warn("there seems to be a wrong ending in the file for line %d (%s) in file %s" %(idx, line, filename))
                     else:
                         break;
+        self._parser.checkCaches(tme=self._tme)
 
     def parserName(self):
         return self._parser.__class__.__name__

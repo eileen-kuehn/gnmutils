@@ -27,6 +27,9 @@ class JobParser(object):
             "valid": 10, "int_in_volume": 11, "int_out_volume": 12,
             "ext_in_volume": 13, "ext_out_volume":14}
 
+    def checkCaches(self, tme=None):
+        pass
+
     def clearCaches(self):
         logging.info("clearing caches of process parser")
         del self._root
