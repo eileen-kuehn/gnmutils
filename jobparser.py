@@ -16,7 +16,7 @@ class JobParser(object):
         
     @property
     def processCache(self):
-        return self._processCache
+        return self._processCache.objectCache
         
     def defaultHeader(self):
         return {"tme":0, "exit_tme": 1 ,"pid": 2, "ppid": 3, "gpid": 4,
