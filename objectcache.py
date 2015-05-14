@@ -80,7 +80,7 @@ class ObjectCache(object):
 
     @faultyNodes.setter
     def faultyNodes(self, value=None):
-        self._faultNodes = value
+        self._faultyNodes = value
 
     @property
     def objectCache(self):
