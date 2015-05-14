@@ -74,7 +74,12 @@ class JobParser(object):
     
     def _getTree(self, reinitialize=False):
         if reinitialize or not self._treeInitialized:
-            self._processCache.faultyNodes = set()
+            if reinitialize:
+                self._processCache.faultyNodes = set()
+                for pid in self._processCache.objectCache:
+                    for node in self._processCache.objectCache[pid]:
+                        node.children = []
+                        node.parent = None
             self._initializeTree()
             self._treeInitialized = True
         if (len(self._processCache.faultyNodes) <= 1 and self._root and 
@@ -86,10 +91,6 @@ class JobParser(object):
     def _initializeTree(self):
         logging.info("Initializing tree structure")
         processCache = self._processCache.objectCache
-        if self._treeInitialized:
-            for pid in processCache:
-                for node in processCache[pid]:
-                    node.children = []
         # sort the keys first to get the correct ordering in the final tree
         for pid in sorted(processCache.keys(), key=lambda item: int(item)):
             for node in processCache[pid]:
