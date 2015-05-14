@@ -14,21 +14,8 @@ class Process(object):
         self._gpid = self._checkIsNone(value=gpid)
         self.valid = valid
         
-        self._exit_tme = None
-        self._tme = None
-        if state is not None and len(state) > 0:
-            if "exit" in state:
-                # set exit_tme
-                self._exit_tme = self._checkIsNone(value=tme)
-            elif "fork" in state:
-                # set tme
-                self._tme = self._checkIsNone(value=tme)
-            elif ".":
-                self._tme = self._checkIsNone(value=tme)
-                self._exit_tme = self._checkIsNone(value=exit_tme)
-                self.valid = False
-        else:
-            self._tme = self._checkIsNone(value=tme)
+        self._tme = self._checkIsNone(value=tme)
+        self._exit_tme = self._checkIsNone(value=exit_tme)
         self._state = stringutils.xstr(state)
         
         # set exit_code first, but can be overwritten by error_code and signal
