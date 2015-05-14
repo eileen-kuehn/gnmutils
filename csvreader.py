@@ -39,26 +39,22 @@ class CSVReader(object):
                 # first check for comments in CSV line and skip
                 if line[0] == "#":
                     continue
-                    
+                
                 # remove newline character from line
                 line = line[:-1]
                 try:
                     # as long as the header has not been initialized,
                     # an exception is thrown and the header row is deteced
                     # otherwise the usual processing process starts
-                    tme = line.split(",")[(self._headerCache[self.parserName()])['tme']] or self._tme
+                    tme = int(line.split(",")[(self._headerCache[self.parserName()])['tme']]) or self._tme
                     self._tme = tme
                 except KeyError:
                     # initialize the header cache
-                    row = line.split(",")
-                    # check if maybe no header is included
-                    if "tme" not in row[0]:
-                        self._headerCache[self.parserName()] = self._parser.defaultHeader()
-                    else:
-                        headerCache = {}
-                        for index, item in enumerate(line.split(",")):
-                            headerCache[item] = index
-                        self._headerCache[self.parserName()] = headerCache
+                    logging.info("initializing header")
+                    self._initializeHeader(line)
+                except ValueError:
+                    logging.warning("reinitializing the header")
+                    self._initializeHeader(line)
                 else:
                     while True:
                         try:
@@ -88,3 +84,14 @@ class CSVReader(object):
     def parserName(self):
         return self._parser.__class__.__name__
                         
+
+    def _initializeHeader(self, line):
+        row = line.split(",")
+        # check if maybe no header is included
+        if "tme" not in row[0]:
+            self._headerCache[self.parserName()] = self._parser.defaultHeader()
+        else:
+            headerCache = {}
+            for index, item in enumerate(line.split(",")):
+                headerCache[item] = index
+            self._headerCache[self.parserName()] = headerCache
