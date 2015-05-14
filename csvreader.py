@@ -50,48 +50,40 @@ class CSVReader(object):
                     self._tme = tme
                 except KeyError:
                     # initialize the header cache
-                    logging.info("initializing header")
-                    self._initializeHeader(line)
-                except ValueError:
-                    logging.warning("reinitializing the header")
-                    self._initializeHeader(line)
-                else:
-                    while True:
-                        try:
-                            row = line.split(",")
-                            # check if there are too many header fields than expected
-                            if len(row) > len(self._headerCache[self.parserName()]):
-                                logging.info("Trying to fix wrong row length: row %d vs. header %d" %(len(row), len(self._headerCache[self.parserName()])))
-                                # check if additional "," is in the command and remove
-                                if len(row) == len(self._headerCache[self.parserName()])+1:
-                                    # there seems to be a "," inside the cmd
-                                    cmdIndex = self._headerCache[self.parserName()]["cmd"]
-                                    cmdString = row[cmdIndex] + row[cmdIndex+1]
-                                    del row[cmdIndex+1]
-                                    row[cmdIndex] = cmdString
-                                else:
-                                    logging.error("wrong length of row")
-                                    sys.exit(1)
-                            # finally add the valid row to the parser
-                            self._parser.parseRow(row=row, headerCache=self._headerCache[self.parserName()], tme=int(tme))
-                        except IndexError as e:
-                            line = (line + csvfile.next())[:-1]
-                        except StopIteration as e:
-                            logging.warn("there seems to be a wrong ending in the file for line %d (%s) in file %s" %(idx, line, filename))
-                        else:
-                            break;
+                    row = line.split(",")
+                    # check if maybe no header is included
+                    if "tme" not in row[0]:
+                        self._headerCache[self.parserName()] = self._parser.defaultHeader()
+                    else:
+                        headerCache = {}
+                        for index, item in enumerate(line.split(",")):
+                            headerCache[item] = index
+                        self._headerCache[self.parserName()] = headerCache
+                        continue
+                while True:
+                    try:
+                        row = line.split(",")
+                        # check if there are too many header fields than expected
+                        if len(row) > len(self._headerCache[self.parserName()]):
+                            logging.info("Trying to fix wrong row length: row %d vs. header %d" %(len(row), len(self._headerCache[self.parserName()])))
+                            # check if additional "," is in the command and remove
+                            if len(row) == len(self._headerCache[self.parserName()])+1:
+                                # there seems to be a "," inside the cmd
+                                cmdIndex = self._headerCache[self.parserName()]["cmd"]
+                                cmdString = row[cmdIndex] + row[cmdIndex+1]
+                                del row[cmdIndex+1]
+                                row[cmdIndex] = cmdString
+                            else:
+                                logging.error("wrong length of row")
+                                sys.exit(1)
+                        # finally add the valid row to the parser
+                        self._parser.parseRow(row=row, headerCache=self._headerCache[self.parserName()], tme=int(tme))
+                    except IndexError as e:
+                        line = (line + csvfile.next())[:-1]
+                    except StopIteration as e:
+                        logging.warn("there seems to be a wrong ending in the file for line %d (%s) in file %s" %(idx, line, filename))
+                    else:
+                        break;
                             
     def parserName(self):
         return self._parser.__class__.__name__
-                        
-
-    def _initializeHeader(self, line):
-        row = line.split(",")
-        # check if maybe no header is included
-        if "tme" not in row[0]:
-            self._headerCache[self.parserName()] = self._parser.defaultHeader()
-        else:
-            headerCache = {}
-            for index, item in enumerate(line.split(",")):
-                headerCache[item] = index
-            self._headerCache[self.parserName()] = headerCache
