@@ -78,6 +78,10 @@ class ObjectCache(object):
     def faultyNodes(self):
         return self._faultyNodes
         
+    @faultyNodes.setter
+    def faultyNodes(self, value=None)
+        self._faultNodes = value
+        
     @property
     def objectCache(self):
         return self._objectCache
