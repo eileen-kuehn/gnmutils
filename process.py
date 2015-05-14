@@ -106,6 +106,7 @@ class Process(object):
                 self.valid = True
             self._setExitCode(exit_code)
             self._exit_tme = tme
+            self._state = state
         else:
             # maybe exit process event arrives first...
             if "exit" == self._state and state != ".":
