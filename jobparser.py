@@ -66,6 +66,12 @@ class JobParser(object):
                 if not node.value.valid:
                     return False
         return True
+        
+    @property
+    def uid(self):
+        for node, depth in self.tree.walkDFS():
+            if node.value.uid > 0:
+                return node.value.uid
 
     # access to tree
     @property
