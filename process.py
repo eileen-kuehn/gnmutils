@@ -66,7 +66,10 @@ class Process(object):
         
     @property
     def tme(self):
-        return int(self._tme)
+        try:
+            return int(self._tme)
+        except TypeError:
+            return 0
         
     @property
     def exit_tme(self):
