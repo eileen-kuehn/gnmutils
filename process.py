@@ -41,7 +41,7 @@ class Process(object):
         return None
     
     @property
-    def job_id(self):
+    def batchsystemId(self):
         if "sge_shepherd" in self.cmd:
             return int(self.cmd.rpartition("-")[2])
         return None
