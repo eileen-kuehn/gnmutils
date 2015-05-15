@@ -52,7 +52,7 @@ class JobParser(object):
         self._addProcess(processNode=newNode)
 
     def _addProcess(self, processNode=None):
-        if "sge_shepherd" in processNode.value.name:
+        if "sge_shepherd" in processNode.value.cmd:
             if self._root is not None: raise NonUniqueRootException
             self._root = processNode
         self._processCache.addNodeObject(processNode)

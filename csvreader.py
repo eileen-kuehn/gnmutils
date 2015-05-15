@@ -72,17 +72,13 @@ class CSVReader(object):
                         row = line.split(",")
                         # check if there are too many header fields than expected
                         if len(row) > len(self._headerCache[self.parserName()]):
-                            logging.info("Trying to fix wrong row length: row %d vs. header %d" %(len(row), len(self._headerCache[self.parserName()])))
-                            # check if additional "," is in the command and remove
-                            if len(row) == len(self._headerCache[self.parserName()])+1:
-                                # there seems to be a "," inside the cmd
+                            logging.info("Trying to fix wrong row length: row %d (%s:%d - %s) vs. header %d" %(len(row), filename, idx, line, len(self._headerCache[self.parserName()])))
+                            # check if additional "," are in command and remove
+                            while len(row) > len(self._headerCache[self.parserName()]):
                                 cmdIndex = self._headerCache[self.parserName()]["cmd"]
                                 cmdString = row[cmdIndex] + row[cmdIndex+1]
                                 del row[cmdIndex+1]
                                 row[cmdIndex] = cmdString
-                            else:
-                                logging.error("wrong length of row %d (%s) in file %s" %(idx, line, filename))
-                                sys.exit(1)
                         # finally add the valid row to the parser
                         self._parser.parseRow(row=row, headerCache=self._headerCache[self.parserName()], tme=int(tme))
                     except IndexError as e:
