@@ -81,7 +81,7 @@ class CSVReader(object):
                                 del row[cmdIndex+1]
                                 row[cmdIndex] = cmdString
                             else:
-                                logging.error("wrong length of row")
+                                logging.error("wrong length of row %d (%s) in file %s" %(idx, line, filename))
                                 sys.exit(1)
                         # finally add the valid row to the parser
                         self._parser.parseRow(row=row, headerCache=self._headerCache[self.parserName()], tme=int(tme))
