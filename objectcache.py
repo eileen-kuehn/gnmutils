@@ -28,6 +28,8 @@ class ObjectCache(object):
             if len(self._objectCache[pid]) == 0:
                 del self._objectCache[pid]
             return True
+        except ValueError:
+            pass
         except KeyError:
             pass
         return False
