@@ -83,7 +83,7 @@ class Traffic(object):
             self.conn_cat = "ext"
 
     def getRow(self):
-        return ("%d,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s"
+        return ("%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
                 %(self.tme, stringutils.xstr(self._pid),
                     stringutils.xstr(self._ppid), stringutils.xstr(self._uid),
                     stringutils.xstr(self.in_rate),
