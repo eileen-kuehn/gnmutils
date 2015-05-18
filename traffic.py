@@ -9,10 +9,10 @@ class Traffic(object):
             source_ip=None, dest_ip=None, source_port=None, dest_port=None,
             conn_cat=None, workernode=None, interval=20):
         self.tme = tme
-        self.pid = pid
-        self.ppid = ppid
-        self.uid = uid
-        self.gpid = gpid
+        self._pid = pid
+        self._ppid = ppid
+        self._uid = uid
+        self._gpid = gpid
         self.source_ip = source_ip
         self.dest_ip = dest_ip
         self.source_port = source_port
@@ -25,6 +25,22 @@ class Traffic(object):
         self.interval = interval
         if conn:
           self.setConnection(conn=conn, workernode=workernode)
+          
+    @property
+    def pid(self):
+        return int(self._pid)
+        
+    @property
+    def ppid(self):
+        return int(self._ppid)
+        
+    @property
+    def uid(self):
+        return int(self._uid)
+        
+    @property
+    def gpid(self):
+        reutrn int(self._gpid)
 
     def setConnection(self, conn=None, workernode=None):
         splittedConnection = conn.split("-")
@@ -68,13 +84,14 @@ class Traffic(object):
 
     def getRow(self):
         return ("%d,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s"
-                %(self.tme, stringutils.xstr(self.pid),
-                    stringutils.xstr(self.ppid), stringutils.xstr(self.uid),
+                %(self.tme, stringutils.xstr(self._pid),
+                    stringutils.xstr(self._ppid), stringutils.xstr(self._uid),
                     stringutils.xstr(self.in_rate),
                     stringutils.xstr(self.out_rate),
                     stringutils.xstr(self.in_cnt),
                     stringutils.xstr(self.out_cnt),
-                    self.gpid, stringutils.xstr(self.source_ip),
+                    stringutils.xstr(self._gpid),
+                    stringutils.xstr(self.source_ip),
                     stringutils.xstr(self.dest_ip),
                     stringutils.xstr(self.source_port),
                     stringutils.xstr(self.dest_port),
