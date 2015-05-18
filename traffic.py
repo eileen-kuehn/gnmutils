@@ -25,22 +25,22 @@ class Traffic(object):
         self.interval = interval
         if conn:
           self.setConnection(conn=conn, workernode=workernode)
-          
+
     @property
     def pid(self):
         return int(self._pid)
-        
+
     @property
     def ppid(self):
         return int(self._ppid)
-        
+
     @property
     def uid(self):
         return int(self._uid)
-        
+
     @property
     def gpid(self):
-        reutrn int(self._gpid)
+        return int(self._gpid)
 
     def setConnection(self, conn=None, workernode=None):
         splittedConnection = conn.split("-")
