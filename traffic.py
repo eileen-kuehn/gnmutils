@@ -29,14 +29,16 @@ class Traffic(object):
           self.setConnection(conn=conn, workernode=workernode)
         if ext_out_cnt or ext_in_cnt or ext_out_rate or ext_in_rate:
           if "ext" not in self.conn_cat:
-            logging.warn("The calculated connection category does not match that of log file")
+            logging.warn("The calculated connection category %s does not match "
+            "that of log file %s for ip %s" %(self.conn_cat, "ext", self.dest_ip))
           self.in_rate = ext_in_rate
           self.out_rate = ext_out_rate
           self.in_cnt = ext_in_cnt
           self.out_cnt = ext_out_cnt
         if int_out_cnt or int_in_cnt or int_out_rate or int_in_rate:
           if "int" not in self.conn_cat:
-            logging.warn("The calculated connection category does not match that of log file")
+            logging.warn("The calculated connection category %s does not match "
+            "that of log file %s for ip %s" %(self.conn_cat, "ext", self.dest_ip))
           self.in_rate = int_in_rate
           self.out_rate = int_out_rate
           self.in_cnt = int_in_cnt
@@ -90,8 +92,8 @@ class Traffic(object):
         self.dest_ip = splittedTarget[0]
         self.dest_port = splittedTarget[1]
 
-        if ((re.match("^10\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})",splittedTarget[0]))
-                or (re.match("^192\.108\.([0-9]{1,3})\.([0-9]{1,3})",splittedTarget[0]))):
+        if ((re.match("^10\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})", self.dest_ip))
+                or (re.match("^192\.108\.([0-9]{1,3})\.([0-9]{1,3})", self.dest_ip))):
             # internal interface
             self.conn_cat = "int"
         else:
