@@ -46,7 +46,7 @@ class CSVReader(object):
                     # as long as the header has not been initialized,
                     # an exception is thrown and the header row is deteced
                     # otherwise the usual processing process starts
-                    tme = line.split(",")[(self._headerCache[self.parserName()])['tme']] or self._tme
+                    tme = line.split(",")[(self._headerCache[self.parserName()])['tme']] or self._tme or tme
                     self._tme = int(tme)
                 except KeyError:
                     # initialize the header cache
