@@ -12,7 +12,7 @@ class Process(object):
         self._ppid = self._checkIsNone(value=ppid)
         self._uid = self._checkIsNone(value=uid)
         self._gpid = self._checkIsNone(value=gpid)
-        self.valid = valid
+        self._valid = valid
 
         self._tme = self._checkIsNone(value=tme)
         self._exit_tme = self._checkIsNone(value=exit_tme)
@@ -92,6 +92,10 @@ class Process(object):
     @property
     def exit_code(self):
         return self._error_code and self._signal and ((self._error_code << 8) + self._signal)
+        
+    @property
+    def valid(self):
+        return int(self._valid)
 
     def getDuration(self):
         return self.valid and (self.exit_tme - self.tme)
