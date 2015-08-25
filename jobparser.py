@@ -21,7 +21,7 @@ class JobParser(object):
     def faultyNodes(self):
         return self._processCache.faultyNodes
 
-    def defaultHeader(self):
+    def defaultHeader(self, length=15):
         return {"tme":0, "exit_tme": 1 ,"pid": 2, "ppid": 3, "gpid": 4,
             "uid": 5, "name": 6, "cmd": 7, "error_code": 8, "signal": 9,
             "valid": 10, "int_in_volume": 11, "int_out_volume": 12,

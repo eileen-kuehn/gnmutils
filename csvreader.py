@@ -53,7 +53,7 @@ class CSVReader(object):
                     row = line.split(",")
                     # check if maybe no header is included
                     if "tme" not in row[0]:
-                        self._headerCache[self.parserName()] = self._parser.defaultHeader()
+                        self._headerCache[self.parserName()] = self._parser.defaultHeader(length=len(row))
                     else:
                         headerCache = {}
                         for index, item in enumerate(line.split(",")):
