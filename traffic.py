@@ -7,7 +7,9 @@ class Traffic(object):
     def __init__ (self, conn=None, pid=None, ppid=None, uid=None, tme=None,
             in_rate=None, out_rate=None, in_cnt=None, out_cnt=None, gpid=None,
             source_ip=None, dest_ip=None, source_port=None, dest_port=None,
-            conn_cat=None, workernode=None, interval=20):
+            conn_cat=None, workernode=None, interval=20, ext_in_rate=None,
+            int_in_rate=None, ext_out_rate=None, int_out_rate=None, ext_in_cnt=None,
+            int_in_cnt=None, ext_out_cnt=None, int_out_cnt=None):
         self.tme = tme
         self._pid = pid
         self._ppid = ppid
@@ -25,6 +27,20 @@ class Traffic(object):
         self.interval = interval
         if conn:
           self.setConnection(conn=conn, workernode=workernode)
+        if ext_out_cnt or ext_in_cnt or ext_out_rate or ext_in_rate:
+          if "ext" not in self.conn_cat:
+            logging.warn("The calculated connection category does not match that of log file")
+          self.in_rate = ext_in_rate
+          self.out_rate = ext_out_rate
+          self.in_cnt = ext_in_cnt
+          self.out_cnt = ext_out_cnt
+        if int_out_cnt or int_in_cnt or int_out_rate or int_in_rate:
+          if "int" not in self.conn_cat:
+            logging.warn("The calculated connection category does not match that of log file")
+          self.in_rate = int_in_rate
+          self.out_rate = int_out_rate
+          self.in_cnt = int_in_cnt
+          self.out_cnt = int_out_cnt
 
     @property
     def pid(self):
