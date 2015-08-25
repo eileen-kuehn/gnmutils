@@ -98,7 +98,7 @@ class Process(object):
         return int(self._valid)
 
     def getDuration(self):
-        return self.valid and (self.exit_tme - self.tme)
+        return self._valid and (self.exit_tme - self.tme)
 
     def getRow(self):
         return ("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%s,%s"
@@ -120,14 +120,14 @@ class Process(object):
             uid=None, tme=None, exit_code=None, gpid=None, state=None):
         if "exit" == state:
             if self._state != ".":
-                self.valid = True
+                self._valid = True
             self._setExitCode(exit_code)
             self._exit_tme = tme
             self._state = state
         else:
             # maybe exit process event arrives first...
             if "exit" == self._state and state != ".":
-                self.valid = True
+                self._valid = True
             self._tme = self._tme or tme
         self._state = self._state or state
         self._name = self._name or name
