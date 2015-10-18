@@ -98,8 +98,8 @@ class FileDataSource(DataSource):
     def write_job(self, **kwargs):
         job = kwargs["data"]
         path = pathutils.ensureDirectory(kwargs.get("path", self.default_path))
-        with open("%s/%s.csv" % (path,
-                                 job.db_id), "w+") as job_file:
+        with open("%s/%s-process.csv" % (path,
+                                         job.db_id), "w+") as job_file:
                 # TODO: write something about creation
                 header_initialized = False
                 for process in job.processes():
