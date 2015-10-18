@@ -1,43 +1,46 @@
 from evenmoreutils import string as stringutils
 
+from gnmutils.exceptions import ProcessMismatchException
+
+
 class Process(object):
     def __init__ (self, name=None, cmd=None, pid=None, ppid=None, uid=None,
             tme=None, exit_tme=None, error_code=None, signal=None, exit_code=0,
             gpid=None, state=None, job_id=None, int_in_volume=None, int_out_volume=None,
             ext_in_volume=None, ext_out_volume=None, tree_depth=None,
             process_type=None, color=None, valid=False):
-        self._name = self._checkIsNone(value=name)
-        self._cmd = self._checkIsNone(value=cmd)
-        self._pid = self._checkIsNone(value=pid)
-        self._ppid = self._checkIsNone(value=ppid)
-        self._uid = self._checkIsNone(value=uid)
-        self._gpid = self._checkIsNone(value=gpid)
+        self._name = self._check_is_none(value=name)
+        self._cmd = self._check_is_none(value=cmd)
+        self._pid = self._check_is_none(value=pid)
+        self._ppid = self._check_is_none(value=ppid)
+        self._uid = self._check_is_none(value=uid)
+        self._gpid = self._check_is_none(value=gpid)
         self._valid = valid
 
-        self._tme = self._checkIsNone(value=tme)
-        self._exit_tme = self._checkIsNone(value=exit_tme)
+        self._tme = self._check_is_none(value=tme)
+        self._exit_tme = self._check_is_none(value=exit_tme)
         self._state = stringutils.xstr(state)
 
         # set exit_code first, but can be overwritten by error_code and signal
-        if self._checkIsNone(value=str(exit_code)) is not None:
+        if self._check_is_none(value=str(exit_code)) is not None:
             self._setExitCode(exit_code)
         else:
-            self._error_code = self._checkIsNone(value=error_code)
-            self._signal = self._checkIsNone(value=signal)
+            self._error_code = self._check_is_none(value=error_code)
+            self._signal = self._check_is_none(value=signal)
 
-        self.job_id = self._checkIsNone(value=job_id)
-        self.tree_depth = self._checkIsNone(value=tree_depth)
-        self.process_type = self._checkIsNone(value=process_type)
-        self.color = self._checkIsNone(value=color)
+        self.job_id = self._check_is_none(value=job_id)
+        self.tree_depth = self._check_is_none(value=tree_depth)
+        self.process_type = self._check_is_none(value=process_type)
+        self.color = self._check_is_none(value=color)
 
         self.int_in_volume = stringutils.xfloat(int_in_volume)
         self.int_out_volume = stringutils.xfloat(int_out_volume)
         self.ext_in_volume = stringutils.xfloat(ext_in_volume)
         self.ext_out_volume = stringutils.xfloat(ext_out_volume)
 
-    def _checkIsNone(self, value=None):
-        if value is not None and len(value) > 0:
-            return value
+    def _check_is_none(self, value=None):
+        if value is not None and len(str(value)) > 0:
+            return str(value)
         return None
 
     @property
@@ -60,19 +63,31 @@ class Process(object):
 
     @property
     def pid(self):
-        return int(self._pid)
+        try:
+            return int(self._pid)
+        except TypeError:
+            return 0
 
     @property
     def ppid(self):
-        return int(self._ppid)
+        try:
+            return int(self._ppid)
+        except TypeError:
+            return 0
 
     @property
     def uid(self):
-        return int(self._uid)
+        try:
+            return int(self._uid)
+        except TypeError:
+            return 0
 
     @property
     def gpid(self):
-        return int(self._gpid)
+        try:
+            return int(self._gpid)
+        except TypeError:
+            return 0
 
     @property
     def tme(self):
@@ -83,7 +98,10 @@ class Process(object):
 
     @property
     def exit_tme(self):
-        return int(self._exit_tme)
+        try:
+            return int(self._exit_tme)
+        except TypeError:
+            return 0
 
     @property
     def signal(self):
@@ -116,9 +134,22 @@ class Process(object):
                 "signal,valid,int_in_volume,int_out_volume,ext_in_volume,"\
                 "ext_out_volume,tree_depth,process_type,color,state")
 
+    def toProcessEvent(self):
+        event_dict = {"name": self.name, "cmd": self.cmd, "pid": self.pid, "ppid": self.ppid,
+                      "uid": self.uid, "gpid": self.gpid, "state": self.state}
+        if "exit" in self.state:
+            event_dict["tme"] = self.exit_tme
+            event_dict["exit_code"] = self.exit_code
+        else:
+            event_dict["tme"] = self.tme
+        return event_dict
+
     def addProcessEvent(self, name=None, cmd=None, pid=None, ppid=None,
             uid=None, tme=None, exit_code=None, gpid=None, state=None):
-        if "exit" == state:
+        if self._pid and self.pid != pid and self.ppid != ppid and \
+                        self.name not in name and self.cmd not in cmd:
+            raise ProcessMismatchException
+        if "exit" in state:
             if self._state != ".":
                 self._valid = True
             self._setExitCode(exit_code)
@@ -126,8 +157,10 @@ class Process(object):
             self._state = state
         else:
             # maybe exit process event arrives first...
-            if "exit" == self._state and state != ".":
+            if "exit" in self._state and state != ".":
                 self._valid = True
+            elif "exit" in self._state and state == ".":
+                self._valid = False
             self._tme = self._tme or tme
         self._state = self._state or state
         self._name = self._name or name
@@ -141,3 +174,12 @@ class Process(object):
         self._error_code = int(exit_code) >> 8
         self._signal = int(exit_code) & 255
 
+    def __repr__(self):
+        return "%s: name (%s), cmd (%s), pid (%d), ppid (%d), uid (%d), gpid (%d), valid (%s), tme (%d), " \
+               "exit_tme (%d), state (%s), error_code (%s), signal (%s), job_id (%s), tree_depth (%s), " \
+               "process_type (%s), color (%s), int_in_volume (%s), int_out_volume (%s), ext_in_volume (%s), " \
+               "ext_out_volume (%s)" % (
+            self.__class__.__name__, self.name, self.cmd, self.pid, self.ppid, self.uid, self.gpid, self.valid,
+            self.tme, self.exit_tme, self.state, stringutils.xint(self._error_code), self.signal, self.job_id,
+            self.tree_depth, self.process_type, self.color, self.int_in_volume, self.int_out_volume, self.ext_in_volume,
+            self.ext_out_volume)

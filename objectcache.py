@@ -1,14 +1,18 @@
 import bisect
 import logging
 
+
 class ObjectCache(object):
     def __init__(self):
         self._objectCache = {}
         self._faultyNodes = set()
         self._unfound = set()
 
-    def addObject(self, object=None, pid=None):
-        if pid is None: pid=object.pid
+    def addObject(self, object=None, pid=None, tme=None):
+        if pid is None:
+            pid=object.pid
+        if tme is None:
+            tme=object.tme
         try:
             tmeList = [process.tme for process in self._objectCache[pid]]
             index = bisect.bisect_left(tmeList, int(object.tme))
@@ -43,7 +47,7 @@ class ObjectCache(object):
         except KeyError:
             if rememberError:
                 self._faultyNodes.add(pid)
-                logging.info("ObjectCache: error for %s (%d)" %(pid, tme))
+                logging.getLogger(self.__class__.__name__).info("error for %s (%d)" %(pid, tme))
 
     def addNodeObject(self, nodeObject):
         try:
@@ -62,7 +66,7 @@ class ObjectCache(object):
         except KeyError:
             if rememberError:
                 self._faultyNodes.add(pid)
-                logging.info("ObjectCache: error for %s (%d)" %(pid, tme))
+                logging.getLogger(self.__class__.__name__).info("error for %s (%d)" %(pid, tme))
 
     def clear(self):
         del self._objectCache
