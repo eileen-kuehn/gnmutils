@@ -1,7 +1,6 @@
 from gnmutils.parser.dataparser import DataParser
 from gnmutils.objectcache import ObjectCache
 from gnmutils.process import Process
-from gnmutils.traffic import Traffic
 from gnmutils.job import Job
 from gnmutils.exceptions import ProcessMismatchException
 
@@ -31,6 +30,10 @@ class StreamParser(DataParser):
             self._process_cache = ObjectCache()
         self._workernode = workernode
         self._run = run
+
+    # TODO: fix writing
+    def defaultHeader(self, **kwargs):
+        return Job.default_header(**kwargs)
 
     @property
     def workernode(self):
