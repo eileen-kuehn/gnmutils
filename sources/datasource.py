@@ -40,3 +40,6 @@ class DataSource(object):
 
     def write_payload_result(self, **kwargs):
         raise NotImplementedError
+
+    def archive(self, **kwargs):
+        raise NotImplementedError

@@ -1,10 +1,10 @@
 class MonitoringConfiguration(object):
-    def __init__(self, version=None, interval=20, level=None, grouping=None, skip_other_pids=False):
+    def __init__(self, version=None, interval=20, level=None, grouping=None, skip_other_pids=False, **kwargs):
         self._version = version
         self._interval = interval
         self._level = level
         self._grouping = grouping
-        self._skip_other_pids = skip_other_pids
+        self._skip_other_pids = skip_other_pids or kwargs.get("skipOtherPids", False)
 
     @property
     def version(self):

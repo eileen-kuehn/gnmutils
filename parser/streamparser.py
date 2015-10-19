@@ -57,7 +57,9 @@ class StreamParser(DataParser):
         else:
             logging.getLogger(self.__class__.__name__).warning("Archiving not done because of missing data_source")
 
-    def check_caches(self):
+    def check_caches(self, **kwargs):
+        if not self._changed:
+            return
         for process in self._process_cache.unfound.copy():
             is_finished, job = self._finish_process(process)
             if is_finished:
@@ -70,11 +72,14 @@ class StreamParser(DataParser):
                     tme=process.tme,
                     gpid=process.gpid,
                     configuration=self.configuration)
-                job_object = self._data_source.read_job(data=job_object)
-
-                if job_object.job_id:
-                    job_object.add_process(process=process)
-                    self._process_cache.unfound.discard(process)
+                for job in self._data_source.read_job(
+                    data=job_object,
+                    path=kwargs.get("path", None)
+                ):
+                    if job.job_id:
+                        job_object = job
+                        job_object.add_process(process=process)
+                        self._process_cache.unfound.discard(process)
 
     def clear_caches(self):
         self._data.clear()
@@ -87,6 +92,7 @@ class StreamParser(DataParser):
         return process
 
     def _add_piece(self, process=None):
+        self._changed = True
         if process.gpid > 0:
             if "exit" in process.state:
                 # look for matching piece

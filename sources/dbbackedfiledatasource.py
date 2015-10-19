@@ -1,8 +1,9 @@
 import os
 
 from gnmutils.sources.filedatasource import FileDataSource
-from gnmutils.db.dbobjects import DBJobObject, DBPayloadObject, DBPayloadResultObject
+from gnmutils.db.dbobjects import DBJobObject, DBPayloadObject, DBPayloadResultObject, DBWorkernodeObject
 from gnmutils.db.dboperator import DBOperator
+from gnmutils.utils import *
 
 from dbutils.datasource import DataSource as DBDataSource
 from dbutils.sqlcommand import SQLCommand
@@ -24,22 +25,52 @@ class DBBackedFileDataSource(FileDataSource):
         return connection is not None
 
     def jobs(self, **kwargs):
+        """
+        :param path:
+        :param data_path:
+        :param source:
+        :return:
+        """
         if "raw" in kwargs.get("source", "processed"):
             for job in FileDataSource.jobs(self, **kwargs):
                 yield job
         else:
             with SQLCommand(dataSource=self._db_data_source) as sqlCommand:
+                path = kwargs.get("path", self.default_path)
+                level = directory_level(path)
                 job_object = DBJobObject(valid=True, completed=True)
+                if level == RUN_LEVEL:
+                    base_path, workernode, run = relevant_directories(path=path).next()
+                    job_object.run = run
+                    workernode_object = self._db_operator.load_or_create_workernode(data=workernode)
+                    job_object.workernode_id = workernode_object.id_value
+                elif level == WORKERNODE_LEVEL:
+                    workernode = os.path.split(path)[1]
+                    workernode_object = self._db_operator.load_or_create_workernode(data=workernode)
+                    job_object.workernode_id = workernode_object.id_value
+
                 for job_result in sqlCommand.find(job_object):
-                    path = os.path.join(
-                        kwargs.get("output_path", self.default_path),
-                        kwargs.get("pattern", "%s-process.csv" % job_result.id_value)
-                    )
-                    parsed_job = self._read_job(path=path)
-                    if parsed_job:
-                        yield parsed_job
+                    current_path = path
+                    if level == BASE_LEVEL:
+                        # join different workernodes and runs
+                        workernode_object = self._db_operator.load_one(DBWorkernodeObject(id=job_result.workernode_id))
+                        current_path = os.path.join(os.path.join(path, workernode_object.name), job_result.run)
+                    elif level == WORKERNODE_LEVEL:
+                        # join different runs
+                        current_path = os.path.join(path, job_result.run)
+
+                    for job in FileDataSource.read_job(
+                        self,
+                        path=current_path,
+                        name=job_result.id_value):
+                        yield job
 
     def read_job(self, **kwargs):
+        """
+        :param data:
+        :param path:
+        :return:
+        """
         job = kwargs.get("data", None)
         workernode_object = self._db_operator.load_or_create_workernode(data=job.workernode)
         configuration_object = self._db_operator.load_or_create_configuration(data=job.configuration)
@@ -52,7 +83,10 @@ class DBBackedFileDataSource(FileDataSource):
             raise RethrowException("The job has not been found")
         else:
             logging.getLogger(self.__class__.__name__).debug("loaded job %d from database" % job_object.id_value)
-            return self._read_job(path=os.path.join(self.default_path, "%s-process.csv" % job_object.id_value))
+            return FileDataSource.read_job(
+                self,
+                path=kwargs.get("path", self.default_path),
+                name=job_object.id_value)
 
     def write_job(self, **kwargs):
         job = kwargs["data"]

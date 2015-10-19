@@ -10,6 +10,7 @@ from gnmutils.sources.datasource import DataSource
 from gnmutils.sources.filedatasource import FileDataSource
 from gnmutils.sources.dbbackedfiledatasource import DBBackedFileDataSource
 from gnmutils.pilot import Pilot
+from gnmutils.utils import *
 from evenmoreutils import path as pathutils
 
 
@@ -24,19 +25,26 @@ def create_payloads():
 
     The payload ids are build from the job id from database and additionally the payload count.
     """
-    data_source = FileDataSource()
+    print
+    print("Starting to extract payloads from CMS pilots")
+    path = eval_input_path()
+    output_path = eval_output_path()
 
-    for pilot in data_source.jobs():
+    data_source = FileDataSource()
+    for pilot in data_source.jobs(path=path):
         pilot.__class__ = Pilot
         for payload, count in pilot.payloads():
             # write file per payload
-            data_source.write_payload(path="/Users/eileen/projects/Dissertation/Development/data/processed",
+            data_source.write_payload(path=output_path,
                                       data=payload)
 
 
 def import_cms_dashboard_data():
+    print
+    print("Starting to import cms data")
+    path = eval_input_path()
     data_source = DBBackedFileDataSource()
-    for data in data_source.object_data(path="/Users/eileen/Development/git/KIT/cmsdataextender"):
+    for data in data_source.object_data(path=path):
         for key in data:
             for result in data[key]:
                 payload_result_object = data_source.write_payload_result(
@@ -48,30 +56,65 @@ def import_cms_dashboard_data():
 def prepare_raw_data():
     print
     print("Starting to split data stream into jobs")
-    path, output_path = eval_input_output_path()
-    count = multiprocessing.cpu_count()
+    path = eval_input_path()
+    output_path = eval_output_path()
+    count = eval_cores()
+    level = directory_level(path)
+    if level == RUN_LEVEL:
+        count = 1
+    do_multicore(
+        count=count,
+        target=_prepare_raw_data,
+        data=[{
+                  "path": os.path.join(os.path.join(element[0], element[1]), element[2]),
+                  "output_path": output_path
+              } for element in list(relevant_directories(path))])
+
+
+def archive_jobs():
+    print
+    print("Starting to archive valid and complete jobs")
+    path = eval_input_path()
+    count = eval_cores()
+    names = ["path", "workernode", "run"]
+    data = [dict(zip(names, element)) for element in list(relevant_directories(path))]
+    do_multicore(
+        count=count,
+        target=_archive_jobs,
+        data=data)
+
+
+def do_multicore(count=1, target=None, data=None):
     pool = multiprocessing.Pool(processes=count)
-    pool.map(_prepare_raw_data, [{
-        "path": os.path.join(path, workernode),
-        "output_path": os.path.join(output_path, workernode)
-    } for workernode in pathutils.getImmediateSubdirectories(path,
-                                                             pattern="c(\d)*-(\d)*-(\d)*")])
+    pool.map(target, data)
 
 
-def _prepare_raw_data(args):
-    path = args.get("path", None)
-    output_path = args.get("output_path", None)
-    data_source = DataSource.best_available_data_source()
-    for job in data_source.jobs(source="raw",
-                                path=path,
-                                output_path=output_path,
-                                archive=True):
-        job = data_source.write_job(data=job,
-                                    path=output_path)
+def _archive_jobs(args):
+    with ExceptionFrame():
+        data_source = DataSource.best_available_data_source()
+        path = args.get("path", None)
+        workernode = args.get("workernode", None)
+        run = args.get("run", None)
+        current_path = os.path.join(os.path.join(path, workernode), run)
+        for job in data_source.jobs(path=current_path):
+            if job.is_complete() and job.is_valid():
+                data_source.archive(
+                    data=job,
+                    path=path,
+                    name="jobarchive")
 
 
-def split_jobs():
-    pass
+def _prepare_raw_data(kwargs):
+    with ExceptionFrame():
+        path = kwargs.get("path", None)
+        output_path = kwargs.get("output_path", None)
+        data_source = DataSource.best_available_data_source()
+        for job in data_source.jobs(source="raw",
+                                    path=path,
+                                    data_path=output_path,
+                                    stateful=True):
+            job = data_source.write_job(data=job,
+                                        path=output_path)
 
 
 def eval_options_choice():
@@ -80,16 +123,27 @@ def eval_options_choice():
     print("\t2. extract payloads from jobs (currently just supported for CMS)")
     print
     print("More workflows:")
-    print("\ta) split job into processes and traffic")
+    print("\ta) put jobs into archive")
     print("\tb) import CMS dashboard data")
     print
     return_options(raw_input("Please choose: "))()
 
 
-def eval_input_output_path():
-    input_path = raw_input("Input folder: ")
-    output_path = raw_input("Output folder: ")
-    return input_path, output_path
+def eval_input_path():
+    input_path = raw_input("Input Path: ")
+    return input_path
+
+
+def eval_output_path():
+    output_path = raw_input("Output Path: ")
+    return output_path
+
+
+def eval_cores():
+    try:
+        return int(raw_input("Number of cores for processing (%d): " % multiprocessing.cpu_count()))
+    except:
+        return 1
 
 
 def return_options(x):
@@ -97,7 +151,7 @@ def return_options(x):
     return {
         '1': prepare_raw_data,
         '2': create_payloads,
-        'a': split_jobs,
+        'a': archive_jobs,
         'b': import_cms_dashboard_data,
         'q': exit
     }.get(x, eval_options_choice)

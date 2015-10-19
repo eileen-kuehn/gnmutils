@@ -23,3 +23,11 @@ class ProcessMismatchException(BasicException):
     """
     def __init__(self):
         BasicException.__init__(self, "Processes that should be combined do not match")
+
+
+class NoGNMDirectoryStructure(BasicException):
+    """
+    Thrown when trying to identify folder structure from gnm workflows
+    """
+    def __init__(self):
+        BasicException.__init__(self, "No GNM directory strucutre could be identified")

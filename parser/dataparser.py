@@ -7,6 +7,8 @@ from utility.exceptions import *
 class DataParser(object):
     def __init__(self, **kwargs):
         self._data_source = kwargs.get("data_source", None)
+        self._data_reader = kwargs.get("data_reader", None)
+        self._changed = True
         if self._data_source is not None:
             self._data = self._data_source.object_data(
                 pattern="data.pkl",
@@ -20,11 +22,22 @@ class DataParser(object):
                 pattern="parsed_data.pkl",
                 path=kwargs.get("path", None)
             ).next() or set()
+            self._changed = False
         else:
             self._data = None
             self._configuration = None
             self._parsed_data = set()
 
+    def data_id(self, value):
+        raise NotImplementedError
+
+    @property
+    def data_reader(self):
+        return self._data_reader
+
+    @data_reader.setter
+    def data_reader(self, value):
+        self._data_reader = value
     @property
     def parsed_data(self):
         return self._parsed_data
@@ -41,7 +54,7 @@ class DataParser(object):
     def data(self):
         return self._data
 
-    def check_caches(self):
+    def check_caches(self, **kwargs):
         raise NotImplementedError
 
     def clear_caches(self):
@@ -55,19 +68,20 @@ class DataParser(object):
         else:
             logging.getLogger(self.__class__.__name__).warning("Archiving not done because of missing data_source")
 
-    def parse(self, *args, **kwargs):
-        data_dict = {}
-        for arg in args:
-            for key in kwargs["header"]:
-                data_dict[key] = arg[kwargs["header"][key]]
-            piece = self._piece_from_dict(data_dict)
-            data = self.add_piece(piece=piece)
-            if data is not None:
-                yield data
+    def parse(self, **kwargs):
+        for data_dict in self._data_reader.data(path=kwargs.get("path", None)):
+            if data_dict is not None:
+                piece = self._piece_from_dict(data_dict)
+                data = self.add_piece(piece=piece)
+                if data is not None:
+                    yield data
+        for new_data in self._parsing_finished():
+            if new_data is not None:
+                yield new_data
 
     def add_piece(self, piece=None):
         """
-        This method adds patial data to the current data object managed by the Parser.
+        This method adds partial data to the current data object managed by the Parser.
 
         :param piece: Partial data to be added
         :raises ParserNotInitializedException: if the data object has not been initialized with specific type
@@ -82,3 +96,6 @@ class DataParser(object):
     def _add_piece(self, piece=None):
         node = Node(value=piece)
         self._data.add_node_object(node)
+
+    def _parsing_finished(self):
+        yield None

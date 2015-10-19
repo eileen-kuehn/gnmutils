@@ -2,6 +2,14 @@ class DataReader(object):
     def __init__(self, parser=None):
         self._parser = parser
 
+    @property
+    def parser(self):
+        self._parser
+
+    @parser.setter
+    def parser(self, value):
+        self._parser = value
+
     def read(self, **kwargs):
         """
         Method to be overwritten by actual subclasses.
@@ -9,6 +17,9 @@ class DataReader(object):
         :param kwargs:
         :raises: `NotImplementedError`
         """
+        raise NotImplementedError
+
+    def data(self, **kwargs):
         raise NotImplementedError
 
     def parser_name(self):
