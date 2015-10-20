@@ -34,6 +34,9 @@ class DBJobObject(DBObject):
         self.workernode_id = workernode_id
         self.configuration_id = configuration_id
 
+    def unique_constraint_keys(self):
+        return ["job_id", "tme", "run", "workernode_id"]
+
 
 class DBWorkernodeObject(DBObject):
     def __init__(self, id=None, name=None):
@@ -68,6 +71,9 @@ class DBPayloadResultObject(DBObject):
         self.workernode_id = workernode_id
         self.payload_id = payload_id
         self.time_offset_id = time_offset_id
+
+    def unique_constraint_keys(self):
+        return ["job_id", "task_monitor_id", "workernode_id"]
 
 
 class DBDataOffsetObject(DBObject):

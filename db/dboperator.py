@@ -2,6 +2,7 @@ from gnmutils.db.dbobjects import DBWorkernodeObject, DBConfigurationObject, DBA
 from dbutils.sqlcommand import SQLCommand
 
 from utility.exceptions import *
+from dbutils.exceptions import UniqueConstrainedViolatedException
 
 
 class DBOperator(object):
@@ -124,7 +125,14 @@ class DBOperator(object):
                 sqlCommand.startTransaction()
                 db_object = sqlCommand.save(db_object)
                 sqlCommand.commitTransaction()
+            except UniqueConstrainedViolatedException as e:
+                description_object = db_object.getDescriptionObject()
+                description_object = self.load_one(data=description_object)
+                logging.getLogger(self.__class__.__name__).warning(
+                    "%s\nold: %s\nnew: %s" % (e, description_object, db_object)
+                )
             except Exception as ex:
+                print(ex)
                 sqlCommand.rollbackTransaction()
                 try:
                     if db_object.uid and db_object.uid > 0:
