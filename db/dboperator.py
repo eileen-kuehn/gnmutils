@@ -96,12 +96,13 @@ class DBOperator(object):
                 sqlCommand.commitTransaction()
             except Exception as e:
                 sqlCommand.rollbackTransaction()
+                # TODO: this should not be needed, when updating, uid should be there
                 try:
                     if db_object.uid and db_object.uid > 0:
                         self.load_or_create_affiliation(data=db_object.uid)
                 except Exception:
                     logging.getLogger(self.__class__.__name__).warning(
-                        "save_or_update: affiliation %d could not be created or loaded (%s)" % (db_object.uid, e))
+                        "update: affiliation %d could not be created or loaded (%s)" % (db_object.uid, e))
                     raise
                 else:
                     try:
@@ -111,7 +112,7 @@ class DBOperator(object):
                     except Exception:
                         sqlCommand.rollbackTransaction()
                         logging.getLogger(self.__class__.__name__).warning(
-                            "save_or_update: object %d could not be updated (%s)" % (db_object.id_value, e))
+                            "final update: object %d could not be updated (%s)" % (db_object.id_value, e))
                         raise
         else:
             # save object
@@ -127,7 +128,7 @@ class DBOperator(object):
                         self.load_or_create_affiliation(data=db_object.uid)
                 except Exception:
                     logging.getLogger(self.__class__.__name__).warning(
-                        "save_or_update: affiliation %d could not be created or loaded (%s)" % (db_object.uid, e))
+                        "save: object %s could not be saved (%s)" % (db_object, e))
                     raise
                 else:
                     try:
@@ -137,6 +138,6 @@ class DBOperator(object):
                     except Exception:
                         sqlCommand.rollbackTransaction()
                         logging.getLogger(self.__class__.__name__).warning(
-                            "save_or_update: object %s could not be saved (%s)" % (db_object, e))
+                            "final save: object %s could not be saved (%s)" % (db_object, e))
                         raise
         return db_object
