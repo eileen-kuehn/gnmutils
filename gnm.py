@@ -45,12 +45,13 @@ def import_cms_dashboard_data():
     path = eval_input_path()
     data_source = DBBackedFileDataSource()
     for data in data_source.object_data(path=path):
-        for key in data:
-            for result in data[key]:
-                payload_result_object = data_source.write_payload_result(
-                    data=result,
-                    workernode=re.match("(^c\d{2}-\d{3}-\d{3})", result["WNHostName"]).group(1),
-                    activity=key)
+        if data is not None:
+            for key in data:
+                for result in data[key]:
+                    payload_result_object = data_source.write_payload_result(
+                        data=result,
+                        workernode=re.match("(^c\d{2}-\d{3}-\d{3})", result["WNHostName"]).group(1),
+                        activity=key)
 
 
 def prepare_raw_data():
@@ -87,6 +88,7 @@ def archive_jobs():
 def do_multicore(count=1, target=None, data=None):
     pool = multiprocessing.Pool(processes=count)
     pool.map(target, data)
+    pool.join()
 
 
 def _archive_jobs(args):
