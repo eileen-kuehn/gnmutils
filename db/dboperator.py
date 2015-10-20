@@ -94,15 +94,19 @@ class DBOperator(object):
                 sqlCommand.startTransaction()
                 db_object = sqlCommand.update(db_object)
                 sqlCommand.commitTransaction()
-            except Exception as e:
+            except Exception as ex:
                 sqlCommand.rollbackTransaction()
                 # TODO: this should not be needed, when updating, uid should be there
                 try:
                     if db_object.uid and db_object.uid > 0:
                         self.load_or_create_affiliation(data=db_object.uid)
-                except Exception:
+                except AttributeError as ae:
+                    logging.getLogger(self.__class__.__name__).info(
+                        "Object %s has no attribute uid" % db_object)
+                    # TODO: what else might be done?
+                except Exception as e:
                     logging.getLogger(self.__class__.__name__).warning(
-                        "update: affiliation %d could not be created or loaded (%s)" % (db_object.uid, e))
+                        "update: affiliation %d could not be created or loaded (%s - %s)" % (db_object.uid, ex, e))
                     raise
                 else:
                     try:
@@ -120,22 +124,25 @@ class DBOperator(object):
                 sqlCommand.startTransaction()
                 db_object = sqlCommand.save(db_object)
                 sqlCommand.commitTransaction()
-            except Exception as e:
+            except Exception as ex:
                 sqlCommand.rollbackTransaction()
-                print(e)
                 try:
                     if db_object.uid and db_object.uid > 0:
                         self.load_or_create_affiliation(data=db_object.uid)
-                except Exception:
+                except AttributeError as ae:
+                    logging.getLogger(self.__class__.__name__).info(
+                        "Object %s has no attribute uid" % db_object)
+                    # TODO: what else might be done?
+                except Exception as e:
                     logging.getLogger(self.__class__.__name__).warning(
-                        "save: object %s could not be saved (%s)" % (db_object, e))
+                        "save: object %s could not be saved (%s - %s)" % (db_object, ex, e))
                     raise
                 else:
                     try:
                         sqlCommand.startTransaction()
                         db_object = sqlCommand.save(db_object)
                         sqlCommand.commitTransaction()
-                    except Exception:
+                    except Exception as e:
                         sqlCommand.rollbackTransaction()
                         logging.getLogger(self.__class__.__name__).warning(
                             "final save: object %s could not be saved (%s)" % (db_object, e))
