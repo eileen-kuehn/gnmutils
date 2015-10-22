@@ -88,6 +88,7 @@ def archive_jobs():
 def do_multicore(count=1, target=None, data=None):
     pool = multiprocessing.Pool(processes=count)
     pool.map(target, data)
+    pool.close()
     pool.join()
 
 
@@ -111,12 +112,26 @@ def _prepare_raw_data(kwargs):
         path = kwargs.get("path", None)
         output_path = kwargs.get("output_path", None)
         data_source = DataSource.best_available_data_source()
-        for job in data_source.jobs(source="raw",
-                                    path=path,
-                                    data_path=output_path,
-                                    stateful=True):
-            job = data_source.write_job(data=job,
-                                        path=output_path)
+        for job in data_source.jobs(
+                source="raw",
+                path=path,
+                data_path=output_path,
+                stateful=True
+        ):
+            job = data_source.write_job(
+                data=job,
+                path=output_path
+            )
+        for traffic in data_source.traffics(
+                source="raw",
+                path=path,
+                data_path=output_path,
+                stateful=True
+        ):
+            traffic = data_source.write_traffic(
+                data=traffic,
+                path=output_path
+            )
 
 
 def eval_options_choice():

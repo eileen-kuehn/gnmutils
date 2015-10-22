@@ -6,7 +6,8 @@ import zipfile
 from gnmutils.sources.datasource import DataSource
 from gnmutils.reader.csvreader import CSVReader
 from gnmutils.parser.jobparser import JobParser
-from gnmutils.parser.streamparser import StreamParser
+from gnmutils.parser.processstreamparser import ProcessStreamParser
+from gnmutils.parser.trafficstreamparser import TrafficStreamParser
 from gnmutils.utils import *
 
 from utility.exceptions import *
@@ -35,7 +36,6 @@ class FileDataSource(DataSource):
                 logging.getLogger(self.__class__.__name__).debug("reading %s for object data" % file_path)
                 data = pickle.load(open(file_path, "rb"))
                 yield data
-        yield None
 
     def write_object_data(self, **kwargs):
         """
@@ -49,6 +49,41 @@ class FileDataSource(DataSource):
         with open("%s/%s.pkl" % (path,
                                  kwargs.get("name", "object_data")), "w+") as data_file:
             pickle.dump(object_data, data_file)
+
+    def traffics(self, **kwargs):
+        """
+        :param path:
+        :param data_path:
+        :param source:
+        :param stateful:
+        :return:
+        """
+        path = kwargs.get("path", self.default_path)
+        if "processed" in kwargs.get("source", "processed"):
+            pass
+        else:
+            # convert raw data
+            for base_path, workernode, run in relevant_directories(path=path):
+                current_path = os.path.join(os.path.join(base_path, workernode), run)
+                converter = CSVReader()
+                parser = TrafficStreamParser(
+                    workernode=workernode,
+                    run=run,
+                    data_source=self,
+                    path=current_path,
+                    data_reader=converter)
+                converter.parser = parser
+                for traffic in self._read_stream(
+                    path=current_path,
+                    data_path=os.path.join(os.path.join(
+                        kwargs.get("data_path", self.default_path), workernode), run),
+                    workernode=workernode,
+                    run=run,
+                    stateful=kwargs.get("stateful", False),
+                    pattern="^[0-9]{10}-traffic.log-[0-9]{8}",
+                    converter=converter
+                ):
+                    yield traffic
 
     def jobs(self, **kwargs):
         """
@@ -74,15 +109,51 @@ class FileDataSource(DataSource):
         else:
             # convert raw data
             for base_path, workernode, run in relevant_directories(path=path):
+                current_path = os.path.join(os.path.join(base_path, workernode), run)
+                converter = CSVReader()
+                parser = ProcessStreamParser(
+                    workernode=workernode,
+                    run=run,
+                    data_source=self,
+                    path=current_path,
+                    data_reader=converter)
+                converter.parser = parser
                 for job in self._read_stream(
                         path=os.path.join(os.path.join(base_path, workernode), run),
                         data_path=os.path.join(os.path.join(
                             kwargs.get("data_path", self.default_path), workernode), run),
                         workernode=workernode,
                         run=run,
-                        stateful=kwargs.get("stateful", False)
+                        stateful=kwargs.get("stateful", False),
+                        pattern="^[0-9]{10}-process.log-[0-9]{8}",
+                        converter=converter
                 ):
                     yield job
+
+    def write_traffic(self, **kwargs):
+        """
+        :param path:
+        :param data:
+        :return:
+        """
+        traffic = kwargs.get("data", None)
+        path = pathutils.ensureDirectory(kwargs.get("path", self.default_path))
+        base_path = os.path.join(os.path.join(path, traffic["workernode"]), traffic["run"])
+        pathutils.ensureDirectory(base_path)
+        with open(os.path.join(
+            base_path, "%s-traffic.csv" % traffic["id"]
+        ), "a") as traffic_file:
+            # TODO: write something about creation
+            header_initialized = False
+            print(traffic["data"])
+            for traffic_data in traffic["data"]:
+                if not header_initialized:
+                    # write header
+                    if traffic["configuration"] is not None:
+                        traffic_file.write("%s\n" % traffic["configuration"].getRow())
+                    traffic_file.write("%s\n" % traffic_data.getHeader())
+                    header_initialized = True
+                traffic_file.write("%s\n" % traffic_data.getRow())
 
     def write_job(self, **kwargs):
         """
@@ -97,7 +168,7 @@ class FileDataSource(DataSource):
         pathutils.ensureDirectory(base_path)
         with open(os.path.join(
                 base_path, "%s-process.csv" %job.db_id
-        ), "w+") as job_file:
+        ), "w") as job_file:
                 # TODO: write something about creation
                 header_initialized = False
                 for process in job.processes():
@@ -114,7 +185,8 @@ class FileDataSource(DataSource):
     def write_payload_result(self, **kwargs):
         logging.getLogger(self.__class__.__name__).warn("writing of payload results to filesystem is not supported")
 
-    def _read_stream(self, path=None, data_path=None, workernode=None, run=None, converter=CSVReader(), stateful=False):
+    def _read_stream(self, path=None, data_path=None, workernode=None, run=None, converter=CSVReader(), stateful=False,
+                     pattern=None):
         """
         :param path:
         :param data_path:
@@ -122,20 +194,18 @@ class FileDataSource(DataSource):
         :param run:
         :param converter:
         :param stateful:
+        :param pattern:
         :return:
         """
-        parser = StreamParser(workernode=workernode, run=run, data_source=self, path=path, data_reader=converter)
-        converter.parser = parser
         for dir_entry in sorted(os.listdir(path)):
-            if re.match("^[0-9]{10}-process.log-[0-9]{8}", dir_entry):
-                for job in parser.parse(path=os.path.join(path, dir_entry)):
+            if re.match(pattern, dir_entry):
+                for job in converter.parser.parse(path=os.path.join(path, dir_entry)):
                     yield job
-        parser.check_caches(path=data_path)
-        for jid in parser.data.objectCache.keys():
-            while parser.data.objectCache[jid]:
-                yield parser.data.objectCache[jid].pop()
+        converter.parser.check_caches(path=data_path)
+        for data in converter.parser.pop_data():
+            yield data
         if stateful:
-            parser.archive_state(path=path)
+            converter.parser.archive_state(path=path)
 
     def read_job(self, path=None, name=None, converter=CSVReader()):
         """
@@ -183,15 +253,24 @@ class FileDataSource(DataSource):
         try:
             with zipfile.ZipFile(archive_path, mode="a", allowZip64=True) as zf:
                 process_source = os.path.join(current_path, "%s-process.csv" % job.db_id)
-                if os.path.isfile(process_source):
+                traffic_source = os.path.join(current_path, "%s-traffic.csv" % job.db_id)
+                if os.path.isfile(process_source) and \
+                        os.path.isfile(traffic_source):
                     zf.write(process_source, os.path.basename(process_source))
+                    zf.write(traffic_source, os.path.basename(traffic_source))
                 if zf.testzip() is None:
                     os.remove(process_source)
+                    os.remove(traffic_source)
                 else:
-                    logging.critical("something is wrong with zipfile %s for file %s" % (archive_path, zf.testzip()))
+                    logging.getLogger(self.__class__.__name__).critical(
+                        "something is wrong with zipfile %s for file %s" %
+                        (archive_path, zf.testzip())
+                    )
         except zipfile.BadZipfile as e:
-            logging.critical("%s: Received bad zipfile error for zipfile %s" % (e, archive_path))
+            logging.getLogger(self.__class__.__name__).critical(
+                "%s: Received bad zipfile error for zipfile %s" % (e, archive_path))
             sys.exit(1)
         except zipfile.LargeZipFile as e:
-            logging.critical("%s: Received large zipfile error for zipfile %s" % (e, archive_path))
+            logging.getLogger(self.__class__.__name__).critical(
+                "%s: Received large zipfile error for zipfile %s" % (e, archive_path))
             sys.exit(1)

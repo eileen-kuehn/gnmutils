@@ -23,7 +23,8 @@ class Pilot(Job):
                             # payload found
                             # generate new job object
                             count += 1
-                            job = Job(job_id="%s-%d" % (self._job_id, count))
+                            job = Job(job_id="%s-%d" % (self._job_id, count),
+                                      data_source=self._data_source)
                             for child_node, child_depth in Tree(child).walkDFS():
                                 if exclude_watchdog:
                                     if "crabWatchdog.sh" in child_node.value.name:

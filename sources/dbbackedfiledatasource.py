@@ -40,7 +40,7 @@ class DBBackedFileDataSource(FileDataSource):
                 level = directory_level(path)
                 job_object = DBJobObject(valid=True, completed=True)
                 if level == RUN_LEVEL:
-                    base_path, workernode, run = relevant_directories(path=path).next()
+                    base_path, workernode, run = next(relevant_directories(path=path), (None, None, None))
                     job_object.run = run
                     workernode_object = self._db_operator.load_or_create_workernode(data=workernode)
                     job_object.workernode_id = workernode_object.id_value
@@ -146,3 +146,18 @@ class DBBackedFileDataSource(FileDataSource):
             workernode_object = self._db_operator.save_or_update(sql_command=sqlCommand,
                                                                  data=payload_result_object)
         return workernode_object
+
+    def job_description(self, **kwargs):
+        job = kwargs.get("data", None)
+
+        workernode_object = self._db_operator.load_or_create_workernode(data=job.workernode)
+        job_object = DBJobObject(run=job.run, gpid=job.gpid, tme=job.tme, workernode_id=workernode_object.id_value)
+        try:
+            job_object = self._db_operator.load_job(data=job_object)
+        except Exception as e:
+            logging.getLogger(self.__class__.__name__).info("No matching job has been found (%s)" % e)
+            return None
+        else:
+            job.db_id = job_object.id_value
+            job.last_tme = max(job_object.exit_tme, job_object.last_tme)
+        return job

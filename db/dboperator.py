@@ -2,7 +2,7 @@ from gnmutils.db.dbobjects import DBWorkernodeObject, DBConfigurationObject, DBA
 from dbutils.sqlcommand import SQLCommand
 
 from utility.exceptions import *
-from dbutils.exceptions import UniqueConstrainedViolatedException
+from dbutils.exceptions import UniqueConstrainedViolatedException, NoObjectFoundException
 
 
 class DBOperator(object):
@@ -28,7 +28,7 @@ class DBOperator(object):
         if not job_object.exit_tme and not job_object.last_tme:
             job_object.add_order_by('tme', 'DESC')
             logging.getLogger(self.__class__.__name__).debug("trying to find ordered jobs")
-            return sql_command.find(job_object).next()
+            return next(sql_command.find(job_object), None)
         if job_object.exit_tme:
           job_object.add_filter('exit_tme', '>=')
         if job_object.last_tme:

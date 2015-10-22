@@ -8,7 +8,7 @@ class Process(object):
             tme=None, exit_tme=None, error_code=None, signal=None, exit_code=0,
             gpid=None, state=None, job_id=None, int_in_volume=None, int_out_volume=None,
             ext_in_volume=None, ext_out_volume=None, tree_depth=None,
-            process_type=None, color=None, valid=False):
+            process_type=None, color=None, valid=False, traffic=None):
         self._name = self._check_is_none(value=name)
         self._cmd = self._check_is_none(value=cmd)
         self._pid = self._check_is_none(value=pid)
@@ -16,6 +16,7 @@ class Process(object):
         self._uid = self._check_is_none(value=uid)
         self._gpid = self._check_is_none(value=gpid)
         self._valid = valid
+        self._traffic = traffic
 
         self._tme = self._check_is_none(value=tme)
         self._exit_tme = self._check_is_none(value=exit_tme)
@@ -42,6 +43,11 @@ class Process(object):
         if value is not None and len(str(value)) > 0:
             return str(value)
         return None
+
+
+    @property
+    def traffic(self):
+        return self._traffic
 
     @property
     def batchsystemId(self):

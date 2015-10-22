@@ -21,6 +21,13 @@ class DataSource(object):
     def object_data(self, **kwargs):
         raise NotImplementedError
 
+    # TODO: not a very good solution...
+    def job_description(self, **kwargs):
+        raise NotImplementedError
+
+    def traffics(self, **kwargs):
+        raise NotImplementedError
+
     def jobs(self, **kwargs):
         raise NotImplementedError
 

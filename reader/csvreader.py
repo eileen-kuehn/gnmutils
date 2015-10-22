@@ -124,6 +124,9 @@ class CSVReader(DataReader):
                                     del row[cmdIndex+1]
                                     row[cmdIndex] = cmdString
                             # finally add the valid row to the parser
+                            tme_in_row = row[self._headerCache[self.parser_name()]["tme"]]
+                            if tme_in_row is None or len(tme_in_row) == 0:
+                                row[self._headerCache[self.parser_name()]["tme"]] = self._tme
                             data_dict = {}
                             for key in self._headerCache[self.parser_name()]:
                                 data_dict[key] = row[self._headerCache[self.parser_name()][key]]
@@ -131,96 +134,10 @@ class CSVReader(DataReader):
                         except IndexError as e:
                             line = (line + csvfile.next())[:-1]
                         except StopIteration as e:
-                            logging.warn(
+                            logging.getLogger(self.__class__.__name__).error(
                                 "there seems to be a wrong ending in the file for line %d (%s) in file %s" % (
                                     idx, line, path)
                             )
                         else:
                             break
             self._parser.parsed_data.add(path)
-
-    def read(self, filename=None):
-        """
-        Method that takes care of checking and preparing the lines in file specified by py:attribute:`filename`.
-        The actual rows of the file are given to an explicitly specified :py:func:`parser`.
-
-        :param str filename: file to open for parsing
-        """
-        openFunction = open
-        if re.match(".*.gz$", filename):
-          openFunction = gzip.open
-        if filename in self._parser.parsed_data:
-            return
-        logging.getLogger(self.__class__.__name__).info("starting to read %s" % filename)
-        with openFunction(filename, 'r') as csvfile:
-            tme = 0
-            # process every line in csvfile
-            for idx, line in enumerate(csvfile):
-                # first check for comments in CSV line and skip
-                if line[0] == "#":
-                    # check if it is a line specifying the version of monitoring tool
-                    if line.startswith("# version"):
-                        try:
-                            configDict = dict(((val.strip() for val in values.split(":")) for values in line[1:].split(",")))
-                            configuration = MonitoringConfiguration(**configDict)
-                            self._parser.configuration = configuration
-                        except KeyError:
-                            pass
-                    continue
-
-                # remove newline character from line
-                line = line[:-1]
-                try:
-                    # as long as the header has not been initialized,
-                    # an exception is thrown and the header row is deteced
-                    # otherwise the usual processing process starts
-                    tme = line.split(",")[(self._headerCache[self.parser_name()])['tme']] or self._tme or tme
-                    self._tme = int(tme)
-                except KeyError:
-                    # initialize the header cache
-                    row = line.split(",")
-                    # check if maybe no header is included
-                    if "tme" not in row[0]:
-                        self._headerCache[self.parser_name()] = self._parser.defaultHeader(length=len(row))
-                    else:
-                        headerCache = {}
-                        for index, item in enumerate(line.split(",")):
-                            headerCache[item] = index
-                        self._headerCache[self.parser_name()] = headerCache
-                        continue
-                except ValueError:
-                    # current line is header line
-                    headerCache = {}
-                    for index, item in enumerate(line.split(",")):
-                        headerCache[item] = index
-                    self._headerCache[self.parser_name()] = headerCache
-                    continue
-                while True:
-                    try:
-                        row = line.split(",")
-                        # check if there are too many header fields than expected
-                        if len(row) > len(self._headerCache[self.parser_name()]):
-                            logging.info("Trying to fix wrong row length: row %d (%s:%d - %s) vs. header %d" %(len(row), filename, idx, line, len(self._headerCache[self.parser_name()])))
-                            # check if additional "," are in command and remove
-                            while len(row) > len(self._headerCache[self.parser_name()]):
-                                cmdIndex = self._headerCache[self.parser_name()]["cmd"]
-                                cmdString = row[cmdIndex] + row[cmdIndex+1]
-                                del row[cmdIndex+1]
-                                row[cmdIndex] = cmdString
-                        # finally add the valid row to the parser
-                        m = re.match("(\d*)", os.path.basename(filename))
-                        if m.group(1):
-                            for data in self._parser.parse(
-                                    row, header=self._headerCache[self.parser_name()], tme=int(tme), id=m.group(1)):
-                                yield data
-                        else:
-                            for data in self._parser.parse(
-                                    row, header=self._headerCache[self.parser_name()], tme=int(tme)):
-                                yield data
-                    except IndexError as e:
-                        line = (line + csvfile.next())[:-1]
-                    except StopIteration as e:
-                        logging.warn("there seems to be a wrong ending in the file for line %d (%s) in file %s" %(idx, line, filename))
-                    else:
-                        break
-        self._parser.parsed_data.add(filename)

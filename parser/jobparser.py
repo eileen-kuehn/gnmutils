@@ -11,7 +11,7 @@ class JobParser(DataParser):
     """
     def __init__(self, **kwargs):
         DataParser.__init__(self, **kwargs)
-        self._data = Job()
+        self._data = Job(data_source=self._data_source)
 
     def data_id(self, value):
         self._data.db_id = value

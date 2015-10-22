@@ -10,18 +10,22 @@ class DataParser(object):
         self._data_reader = kwargs.get("data_reader", None)
         self._changed = True
         if self._data_source is not None:
-            self._data = self._data_source.object_data(
-                pattern="data.pkl",
+            self._data = next(self._data_source.object_data(
+                pattern="^data.pkl",
                 path=kwargs.get("path", None)
-            ).next()
-            self._configuration = self._data_source.object_data(
-                pattern="configuration.pkl",
+            ), None)
+            self._data = next(self._data_source.object_data(
+                pattern="^data.pkl",
                 path=kwargs.get("path", None)
-            ).next()
-            self._parsed_data = self._data_source.object_data(
-                pattern="parsed_data.pkl",
+            ), None)
+            self._configuration = next(self._data_source.object_data(
+                pattern="^configuration.pkl",
                 path=kwargs.get("path", None)
-            ).next() or set()
+            ), None)
+            self._parsed_data = next(self._data_source.object_data(
+                pattern="^parsed_data.pkl",
+                path=kwargs.get("path", None)
+            ), set())
             self._changed = False
         else:
             self._data = None
@@ -38,6 +42,7 @@ class DataParser(object):
     @data_reader.setter
     def data_reader(self, value):
         self._data_reader = value
+
     @property
     def parsed_data(self):
         return self._parsed_data
@@ -53,6 +58,9 @@ class DataParser(object):
     @property
     def data(self):
         return self._data
+
+    def pop_data(self):
+        raise NotImplementedError
 
     def check_caches(self, **kwargs):
         raise NotImplementedError

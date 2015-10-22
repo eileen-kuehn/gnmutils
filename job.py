@@ -11,28 +11,45 @@ class Job(object):
     It allows access to the job tree.
     """
     def __init__(self, db_id=None, job_id=None, workernode=None, run=None, tme=None, gpid=None, configuration=None,
-                 last_tme=None):
+                 last_tme=None, **kwargs):
         self._db_id = db_id
         self._job_id = job_id
         self._workernode = workernode
         self._run = run
-        self._tme = (tme or 0)
-        self._gpid = (gpid or 0)
+        self._tme = int(tme) if tme is not None else 0
+        self._gpid = int(gpid) if gpid is not None else 0
         self._root = None
         self._process_cache = ObjectCache()
         self._tree_initialized = False
         self._configuration = configuration
         self._last_tme = last_tme
         self._tree = None
+        # for lazy loading of traffic
+        self._data_source = kwargs.get("data_source", None)
 
     def clear_caches(self):
         self._root = None
         self._process_cache.clear()
         self._tree_initialized = False
 
+    def prepare_traffic(self):
+        raise NotImplementedError
+
+    @property
+    def data_source(self):
+        return self._data_source
+
+    @data_source.setter
+    def data_source(self, value):
+        self._data_source = value
+
     @property
     def last_tme(self):
         return self._last_tme or self.exit_tme
+
+    @last_tme.setter
+    def last_tme(self, value):
+        self._last_tme = value
 
     @property
     def configuration(self):
@@ -134,6 +151,9 @@ class Job(object):
     def add_process(self, process=None, is_root=False):
         node = Node(value=process)
         self._add(node=node, is_root=is_root)
+
+    def add_traffic(self, traffic=None):
+        raise NotImplementedError
 
     def is_valid(self):
         if len(self._process_cache.faultyNodes) > 1 or self._root is None:
