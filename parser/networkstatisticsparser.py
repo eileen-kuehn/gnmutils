@@ -50,14 +50,17 @@ class NetworkStatisticsParser(DataParser):
         return self._configuration.interval
 
     def _get_matching_tme(self, tme=None):
-        value = (tme - self._base_tme) // 20
+        value = (tme - self._base_tme) // self._get_interval()
         return self._base_tme + (value * self._get_interval())
 
     def _add_piece(self, piece=None):
         tme = self._get_matching_tme(tme=int(piece.get("tme", 0)))
         statistics = self._data.get(
             tme,
-            NetworkStatistics(workernode=self._workernode, run=self._run)
+            NetworkStatistics(
+                workernode=self._workernode,
+                run=self._run,
+                tme=tme)
         )
         statistics.add(piece)
         self._data[tme] = statistics
