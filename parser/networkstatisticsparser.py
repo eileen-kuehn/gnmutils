@@ -4,6 +4,9 @@ import os
 from gnmutils.parser.dataparser import DataParser
 from gnmutils.networkstatistics import NetworkStatistics
 
+from gnmutils.traffic import Traffic
+from gnmutils.job import Job
+
 from utility.exceptions import *
 
 
@@ -14,6 +17,13 @@ class NetworkStatisticsParser(DataParser):
         self._workernode = workernode
         self._run = run
         self._base_tme = 0
+
+    def defaultHeader(self, **kwargs):
+        length = kwargs.get("length", 0)
+        traffic_header = Traffic.default_header(length=length)
+        if len(traffic_header) == length:
+            return traffic_header
+        return Job.default_header(length=length)
 
     def load_archive_state(self, path=None):
         if self._data_source is not None:
