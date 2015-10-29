@@ -1,5 +1,7 @@
 import os
 import re
+import time
+import inspect
 import pickle
 import zipfile
 
@@ -188,15 +190,21 @@ class FileDataSource(DataSource):
         with open(os.path.join(
             base_path, "%s-traffic.csv" % traffic["id"]
         ), "a") as traffic_file:
+            comment_string = "# Created by %s (%s) on %s" % (
+                self.__class__.__name__, inspect.currentframe().f_code.co_name, time.strftime("%Y%m%d")
+            )
             if traffic["configuration"] is not None:
-                header_data = "%s\n%s" % (
+                header_data = "%s\n%s\n%s" % (
+                    comment_string,
                     traffic["configuration"].getRow(),
                     traffic["data"][0].getHeader()
                 )
             else:
-                header_data = "%s" % traffic["data"][0].getHeader()
+                header_data = "%s\n%s" % (
+                    comment_string,
+                    traffic["data"][0].getHeader()
+                )
             for traffic_data in traffic["data"]:
-                # TODO: write something about creation
                 csvutils.dumpToFile(
                     file=traffic_file,
                     data="%s" % traffic_data.getRow(),
@@ -217,11 +225,14 @@ class FileDataSource(DataSource):
         with open(os.path.join(
                 base_path, "%s-process.csv" %job.db_id
         ), "w") as job_file:
-                # TODO: write something about creation
                 header_initialized = False
                 for process in job.processes():
                     if not header_initialized:
                         # write header
+                        comment_string = "# Created by %s (%s) on %s" % (
+                            self.__class__.__name__, inspect.currentframe().f_code.co_name, time.strftime("%Y%m%d")
+                        )
+                        job_file.write("%s\n" % comment_string)
                         job_file.write("%s\n" % job.configuration.getRow())
                         job_file.write("%s\n" % process.getHeader())
                         header_initialized = True
@@ -296,17 +307,24 @@ class FileDataSource(DataSource):
         )
         with open(os.path.join(current_path, "%s-process.csv" % payload.db_id), "w") as process_file, \
             open(os.path.join(current_path, "%s-traffic.csv" % payload.db_id), "w") as traffic_file:
-                # TODO: write something about creation
                 for process in payload.processes():
                     # write process information
                     if process_file.tell() == 0:
+                        comment_string = "# Created by %s (%s) on %s" % (
+                            self.__class__.__name__, inspect.currentframe().f_code.co_name, time.strftime("%Y%m%d")
+                        )
+                        process_file.write("%s %s\n" % comment_string)
                         # write header
                         process_file.write("%s\n" % process.getHeader())
                     process_file.write("%s\n" % process.getRow())
                     # write traffic information
                     for traffic in process.traffic:
                         if traffic_file.tell() == 0:
+                            comment_string = "# Created by %s (%s) on %s" % (
+                                self.__class__.__name__, inspect.currentframe().f_code.co_name, time.strftime("%Y%m%d")
+                            )
                             # write header
+                            traffic_file.write("%s\n" % comment_string)
                             traffic_file.write("%s\n" % traffic.getHeader())
                         traffic_file.write("%s\n" % traffic.getRow())
 
@@ -322,6 +340,10 @@ class FileDataSource(DataSource):
                 for tme in sorted(network_statistics.keys()):
                     # write header
                     if statistics_file.tell() == 0:
+                        comment_string = "# Created by %s (%s) on %s" % (
+                            self.__class__.__name__, inspect.currentframe().f_code.co_name, time.strftime("%Y%m%d")
+                        )
+                        statistics_file.write("%s\n" % comment_string)
                         statistics_file.write("%s\n" % network_statistics[tme].getHeader())
                     statistics_file.write("%s\n" % network_statistics[tme].getRow())
 
