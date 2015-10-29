@@ -9,28 +9,26 @@ class DataParser(object):
         self._data_source = kwargs.get("data_source", None)
         self._data_reader = kwargs.get("data_reader", None)
         self._changed = True
+        self._data = None
+        self._configuration = None
+        self._parsed_data = set()
+        self.load_archive_state(path=kwargs.get("path", None))
+
+    def load_archive_state(self, path=None):
         if self._data_source is not None:
             self._data = next(self._data_source.object_data(
                 pattern="^data.pkl",
-                path=kwargs.get("path", None)
-            ), None)
-            self._data = next(self._data_source.object_data(
-                pattern="^data.pkl",
-                path=kwargs.get("path", None)
+                path=path
             ), None)
             self._configuration = next(self._data_source.object_data(
                 pattern="^configuration.pkl",
-                path=kwargs.get("path", None)
+                path=path
             ), None)
             self._parsed_data = next(self._data_source.object_data(
                 pattern="^parsed_data.pkl",
-                path=kwargs.get("path", None)
+                path=path
             ), set())
             self._changed = False
-        else:
-            self._data = None
-            self._configuration = None
-            self._parsed_data = set()
 
     def data_id(self, value):
         raise NotImplementedError

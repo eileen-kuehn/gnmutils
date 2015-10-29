@@ -26,6 +26,7 @@ class Job(object):
         self._tree = None
         # for lazy loading of traffic
         self._data_source = kwargs.get("data_source", None)
+        self._path = kwargs.get("path", None)
 
     def clear_caches(self):
         self._root = None
@@ -33,7 +34,10 @@ class Job(object):
         self._tree_initialized = False
 
     def prepare_traffic(self):
-        raise NotImplementedError
+        traffic = self._data_source.read_traffic(path=self._path, name=self.db_id)
+        for traffics in traffic:
+            for element in traffics:
+                self.add_traffic(element)
 
     @property
     def data_source(self):
@@ -88,7 +92,11 @@ class Job(object):
     @property
     def job_id(self):
         try:
-            return self._root.value.batchsystemId
+            batchsystem_id = self._root.value.batchsystemId
+            if batchsystem_id is not None:
+                return batchsystem_id
+            else:
+                return self._job_id
         except:
             return self._job_id
 
@@ -153,7 +161,8 @@ class Job(object):
         self._add(node=node, is_root=is_root)
 
     def add_traffic(self, traffic=None):
-        raise NotImplementedError
+        process_node = self._process_cache.getNodeObject(tme=traffic.tme, pid=traffic.pid)
+        process_node.value.traffic.append(traffic)
 
     def is_valid(self):
         if len(self._process_cache.faultyNodes) > 1 or self._root is None:

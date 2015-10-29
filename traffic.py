@@ -35,10 +35,10 @@ class Traffic(object):
                     "The calculated connection category %s does not match that of log file %s for ip %s" %
                     (self.conn_cat, "ext", self.dest_ip)
                 )
-        self.in_rate = ext_in_rate
-        self.out_rate = ext_out_rate
-        self.in_cnt = ext_in_cnt
-        self.out_cnt = ext_out_cnt
+            self.in_rate = ext_in_rate
+            self.out_rate = ext_out_rate
+            self.in_cnt = ext_in_cnt
+            self.out_cnt = ext_out_cnt
         if ((int_out_cnt or int_in_cnt or int_out_rate or int_in_rate) and
                 (float(int_out_cnt) > 0 or float(int_in_cnt) > 0 or float(int_out_rate) > 0 or float(int_in_rate) > 0)):
             if "int" not in self.conn_cat:
@@ -46,10 +46,10 @@ class Traffic(object):
                     "The calculated connection category %s does not match that of log file %s for ip %s" %
                     (self.conn_cat, "int", self.dest_ip)
                 )
-        self.in_rate = int_in_rate
-        self.out_rate = int_out_rate
-        self.in_cnt = int_in_cnt
-        self.out_cnt = int_out_cnt
+            self.in_rate = int_in_rate
+            self.out_rate = int_out_rate
+            self.in_cnt = int_in_cnt
+            self.out_cnt = int_out_cnt
 
     @property
     def pid(self):

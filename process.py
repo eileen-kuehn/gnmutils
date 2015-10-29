@@ -16,7 +16,7 @@ class Process(object):
         self._uid = self._check_is_none(value=uid)
         self._gpid = self._check_is_none(value=gpid)
         self._valid = valid
-        self._traffic = traffic
+        self._traffic = traffic or []
 
         self._tme = self._check_is_none(value=tme)
         self._exit_tme = self._check_is_none(value=exit_tme)

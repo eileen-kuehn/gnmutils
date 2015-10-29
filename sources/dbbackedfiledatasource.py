@@ -107,18 +107,23 @@ class DBBackedFileDataSource(FileDataSource):
             return job
 
     def write_payload(self, **kwargs):
+        """
+        :param path:
+        :param data:
+        :return:
+        """
         payload = kwargs["data"]
         with SQLCommand(dataSource=self._db_data_source) as sqlCommand:
-            payload_object = DBPayloadObject(payload_id=payload.job_id,
+            payload_object = DBPayloadObject(id=payload.db_id,
                                              tme=payload.tme,
                                              exit_tme=payload.exit_tme,
                                              exit_code=payload.exit_code,
-                                             job_id=payload.job_id.split("-")[0])
+                                             job_id=payload.job_id)
             try:
                 sqlCommand.startTransaction()
                 payload_object = sqlCommand.save(payload_object)
+                self._write_payload(**kwargs)
                 sqlCommand.commitTransaction()
-                self._write_payload(kwargs)
             except:
                 sqlCommand.rollbackTransaction()
                 raise RethrowException("The payload could not be created")

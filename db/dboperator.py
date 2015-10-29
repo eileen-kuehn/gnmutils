@@ -2,7 +2,7 @@ from gnmutils.db.dbobjects import DBWorkernodeObject, DBConfigurationObject, DBA
 from dbutils.sqlcommand import SQLCommand
 
 from utility.exceptions import *
-from dbutils.exceptions import UniqueConstrainedViolatedException, NoObjectFoundException
+from dbutils.exceptions import UniqueConstrainedViolatedException
 
 
 class DBOperator(object):

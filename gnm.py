@@ -17,7 +17,7 @@ from evenmoreutils import path as pathutils
 def create_payloads():
     """
     For CMS pilots there is a very simple (but quick-n-dirty) approach to recognise the actual payloads. The method
-    is based on the name of processes. As soon as there is a realiable but automatical solution, I need to switch
+    is based on the name of processes. As soon as there is a reliable but automatic solution, I need to switch
     to this one.
 
     The extractor looks into the different CMS jobs, which payloads still have not been identified and extracts those
@@ -29,14 +29,18 @@ def create_payloads():
     print("Starting to extract payloads from CMS pilots")
     path = eval_input_path()
     output_path = eval_output_path()
+    count = eval_cores()
+    level = directory_level(path)
+    if level == RUN_LEVEL:
+        count = 1
 
-    data_source = FileDataSource()
-    for pilot in data_source.jobs(path=path):
-        pilot.__class__ = Pilot
-        for payload, count in pilot.payloads():
-            # write file per payload
-            data_source.write_payload(path=output_path,
-                                      data=payload)
+    do_multicore(
+        count=count,
+        target=_create_payloads,
+        data=[{
+                  "path": os.path.join(os.path.join(element[0], element[1]), element[2]),
+                  "output_path": output_path
+              } for element in list(relevant_directories(path))])
 
 
 def import_cms_dashboard_data():
@@ -85,11 +89,47 @@ def archive_jobs():
         data=data)
 
 
+def generate_network_statistics():
+    print
+    print("Starting to generate network statistics")
+    path = eval_input_path()
+    output_path = eval_output_path()
+    count = eval_cores()
+    level = directory_level(path)
+    if level == RUN_LEVEL:
+        count = 1
+    do_multicore(
+        count=count,
+        target=_generate_network_statistics,
+        data=[{
+            "path": os.path.join(os.path.join(element[0], element[1]), element[2]),
+            "output_path": output_path
+        } for element in list(relevant_directories(path))]
+    )
+
+
 def do_multicore(count=1, target=None, data=None):
     pool = multiprocessing.Pool(processes=count)
     pool.map(target, data)
     pool.close()
     pool.join()
+
+
+def _create_payloads(args):
+    with ExceptionFrame():
+        data_source = DataSource.best_available_data_source()
+        path = args.get("path", None)
+        output_path = args.get("output_path", None)
+        for pilot in data_source.jobs(path=path):
+            pilot.__class__ = Pilot
+            if pilot.is_cms_pilot():
+                pilot.prepare_traffic()
+                for payload, count in pilot.payloads():
+                    # write file per payload
+                    data_source.write_payload(path=output_path,
+                                              data=payload)
+            else:
+                logging.info("current pilot is not a CMS pilot")
 
 
 def _archive_jobs(args):
@@ -106,6 +146,20 @@ def _archive_jobs(args):
                     path=path,
                     name="jobarchive")
 
+
+def _generate_network_statistics(kwargs):
+    with ExceptionFrame():
+        data_source = FileDataSource()
+        path = kwargs.get("path", None)
+        output_path = kwargs.get("output_path", None)
+        for stats in data_source.network_statistics(
+            path=path,
+            stateful=True
+        ):
+            data_source.write_network_statistics(
+                data=stats,
+                path=output_path
+            )
 
 def _prepare_raw_data(kwargs):
     with ExceptionFrame():
@@ -142,6 +196,7 @@ def eval_options_choice():
     print("More workflows:")
     print("\ta) put jobs into archive")
     print("\tb) import CMS dashboard data")
+    print("\tc) generate data on byte size and number of events per interval")
     print
     return_options(raw_input("Please choose: "))()
 
@@ -170,6 +225,7 @@ def return_options(x):
         '2': create_payloads,
         'a': archive_jobs,
         'b': import_cms_dashboard_data,
+        'c': generate_network_statistics,
         'q': exit
     }.get(x, eval_options_choice)
 

@@ -11,6 +11,15 @@ class Pilot(Job):
     def __init__(self):
         Job.__init__(self)
 
+    def is_cms_pilot(self):
+        try:
+            for node, depth in self.tree.walkDFS():
+                if "condor_startd" in node.value.name:
+                    return True
+        except:
+            pass
+        return False
+
     def payloads(self, exclude_watchdog=False):
         if self.tree is not None:
             count = 0
@@ -23,7 +32,10 @@ class Pilot(Job):
                             # payload found
                             # generate new job object
                             count += 1
-                            job = Job(job_id="%s-%d" % (self._job_id, count),
+                            job = Job(db_id="%s-%d" % (self._db_id, count),
+                                      job_id="%s" % self._db_id,
+                                      workernode=self.workernode,
+                                      run=self.run,
                                       data_source=self._data_source)
                             for child_node, child_depth in Tree(child).walkDFS():
                                 if exclude_watchdog:

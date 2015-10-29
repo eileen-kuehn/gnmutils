@@ -19,17 +19,18 @@ class ProcessStreamParser(DataParser):
     As the completeness regarding the traffic cannot be determined automatically, it is ... what?!
     """
     def __init__(self, workernode=None, run=None, **kwargs):
+        self._process_cache = ObjectCache()
         DataParser.__init__(self, **kwargs)
         self._data = self._data or ObjectCache()
+        self._workernode = workernode
+        self._run = run
+
+    def load_archive_state(self, path=None):
         if self._data_source is not None:
             self._process_cache = next(self._data_source.object_data(
                 pattern="process_cache.pkl",
-                path=kwargs.get("path", None)
+                path=path
             ), ObjectCache())
-        else:
-            self._process_cache = ObjectCache()
-        self._workernode = workernode
-        self._run = run
 
     # TODO: fix naming of method
     def defaultHeader(self, **kwargs):

@@ -45,9 +45,9 @@ class DBWorkernodeObject(DBObject):
 
 
 class DBPayloadObject(DBObject):
-    def __init__(self, payload_id=None, tme=None, exit_tme=None, exit_code=None,
+    def __init__(self, id=None, tme=None, exit_tme=None, exit_code=None,
                  job_id=None):
-        super(DBPayloadObject, self).__init__("payload", {"payload_id": payload_id})
+        super(DBPayloadObject, self).__init__("payload", {"id": id})
         self.tme = tme
         self.exit_tme = exit_tme
         self.exit_code = exit_code

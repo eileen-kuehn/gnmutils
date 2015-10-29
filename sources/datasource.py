@@ -34,6 +34,9 @@ class DataSource(object):
     def payloads(self, **kwargs):
         pass
 
+    def network_statistics(self, **kwargs):
+        raise NotImplementedError
+
     # TODO: make more general function read!
     def read_job(self, **kwargs):
         raise NotImplementedError
@@ -46,6 +49,9 @@ class DataSource(object):
         raise NotImplementedError
 
     def write_payload_result(self, **kwargs):
+        raise NotImplementedError
+
+    def write_network_statistics(self, **kwargs):
         raise NotImplementedError
 
     def archive(self, **kwargs):
