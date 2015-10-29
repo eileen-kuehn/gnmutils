@@ -96,7 +96,6 @@ class ProcessStreamParser(DataParser):
         self._process_cache.clear()
 
     def _piece_from_dict(self, piece=None):
-        # TODO: differentiate between Traffic and Process
         process = Process()
         process.addProcessEvent(**piece)
         return process
