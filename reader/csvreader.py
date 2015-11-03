@@ -22,7 +22,7 @@ class CSVReader(DataReader):
     def __init__(self, parser=None):
         DataReader.__init__(self, parser=parser)
         # caches the different header fields
-        self._headerCache = {}
+        self._header = None
         self._tme = None
 
     @property
@@ -50,13 +50,14 @@ class CSVReader(DataReader):
         """
         Method explicitly clears the available caches.
         """
-        del self._headerCache
-        self._headerCache = {}
+        del self._header
+        self._header = None
         self._tme = None
         if self._parser:
             self._parser.clearCaches()
 
     def data(self, path=None):
+        self._header = None
         openFunction = open
         if re.match(".*.gz$", path):
           openFunction = gzip.open
@@ -87,49 +88,49 @@ class CSVReader(DataReader):
                         # as long as the header has not been initialized,
                         # an exception is thrown and the header row is deteced
                         # otherwise the usual processing process starts
-                        tme = line.split(",")[(self._headerCache[self.parser_name()])['tme']] or self._tme or tme
+                        tme = line.split(",")[self._header['tme']] or self._tme or tme
                         self._tme = int(tme)
-                    except KeyError:
+                    except TypeError:
                         # initialize the header cache
                         row = line.split(",")
                         # check if maybe no header is included
                         if "tme" not in row[0]:
-                            self._headerCache[self.parser_name()] = self._parser.defaultHeader(length=len(row))
+                            self._header = self._parser.defaultHeader(length=len(row))
                         else:
                             headerCache = {}
                             for index, item in enumerate(line.split(",")):
                                 headerCache[item] = index
-                            self._headerCache[self.parser_name()] = headerCache
+                            self._header = headerCache
                             continue
                     except ValueError:
                         # current line is header line
                         headerCache = {}
                         for index, item in enumerate(line.split(",")):
                             headerCache[item] = index
-                        self._headerCache[self.parser_name()] = headerCache
+                        self._header = headerCache
                         continue
                     while True:
                         try:
                             row = line.split(",")
                             # check if there are too many header fields than expected
-                            if len(row) > len(self._headerCache[self.parser_name()]):
+                            if len(row) > len(self._header):
                                 logging.info(
                                     "Trying to fix wrong row length: row %d (%s:%d - %s) vs. header %d" % (
-                                        len(row), path, idx, line, len(self._headerCache[self.parser_name()]))
+                                        len(row), path, idx, line, len(self._header))
                                 )
                                 # check if additional "," are in command and remove
-                                while len(row) > len(self._headerCache[self.parser_name()]):
-                                    cmdIndex = self._headerCache[self.parser_name()]["cmd"]
+                                while len(row) > len(self._header):
+                                    cmdIndex = self._header["cmd"]
                                     cmdString = row[cmdIndex] + row[cmdIndex+1]
                                     del row[cmdIndex+1]
                                     row[cmdIndex] = cmdString
                             # finally add the valid row to the parser
-                            tme_in_row = row[self._headerCache[self.parser_name()]["tme"]]
+                            tme_in_row = row[self._header["tme"]]
                             if tme_in_row is None or len(tme_in_row) == 0:
-                                row[self._headerCache[self.parser_name()]["tme"]] = self._tme
+                                row[self._header["tme"]] = self._tme
                             data_dict = {}
-                            for key in self._headerCache[self.parser_name()]:
-                                data_dict[key] = row[self._headerCache[self.parser_name()][key]]
+                            for key in self._header:
+                                data_dict[key] = row[self._header[key]]
                             yield data_dict
                         except IndexError as e:
                             line = (line + csvfile.next())[:-1]
