@@ -51,6 +51,17 @@ class Traffic(object):
             self.in_cnt = int_in_cnt
             self.out_cnt = int_out_cnt
 
+    @staticmethod
+    def is_conform(**kwargs):
+        if (kwargs.get("in_rate", None) is not None or
+            kwargs.get("out_rate", None) is not None or
+            kwargs.get("int_in_rate", None) is not None or
+            kwargs.get("int_out_rate", None) is not None or
+            kwargs.get("ext_in_rate", None) is not None or
+            kwargs.get("ext_out_rate", None) is not None):
+            return True
+        return False
+
     @property
     def pid(self):
         return int(self._pid)

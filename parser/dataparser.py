@@ -75,6 +75,13 @@ class DataParser(object):
             logging.getLogger(self.__class__.__name__).warning("Archiving not done because of missing data_source")
 
     def parse(self, **kwargs):
+        """
+        This method instantiates the parsing for file given by :py:param:`path` on specified :py:class:`DataReader`.
+        It acts as a generator and yields all finished objects.
+
+        :param path:
+        :return:
+        """
         for data_dict in self._data_reader.data(path=kwargs.get("path", None)):
             if data_dict is not None:
                 piece = self._piece_from_dict(data_dict)
@@ -91,6 +98,7 @@ class DataParser(object):
 
         :param piece: Partial data to be added
         :raises ParserNotInitializedException: if the data object has not been initialized with specific type
+        :return:
         """
         if self._data is None:
             raise ParserNotInitializedException
