@@ -76,7 +76,7 @@ class Traffic(object):
 
     @property
     def gpid(self):
-        return int(self._gpid)
+        return int(self._gpid) if self._gpid is not None else 0
 
     def setConnection(self, conn=None, workernode=None):
         splittedConnection = conn.split("-")
