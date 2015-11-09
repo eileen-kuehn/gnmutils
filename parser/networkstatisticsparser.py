@@ -20,6 +20,10 @@ class NetworkStatisticsParser(DataParser):
 
     def defaultHeader(self, **kwargs):
         length = kwargs.get("length", 0)
+        row = kwargs.get("row", None)
+        if row is not None and re.match(".*[A-Za-z]", row):
+            # I guess it is a job
+            return Job.default_header(length=length)
         traffic_header = Traffic.default_header(length=length)
         if len(traffic_header) == length:
             return traffic_header
