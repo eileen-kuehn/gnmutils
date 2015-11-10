@@ -145,7 +145,8 @@ class Traffic(object):
         )
 
     @staticmethod
-    def default_header(length=10):
+    def default_header(**kwargs):
+        length = kwargs.get("length", 10)
         if length > 10:
             return {"tme": 0, "pid": 1, "ppid": 2, "uid": 3, "int_in_rate": 4, "ext_in_rate": 5, "int_out_rate": 6,
                     "ext_out_rate": 7, "int_in_cnt": 8, "ext_in_cnt": 9, "int_out_cnt": 10, "ext_out_cnt": 11,

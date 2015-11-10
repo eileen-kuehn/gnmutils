@@ -198,13 +198,14 @@ class Job(object):
         return count
 
     @staticmethod
-    def default_header(length=15):
+    def default_header(**kwargs):
         """
         Returns the header for CSV output in dictionary format.
 
         :param length: Number of elements being expected
         :return: Dictionary of keys and their positions
         """
+        length = kwargs.get("length", 15)
         if length == 9:
             return {"tme": 0, "pid": 1, "ppid": 2, "uid": 3, "name": 4,
                     "cmd": 5, "exit_code": 6, "state": 7, "gpid": 8}
