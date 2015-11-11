@@ -81,6 +81,9 @@ class DBOperator(object):
                 sqlCommand.startTransaction()
                 configuration_object = sqlCommand.save(configuration_object)
                 sqlCommand.commitTransaction()
+            except UniqueConstrainedViolatedException as e:
+                sqlCommand.rollbackTransaction()
+                configuration_object = self.load_one(sql_command=sqlCommand, data=configuration_object)
             except Exception as e:
                 sqlCommand.rollbackTransaction()
                 raise
