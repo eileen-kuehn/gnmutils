@@ -78,7 +78,7 @@ class TrafficStreamParser(DataParser):
 
     # TODO: fix naming of method
     def defaultHeader(self, **kwargs):
-        return Traffic.defaultHeader(**kwargs)
+        return Traffic.default_header(**kwargs)
 
     @property
     def workernode(self):
