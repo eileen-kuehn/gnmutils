@@ -163,6 +163,9 @@ class DBBackedFileDataSource(FileDataSource):
             logging.getLogger(self.__class__.__name__).info("No matching job has been found (%s)" % e)
             return None
         else:
+            # trying to fix a bug where job_object is none and therefore no access possible
+            if job_object is None:
+                return None
             job.db_id = job_object.id_value
             job.last_tme = max(job_object.exit_tme, job_object.last_tme)
         return job
