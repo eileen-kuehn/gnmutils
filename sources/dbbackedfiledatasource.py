@@ -82,11 +82,17 @@ class DBBackedFileDataSource(FileDataSource):
         except:
             raise RethrowException("The job has not been found")
         else:
-            logging.getLogger(self.__class__.__name__).debug("loaded job %d from database" % job_object.id_value)
-            return FileDataSource.read_job(
-                self,
-                path=kwargs.get("path", self.default_path),
-                name=job_object.id_value)
+            if job_object is not None:
+                logging.getLogger(self.__class__.__name__).debug("loaded job %d from database" % job_object.id_value)
+                return FileDataSource.read_job(
+                    self,
+                    path=kwargs.get("path", self.default_path),
+                    name=job_object.id_value)
+            else:
+                logging.getLogger(self.__class__.__name__).warning(
+                        "did not find job (run=%s, gpid=%s, tme=%s, workernode_id=%s) in database" %
+                        (job.run, job.gpid, job.tme, workernode_object.id_value))
+                return None
 
     def write_job(self, **kwargs):
         job = kwargs["data"]

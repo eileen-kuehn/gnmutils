@@ -86,7 +86,7 @@ class ProcessStreamParser(DataParser):
                     data=job_object,
                     path=kwargs.get("path", None)
                 ):
-                    if job.job_id:
+                    if job is not None and job.job_id:
                         job_object = job
                         job_object.add_process(process=process)
                         self._process_cache.unfound.discard(process)
