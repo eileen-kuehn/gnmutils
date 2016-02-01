@@ -82,14 +82,16 @@ class ProcessStreamParser(DataParser):
                     gpid=process.gpid,
                     configuration=self.configuration,
                     data_source=self._data_source)
-                for job in self._data_source.read_job(
+                job_reader = self._data_source.read_job(
                     data=job_object,
                     path=kwargs.get("path", None)
-                ):
-                    if job is not None and job.job_id:
-                        job_object = job
-                        job_object.add_process(process=process)
-                        self._process_cache.unfound.discard(process)
+                )
+                if job_reader is not None:
+                    for job in job_reader:
+                        if job is not None and job.job_id:
+                            job_object = job
+                            job_object.add_process(process=process)
+                            self._process_cache.unfound.discard(process)
 
     def clear_caches(self):
         self._data.clear()
