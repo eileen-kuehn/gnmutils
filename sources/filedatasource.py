@@ -311,9 +311,11 @@ class FileDataSource(DataSource):
                     # write process information
                     if process_file.tell() == 0:
                         comment_string = "# Created by %s (%s) on %s" % (
-                            self.__class__.__name__, inspect.currentframe().f_code.co_name, time.strftime("%Y%m%d")
+                            self.__class__.__name__,
+                            inspect.currentframe().f_code.co_name,
+                            time.strftime("%Y%m%d")
                         )
-                        process_file.write("%s %s\n" % comment_string)
+                        process_file.write("%s\n" % comment_string)
                         # write header
                         process_file.write("%s\n" % process.getHeader())
                     process_file.write("%s\n" % process.getRow())
