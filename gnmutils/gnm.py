@@ -1,5 +1,3 @@
-import re
-import os
 import argparse
 import multiprocessing
 
@@ -11,17 +9,16 @@ from gnmutils.sources.filedatasource import FileDataSource
 from gnmutils.sources.dbbackedfiledatasource import DBBackedFileDataSource
 from gnmutils.pilot import Pilot
 from gnmutils.utils import *
-from evenmoreutils import path as pathutils
 
 
 def create_payloads():
     """
-    For CMS pilots there is a very simple (but quick-n-dirty) approach to recognise the actual payloads. The method
-    is based on the name of processes. As soon as there is a reliable but automatic solution, I need to switch
-    to this one.
+    For CMS pilots there is a very simple (but quick-n-dirty) approach to recognise the actual
+    payloads. The method is based on the name of processes. As soon as there is a reliable but
+    automatic solution, I need to switch to this one.
 
-    The extractor looks into the different CMS jobs, which payloads still have not been identified and extracts those
-    data. It is saved to `processed/payloads`.
+    The extractor looks into the different CMS jobs, which payloads still have not been identified
+    and extracts those data. It is saved to `processed/payloads`.
 
     The payload ids are build from the job id from database and additionally the payload count.
     """

@@ -6,10 +6,11 @@ from evenmoreutils import string as stringutils
 
 class Traffic(object):
     def __init__(
-            self, conn=None, pid=None, ppid=None, uid=None, tme=None, in_rate=None, out_rate=None, in_cnt=None,
-            out_cnt=None, gpid=None, source_ip=None, dest_ip=None, source_port=None, dest_port=None, conn_cat=None,
-            workernode=None, interval=20, ext_in_rate=None, int_in_rate=None, ext_out_rate=None, int_out_rate=None,
-            ext_in_cnt=None, int_in_cnt=None, ext_out_cnt=None, int_out_cnt=None
+            self, conn=None, pid=None, ppid=None, uid=None, tme=None, in_rate=None, out_rate=None,
+            in_cnt=None, out_cnt=None, gpid=None, source_ip=None, dest_ip=None, source_port=None,
+            dest_port=None, conn_cat=None, workernode=None, interval=20, ext_in_rate=None,
+            int_in_rate=None, ext_out_rate=None, int_out_rate=None, ext_in_cnt=None,
+            int_in_cnt=None, ext_out_cnt=None, int_out_cnt=None
     ):
         self.tme = int(tme)
         self._pid = pid
@@ -29,22 +30,24 @@ class Traffic(object):
         if conn:
             self.setConnection(conn=conn, workernode=workernode)
         if ((ext_out_cnt or ext_in_cnt or ext_out_rate or ext_in_rate) and
-                (float(ext_out_cnt) > 0 or float(ext_in_cnt) > 0 or float(ext_out_rate) > 0 or float(ext_in_rate) > 0)):
+                (float(ext_out_cnt) > 0 or float(ext_in_cnt) > 0 or float(ext_out_rate) > 0 or
+                         float(ext_in_rate) > 0)):
             if "ext" not in self.conn_cat:
                 logging.getLogger(self.__class__.__name__).warning(
-                    "The calculated connection category %s does not match that of log file %s for ip %s" %
-                    (self.conn_cat, "ext", self.dest_ip)
+                    "The calculated connection category %s does not match that of "
+                    "log file %s for ip %s" % (self.conn_cat, "ext", self.dest_ip)
                 )
             self.in_rate = ext_in_rate
             self.out_rate = ext_out_rate
             self.in_cnt = ext_in_cnt
             self.out_cnt = ext_out_cnt
         if ((int_out_cnt or int_in_cnt or int_out_rate or int_in_rate) and
-                (float(int_out_cnt) > 0 or float(int_in_cnt) > 0 or float(int_out_rate) > 0 or float(int_in_rate) > 0)):
+                (float(int_out_cnt) > 0 or float(int_in_cnt) > 0 or float(int_out_rate) > 0 or
+                         float(int_in_rate) > 0)):
             if "int" not in self.conn_cat:
                 logging.getLogger(self.__class__.__name__).warning(
-                    "The calculated connection category %s does not match that of log file %s for ip %s" %
-                    (self.conn_cat, "int", self.dest_ip)
+                    "The calculated connection category %s does not match that of "
+                    "log file %s for ip %s" % (self.conn_cat, "int", self.dest_ip)
                 )
             self.in_rate = int_in_rate
             self.out_rate = int_out_rate
@@ -54,11 +57,11 @@ class Traffic(object):
     @staticmethod
     def is_conform(**kwargs):
         if (kwargs.get("in_rate", None) is not None or
-            kwargs.get("out_rate", None) is not None or
-            kwargs.get("int_in_rate", None) is not None or
-            kwargs.get("int_out_rate", None) is not None or
-            kwargs.get("ext_in_rate", None) is not None or
-            kwargs.get("ext_out_rate", None) is not None):
+                    kwargs.get("out_rate", None) is not None or
+                    kwargs.get("int_in_rate", None) is not None or
+                    kwargs.get("int_out_rate", None) is not None or
+                    kwargs.get("ext_in_rate", None) is not None or
+                    kwargs.get("ext_out_rate", None) is not None):
             return True
         return False
 
@@ -141,18 +144,19 @@ class Traffic(object):
 
     def getHeader(self):
         return (
-            "tme,pid,ppid,uid,in_rate,out_rate,in_cnt,out_cnt,gpid,source_ip,dest_ip,source_port,dest_port,conn_cat"
+            "tme,pid,ppid,uid,in_rate,out_rate,in_cnt,out_cnt,gpid,source_ip,dest_ip,source_port,"
+            "dest_port,conn_cat"
         )
 
     @staticmethod
     def default_header(**kwargs):
         length = kwargs.get("length", 10)
         if length > 10:
-            return {"tme": 0, "pid": 1, "ppid": 2, "uid": 3, "int_in_rate": 4, "ext_in_rate": 5, "int_out_rate": 6,
-                    "ext_out_rate": 7, "int_in_cnt": 8, "ext_in_cnt": 9, "int_out_cnt": 10, "ext_out_cnt": 11,
-                    "conn": 12, "gpid": 13}
-        return {"tme": 0, "pid": 1, "ppid": 2, "uid": 3, "in_rate": 4, "out_rate": 5, "in_cnt": 6, "out_cnt": 7,
-                "conn": 8, "gpid": 9}
+            return {"tme": 0, "pid": 1, "ppid": 2, "uid": 3, "int_in_rate": 4, "ext_in_rate": 5,
+                    "int_out_rate": 6, "ext_out_rate": 7, "int_in_cnt": 8, "ext_in_cnt": 9,
+                    "int_out_cnt": 10, "ext_out_cnt": 11, "conn": 12, "gpid": 13}
+        return {"tme": 0, "pid": 1, "ppid": 2, "uid": 3, "in_rate": 4, "out_rate": 5, "in_cnt": 6,
+                "out_cnt": 7, "conn": 8, "gpid": 9}
 
     def __repr__(self):
         return self.getRow()

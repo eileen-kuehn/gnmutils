@@ -10,8 +10,8 @@ class Job(object):
     This class acts as a wrapper for the different processes forming a batch system job.
     It allows access to the job tree.
     """
-    def __init__(self, db_id=None, job_id=None, workernode=None, run=None, tme=None, gpid=None, configuration=None,
-                 last_tme=None, **kwargs):
+    def __init__(self, db_id=None, job_id=None, workernode=None, run=None, tme=None, gpid=None,
+                 configuration=None, last_tme=None, **kwargs):
         self._db_id = db_id
         self._job_id = job_id
         self._workernode = workernode
@@ -207,12 +207,11 @@ class Job(object):
         """
         length = kwargs.get("length", 15)
         if length == 9:
-            return {"tme": 0, "pid": 1, "ppid": 2, "uid": 3, "name": 4,
-                    "cmd": 5, "exit_code": 6, "state": 7, "gpid": 8}
-        return {"tme": 0, "exit_tme": 1, "pid": 2, "ppid": 3, "gpid": 4,
-                "uid": 5, "name": 6, "cmd": 7, "error_code": 8, "signal": 9,
-                "valid": 10, "int_in_volume": 11, "int_out_volume": 12,
-                "ext_in_volume": 13, "ext_out_volume": 14}
+            return {"tme": 0, "pid": 1, "ppid": 2, "uid": 3, "name": 4, "cmd": 5, "exit_code": 6,
+                    "state": 7, "gpid": 8}
+        return {"tme": 0, "exit_tme": 1, "pid": 2, "ppid": 3, "gpid": 4, "uid": 5, "name": 6,
+                "cmd": 7, "error_code": 8, "signal": 9, "valid": 10, "int_in_volume": 11,
+                "int_out_volume": 12, "ext_in_volume": 13, "ext_out_volume": 14}
 
     def _add(self, node=None, is_root=False):
         if "sge_shepherd" in node.value.cmd or is_root:
@@ -237,7 +236,8 @@ class Job(object):
             if (len(self._process_cache.faultyNodes) <= 1 and self._root and
                     (Tree(self._root).getVertexCount() == self.process_count())):
                 self._tree = Tree(self._root)
-        logging.getLogger(self.__class__.__name__).info("faulty nodes: %s" % self._process_cache.faultyNodes)
+        logging.getLogger(self.__class__.__name__).info("faulty nodes: %s" %
+                                                        self._process_cache.faultyNodes)
         return self._tree
 
     def _initialize_tree(self):
@@ -261,8 +261,9 @@ class Job(object):
                 node.value.tree_depth = depth
 
     def __repr__(self):
-        return "%s: db_id (%s), job_id (%s), gpid (%d), workernode (%s), configuration (%s), run (%s), tme (%d), root (%s), " \
-               "process_cache (%s), tree_initialized (%s)" % (
-            self.__class__.__name__, self.db_id, self.job_id, self.gpid, self.workernode, self.configuration, self.run,
-            self.tme, (self._root and self._root.value), self._process_cache, self._tree_initialized
+        return "%s: db_id (%s), job_id (%s), gpid (%d), workernode (%s), configuration (%s), " \
+               "run (%s), tme (%d), root (%s), process_cache (%s), tree_initialized (%s)" % (
+            self.__class__.__name__, self.db_id, self.job_id, self.gpid, self.workernode,
+            self.configuration, self.run, self.tme, (self._root and self._root.value),
+            self._process_cache, self._tree_initialized
         )

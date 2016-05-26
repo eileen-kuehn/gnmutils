@@ -42,9 +42,15 @@ class NetworkStatisticsParser(DataParser):
 
     def archive_state(self, **kwargs):
         if self._data_source is not None:
-            self._data_source.write_object_data(data=self._parsed_data, name="statistics_parsed_data", **kwargs)
+            self._data_source.write_object_data(
+                data=self._parsed_data,
+                name="statistics_parsed_data",
+                **kwargs
+            )
         else:
-            logging.getLogger(self.__class__.__name__).warning("Archiving not done because of missing data_source")
+            logging.getLogger(self.__class__.__name__).warning(
+                "Archiving not done because of missing data_source"
+            )
 
     def check_caches(self, **kwargs):
         pass
@@ -55,7 +61,10 @@ class NetworkStatisticsParser(DataParser):
     def parse(self, **kwargs):
         path = kwargs.get("path", None)
         if self._base_tme == 0:
-            self._base_tme = int(re.match("(\d*)-(process|traffic).log-[0-9]{8}", os.path.split(path)[1]).group(1))
+            self._base_tme = int(re.match(
+                "(\d*)-(process|traffic).log-[0-9]{8}",
+                os.path.split(path)[1]
+            ).group(1))
         return DataParser.parse(self, **kwargs)
 
     def _get_interval(self):

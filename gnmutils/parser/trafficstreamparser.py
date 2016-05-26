@@ -34,13 +34,14 @@ class TrafficWrapper(object):
 
 class TrafficStreamParser(DataParser):
     """
-    First the :py:class:`TrafficStreamParser` follows a very simple approach. When a traffic entry is going to be
-    parsed, it checks if it already knows the :py:class:`Job` it belongs to. If no :py:class:`Job` can be found, a
-    streamlined version (just identified by unique constraint values) is loaded an put into the cache. This cache
-    is used to attache the single :py:class:`Traffic` objects in form of an array.
+    First the :py:class:`TrafficStreamParser` follows a very simple approach. When a traffic entry
+    is going to be parsed, it checks if it already knows the :py:class:`Job` it belongs to.
+    If no :py:class:`Job` can be found, a streamlined version (just identified by unique constraint
+    values) is loaded an put into the cache. This cache is used to attache the single
+    :py:class:`Traffic` objects in form of an array.
 
-    At the time when splitting the stream, it does not matter, if the single traffic entries are matched to existing
-    :py:class:`Process`es. They just need to appear in csv files.
+    At the time when splitting the stream, it does not matter, if the single traffic entries are
+    matched to existing :py:class:`Process`es. They just need to appear in csv files.
     """
     def __init__(self, workernode=None, run=None, **kwargs):
         DataParser.__init__(self, **kwargs)
@@ -98,11 +99,25 @@ class TrafficStreamParser(DataParser):
 
     def archive_state(self, **kwargs):
         if self._data_source is not None:
-            self._data_source.write_object_data(data=self._data, name="traffic_data", **kwargs)
-            self._data_source.write_object_data(data=self._configuration, name="configuration", **kwargs)
-            self._data_source.write_object_data(data=self._parsed_data, name="traffic_parsed_data", **kwargs)
+            self._data_source.write_object_data(
+                data=self._data,
+                name="traffic_data",
+                **kwargs
+            )
+            self._data_source.write_object_data(
+                data=self._configuration,
+                name="configuration",
+                **kwargs
+            )
+            self._data_source.write_object_data(
+                data=self._parsed_data,
+                name="traffic_parsed_data",
+                **kwargs
+            )
         else:
-            logging.getLogger(self.__class__.__name__).warning("Archiving not done because of missing data_source")
+            logging.getLogger(self.__class__.__name__).warning(
+                "Archiving not done because of missing data_source"
+            )
 
     def _add_piece(self, piece=None):
         self._changed = True

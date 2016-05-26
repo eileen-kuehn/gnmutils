@@ -1,5 +1,3 @@
-import os
-import re
 import time
 import inspect
 import pickle
@@ -38,7 +36,9 @@ class FileDataSource(DataSource):
                                                       self.default_path))):
             if re.search(kwargs.get("pattern", ".pkl"), dir_entry):
                 file_path = os.path.join(kwargs.get("path", self.default_path), dir_entry)
-                logging.getLogger(self.__class__.__name__).debug("reading %s for object data" % file_path)
+                logging.getLogger(self.__class__.__name__).debug(
+                    "reading %s for object data" % file_path
+                )
                 data = pickle.load(open(file_path, "rb"))
                 yield data
 
@@ -191,7 +191,9 @@ class FileDataSource(DataSource):
             base_path, "%s-traffic.csv" % traffic["id"]
         ), "a") as traffic_file:
             comment_string = "# Created by %s (%s) on %s" % (
-                self.__class__.__name__, inspect.currentframe().f_code.co_name, time.strftime("%Y%m%d")
+                self.__class__.__name__,
+                inspect.currentframe().f_code.co_name,
+                time.strftime("%Y%m%d")
             )
             if traffic["configuration"] is not None:
                 header_data = "%s\n%s\n%s" % (
@@ -230,7 +232,9 @@ class FileDataSource(DataSource):
                     if not header_initialized:
                         # write header
                         comment_string = "# Created by %s (%s) on %s" % (
-                            self.__class__.__name__, inspect.currentframe().f_code.co_name, time.strftime("%Y%m%d")
+                            self.__class__.__name__,
+                            inspect.currentframe().f_code.co_name,
+                            time.strftime("%Y%m%d")
                         )
                         job_file.write("%s\n" % comment_string)
                         job_file.write("%s\n" % job.configuration.getRow())
@@ -242,10 +246,12 @@ class FileDataSource(DataSource):
         self._write_payload(**kwargs)
 
     def write_payload_result(self, **kwargs):
-        logging.getLogger(self.__class__.__name__).warn("writing of payload results to filesystem is not supported")
+        logging.getLogger(self.__class__.__name__).warn(
+            "writing of payload results to filesystem is not supported"
+        )
 
-    def _read_stream(self, path=None, data_path=None, workernode=None, run=None, converter=CSVReader(), stateful=False,
-                     pattern=None):
+    def _read_stream(self, path=None, data_path=None, workernode=None, run=None,
+                     converter=CSVReader(), stateful=False, pattern=None):
         """
         :param path:
         :param data_path:
@@ -305,8 +311,10 @@ class FileDataSource(DataSource):
         current_path = pathutils.ensureDirectory(
             os.path.join(os.path.join(path, payload.workernode), payload.run)
         )
-        with open(os.path.join(current_path, "%s-process.csv" % payload.db_id), "w") as process_file, \
-            open(os.path.join(current_path, "%s-traffic.csv" % payload.db_id), "w") as traffic_file:
+        with open(os.path.join(
+                current_path, "%s-process.csv" % payload.db_id), "w") as process_file, \
+            open(os.path.join(
+                current_path, "%s-traffic.csv" % payload.db_id), "w") as traffic_file:
                 for process in payload.processes():
                     # write process information
                     if process_file.tell() == 0:
@@ -323,7 +331,9 @@ class FileDataSource(DataSource):
                     for traffic in process.traffic:
                         if traffic_file.tell() == 0:
                             comment_string = "# Created by %s (%s) on %s" % (
-                                self.__class__.__name__, inspect.currentframe().f_code.co_name, time.strftime("%Y%m%d")
+                                self.__class__.__name__,
+                                inspect.currentframe().f_code.co_name,
+                                time.strftime("%Y%m%d")
                             )
                             # write header
                             traffic_file.write("%s\n" % comment_string)
@@ -343,12 +353,13 @@ class FileDataSource(DataSource):
                     # write header
                     if statistics_file.tell() == 0:
                         comment_string = "# Created by %s (%s) on %s" % (
-                            self.__class__.__name__, inspect.currentframe().f_code.co_name, time.strftime("%Y%m%d")
+                            self.__class__.__name__,
+                            inspect.currentframe().f_code.co_name,
+                            time.strftime("%Y%m%d")
                         )
                         statistics_file.write("%s\n" % comment_string)
                         statistics_file.write("%s\n" % network_statistics[tme].getHeader())
                     statistics_file.write("%s\n" % network_statistics[tme].getRow())
-
 
     def archive(self, **kwargs):
         """

@@ -1,5 +1,6 @@
 from feature import *
 
+
 class TrafficFeature(Feature):
     def __init__(self, uid=None, id=None, exit_tme=None, tme=None,
             int_in_volume=0, int_in_rate=0, int_out_volume=0, int_out_rate=0,

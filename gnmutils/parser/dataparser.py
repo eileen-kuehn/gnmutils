@@ -68,16 +68,30 @@ class DataParser(object):
 
     def archive_state(self, **kwargs):
         if self._data_source is not None:
-            self._data_source.write_object_data(data=self._data, name="data", **kwargs)
-            self._data_source.write_object_data(data=self._configuration, name="configuration", **kwargs)
-            self._data_source.write_object_data(data=self._parsed_data, name="parsed_data", **kwargs)
+            self._data_source.write_object_data(
+                data=self._data,
+                name="data",
+                **kwargs
+            )
+            self._data_source.write_object_data(
+                data=self._configuration,
+                name="configuration",
+                **kwargs
+            )
+            self._data_source.write_object_data(
+                data=self._parsed_data,
+                name="parsed_data",
+                **kwargs
+            )
         else:
-            logging.getLogger(self.__class__.__name__).warning("Archiving not done because of missing data_source")
+            logging.getLogger(self.__class__.__name__).warning(
+                "Archiving not done because of missing data_source"
+            )
 
     def parse(self, **kwargs):
         """
-        This method instantiates the parsing for file given by :py:param:`path` on specified :py:class:`DataReader`.
-        It acts as a generator and yields all finished objects.
+        This method instantiates the parsing for file given by :py:param:`path` on specified
+        :py:class:`DataReader`. It acts as a generator and yields all finished objects.
 
         :param path:
         :return:
@@ -97,7 +111,8 @@ class DataParser(object):
         This method adds partial data to the current data object managed by the Parser.
 
         :param piece: Partial data to be added
-        :raises ParserNotInitializedException: if the data object has not been initialized with specific type
+        :raises ParserNotInitializedException: if the data object has not been initialized with
+        specific type
         :return:
         """
         if self._data is None:

@@ -4,11 +4,10 @@ from gnmutils.exceptions import ProcessMismatchException
 
 
 class Process(object):
-    def __init__ (self, name=None, cmd=None, pid=None, ppid=None, uid=None,
-            tme=None, exit_tme=None, error_code=None, signal=None, exit_code=0,
-            gpid=None, state=None, job_id=None, int_in_volume=None, int_out_volume=None,
-            ext_in_volume=None, ext_out_volume=None, tree_depth=None,
-            process_type=None, color=None, valid=False, traffic=None):
+    def __init__ (self, name=None, cmd=None, pid=None, ppid=None, uid=None, tme=None, exit_tme=None,
+                  error_code=None, signal=None, exit_code=0, gpid=None, state=None, job_id=None,
+                  int_in_volume=None, int_out_volume=None, ext_in_volume=None, ext_out_volume=None,
+                  tree_depth=None, process_type=None, color=None, valid=False, traffic=None):
         self._name = self._check_is_none(value=name)
         self._cmd = self._check_is_none(value=cmd)
         self._pid = self._check_is_none(value=pid)
@@ -181,11 +180,11 @@ class Process(object):
         self._signal = int(exit_code) & 255
 
     def __repr__(self):
-        return "%s: name (%s), cmd (%s), pid (%d), ppid (%d), uid (%d), gpid (%d), valid (%s), tme (%d), " \
-               "exit_tme (%d), state (%s), error_code (%s), signal (%s), job_id (%s), tree_depth (%s), " \
-               "process_type (%s), color (%s), int_in_volume (%s), int_out_volume (%s), ext_in_volume (%s), " \
-               "ext_out_volume (%s)" % (
-            self.__class__.__name__, self.name, self.cmd, self.pid, self.ppid, self.uid, self.gpid, self.valid,
-            self.tme, self.exit_tme, self.state, stringutils.xint(self._error_code), self.signal, self.job_id,
-            self.tree_depth, self.process_type, self.color, self.int_in_volume, self.int_out_volume, self.ext_in_volume,
-            self.ext_out_volume)
+        return "%s: name (%s), cmd (%s), pid (%d), ppid (%d), uid (%d), gpid (%d), valid (%s), " \
+               "tme (%d), exit_tme (%d), state (%s), error_code (%s), signal (%s), job_id (%s), " \
+               "tree_depth (%s), process_type (%s), color (%s), int_in_volume (%s), " \
+               "int_out_volume (%s), ext_in_volume (%s), ext_out_volume (%s)" % (
+            self.__class__.__name__, self.name, self.cmd, self.pid, self.ppid, self.uid, self.gpid,
+            self.valid, self.tme, self.exit_tme, self.state, stringutils.xint(self._error_code),
+            self.signal, self.job_id, self.tree_depth, self.process_type, self.color,
+            self.int_in_volume, self.int_out_volume, self.ext_in_volume, self.ext_out_volume)

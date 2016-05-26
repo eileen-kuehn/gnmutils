@@ -5,8 +5,8 @@ class DataSource(object):
     @staticmethod
     def best_available_data_source():
         """
-        Method returns best availabe datasource. Denpending on availability of database, it either returns
-        :py:class:`DBBackedFileDataSource` or :py:class:`FileDataSource`.
+        Method returns best availabe datasource. Denpending on availability of database, it either
+        returns :py:class:`DBBackedFileDataSource` or :py:class:`FileDataSource`.
 
         :return: best available datasource
         :rtype: :py:class:`DBBackedFileDataSource` or :py:class:`FileDataSource`

@@ -8,7 +8,8 @@ class DBAffiliationObject(DBObject):
 
 
 class DBConfigurationObject(DBObject):
-    def __init__(self, id=None, version=None, interval=None, level=None, grouping=None, skip_other_pids=None):
+    def __init__(self, id=None, version=None, interval=None, level=None, grouping=None,
+                 skip_other_pids=None):
         super(DBConfigurationObject, self).__init__("configuration", {"id": id})
         self.version = version
         self.interval = interval
@@ -18,9 +19,9 @@ class DBConfigurationObject(DBObject):
 
 
 class DBJobObject(DBObject):
-    def __init__(self, id=None, job_id=None, run=None, completed=None,
-                 valid=None, uid=None, gpid=None, tme=None, exit_tme=None,
-                 last_tme=None, workernode_id=None, configuration_id=None):
+    def __init__(self, id=None, job_id=None, run=None, completed=None, valid=None, uid=None,
+                 gpid=None, tme=None, exit_tme=None, last_tme=None, workernode_id=None,
+                 configuration_id=None):
         super(DBJobObject, self).__init__("job", {"id": id})
         self.job_id = job_id
         self.run = run
@@ -55,10 +56,9 @@ class DBPayloadObject(DBObject):
 
 
 class DBPayloadResultObject(DBObject):
-    def __init__(self, id=None, job_id=None, task_monitor_id=None, activity=None,
-                 tme=None, exit_tme=None, exit_code=None, status_name=None,
-                 status_reason=None, workernode_id=None, payload_id=None,
-                 time_offset_id=None):
+    def __init__(self, id=None, job_id=None, task_monitor_id=None, activity=None, tme=None,
+                 exit_tme=None, exit_code=None, status_name=None, status_reason=None,
+                 workernode_id=None, payload_id=None, time_offset_id=None):
         super(DBPayloadResultObject, self).__init__("payload_result", {"id": id})
         self.job_id = job_id
         self.task_monitor_id = task_monitor_id

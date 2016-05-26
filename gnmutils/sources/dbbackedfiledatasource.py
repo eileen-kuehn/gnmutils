@@ -1,7 +1,6 @@
-import os
-
 from gnmutils.sources.filedatasource import FileDataSource
-from gnmutils.db.dbobjects import DBJobObject, DBPayloadObject, DBPayloadResultObject, DBWorkernodeObject
+from gnmutils.db.dbobjects import DBJobObject, DBPayloadObject, DBPayloadResultObject, \
+    DBWorkernodeObject
 from gnmutils.db.dboperator import DBOperator
 from gnmutils.utils import *
 
@@ -40,7 +39,8 @@ class DBBackedFileDataSource(FileDataSource):
                 level = directory_level(path)
                 job_object = DBJobObject(valid=True, completed=True)
                 if level == RUN_LEVEL:
-                    base_path, workernode, run = next(relevant_directories(path=path), (None, None, None))
+                    base_path, workernode, run = next(relevant_directories(path=path),
+                                                      (None, None, None))
                     job_object.run = run
                     workernode_object = self._db_operator.load_or_create_workernode(data=workernode)
                     job_object.workernode_id = workernode_object.id_value
@@ -53,8 +53,10 @@ class DBBackedFileDataSource(FileDataSource):
                     current_path = path
                     if level == BASE_LEVEL:
                         # join different workernodes and runs
-                        workernode_object = self._db_operator.load_one(DBWorkernodeObject(id=job_result.workernode_id))
-                        current_path = os.path.join(os.path.join(path, workernode_object.name), job_result.run)
+                        workernode_object = self._db_operator.load_one(
+                            DBWorkernodeObject(id=job_result.workernode_id))
+                        current_path = os.path.join(os.path.join(path, workernode_object.name),
+                                                    job_result.run)
                     elif level == WORKERNODE_LEVEL:
                         # join different runs
                         current_path = os.path.join(path, job_result.run)
@@ -73,7 +75,9 @@ class DBBackedFileDataSource(FileDataSource):
         """
         job = kwargs.get("data", None)
         workernode_object = self._db_operator.load_or_create_workernode(data=job.workernode)
-        configuration_object = self._db_operator.load_or_create_configuration(data=job.configuration)
+        configuration_object = self._db_operator.load_or_create_configuration(
+            data=job.configuration
+        )
         job_object = DBJobObject(
             run=job.run, gpid=job.gpid, tme=job.tme, workernode_id=workernode_object.id_value,
             configuration_id=configuration_object.id_value)
@@ -83,7 +87,8 @@ class DBBackedFileDataSource(FileDataSource):
             raise RethrowException("The job has not been found")
         else:
             if job_object is not None:
-                logging.getLogger(self.__class__.__name__).debug("loaded job %d from database" % job_object.id_value)
+                logging.getLogger(self.__class__.__name__).debug("loaded job %d from database" %
+                                                                 job_object.id_value)
                 return FileDataSource.read_job(
                     self,
                     path=kwargs.get("path", self.default_path),
@@ -97,11 +102,14 @@ class DBBackedFileDataSource(FileDataSource):
     def write_job(self, **kwargs):
         job = kwargs["data"]
         workernode_object = self._db_operator.load_or_create_workernode(data=job.workernode)
-        configuration_object = self._db_operator.load_or_create_configuration(data=job.configuration)
+        configuration_object = self._db_operator.load_or_create_configuration(
+            data=job.configuration
+        )
         job_object = DBJobObject(
-            job_id=job.job_id, run=job.run, uid=job.uid, gpid=job.gpid, tme=job.tme, exit_tme=job.exit_tme,
-            workernode_id=workernode_object.id_value, configuration_id=configuration_object.id_value,
-            valid=job.is_valid(), last_tme=job.last_tme, completed=job.is_complete())
+            job_id=job.job_id, run=job.run, uid=job.uid, gpid=job.gpid, tme=job.tme,
+            exit_tme=job.exit_tme, workernode_id=workernode_object.id_value,
+            configuration_id=configuration_object.id_value, valid=job.is_valid(),
+            last_tme=job.last_tme, completed=job.is_complete())
         try:
             self._db_operator.save_or_update(data=job_object)
             job.db_id = job_object.id_value
@@ -142,7 +150,8 @@ class DBBackedFileDataSource(FileDataSource):
         payload_result = kwargs["data"]
         with SQLCommand(dataSource=self._db_data_source) as sqlCommand:
             workernode_object = self._db_operator.load_or_create_workernode(sql_command=sqlCommand,
-                                                                            data=kwargs.get("workernode", None))
+                                                                            data=kwargs.get(
+                                                                                "workernode", None))
             payload_result_object = DBPayloadResultObject(
                 job_id=payload_result["jobId"],
                 task_monitor_id=payload_result["TaskMonitorId"],
@@ -162,11 +171,13 @@ class DBBackedFileDataSource(FileDataSource):
         job = kwargs.get("data", None)
 
         workernode_object = self._db_operator.load_or_create_workernode(data=job.workernode)
-        job_object = DBJobObject(run=job.run, gpid=job.gpid, tme=job.tme, workernode_id=workernode_object.id_value)
+        job_object = DBJobObject(run=job.run, gpid=job.gpid, tme=job.tme,
+                                 workernode_id=workernode_object.id_value)
         try:
             job_object = self._db_operator.load_job(data=job_object)
         except Exception as e:
-            logging.getLogger(self.__class__.__name__).info("No matching job has been found (%s)" % e)
+            logging.getLogger(self.__class__.__name__).info(
+                "No matching job has been found (%s)" % e)
             return None
         else:
             # trying to fix a bug where job_object is none and therefore no access possible

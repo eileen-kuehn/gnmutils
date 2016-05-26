@@ -83,7 +83,10 @@ class DBOperator(object):
                 sqlCommand.commitTransaction()
             except UniqueConstrainedViolatedException as e:
                 sqlCommand.rollbackTransaction()
-                configuration_object = self.load_one(sql_command=sqlCommand, data=configuration_object)
+                configuration_object = self.load_one(
+                    sql_command=sqlCommand,
+                    data=configuration_object
+                )
             except Exception as e:
                 sqlCommand.rollbackTransaction()
                 raise
@@ -104,23 +107,25 @@ class DBOperator(object):
                 try:
                     if db_object.uid and db_object.uid > 0:
                         self.load_or_create_affiliation(data=db_object.uid)
-                except AttributeError as ae:
+                except AttributeError as e:
                     logging.getLogger(self.__class__.__name__).info(
                         "Object %s has no attribute uid" % db_object)
                     # TODO: what else might be done?
                 except Exception as e:
                     logging.getLogger(self.__class__.__name__).warning(
-                        "update: affiliation %d could not be created or loaded (%s - %s)" % (db_object.uid, ex, e))
+                        "update: affiliation %d could not be created or loaded (%s - %s)" %
+                        (db_object.uid, ex, e))
                     raise
                 else:
                     try:
                         sqlCommand.startTransaction()
                         db_object = sqlCommand.update(db_object)
                         sqlCommand.commitTransaction()
-                    except Exception:
+                    except Exception as e:
                         sqlCommand.rollbackTransaction()
                         logging.getLogger(self.__class__.__name__).warning(
-                            "final update: object %d could not be updated (%s)" % (db_object.id_value, e))
+                            "final update: object %d could not be updated (%s)" %
+                            (db_object.id_value, e))
                         raise
         else:
             # save object

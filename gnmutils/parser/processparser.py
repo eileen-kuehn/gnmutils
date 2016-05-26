@@ -1,8 +1,6 @@
-import logging
 import time
 import cPickle as pickle
 
-from utility.exceptions import *
 from gnmutils.parser.dataparser import DataParser
 from gnmutils.process import Process
 from gnmutils.objectcache import ObjectCache
@@ -13,7 +11,8 @@ from gnmutils.exceptions import *
 class ProcessParser(DataParser):
     """
     The :py:class:`ProcessParser` takes process events and accumulates these to a complete process.
-    Complete processes belonging to the same job can then be joined by using a :py:class:`JobParser`.
+    Complete processes belonging to the same job can then be joined by using a
+    :py:class:`JobParser`.
     """
     def __init__(self, converter=None, operator=None, processCache=None, jobCache=None):
         self._converter = converter
@@ -133,7 +132,9 @@ class ProcessParser(DataParser):
                                                      gpid=int(row[headerCache['gpid']]),
                                                      batchsystemId=process.batchsystemId)
                         else:
-                            logging.error("ATTENTION: job was not created as it already seems to be existent - job_id from DB %d vs CSV %d" %(job.job_id, process.batchsystemId))
+                            logging.error("ATTENTION: job was not created as it already seems to "
+                                          "be existent - job_id from DB %d vs CSV %d" %
+                                          (job.job_id, process.batchsystemId))
                     except Exception:
                         self._operator.createJob(tme=tme,
                                                  gpid=int(row[headerCache['gpid']]), 
@@ -175,11 +176,15 @@ class ProcessParser(DataParser):
 
     def clearCaches(self):
         """
-        Method clears the current caches and takes care to pickle the uncompleted processes and jobs.
+        Method clears the current caches and takes care to pickle the uncompleted processes
+        and jobs.
         """
         logging.debug("clearing caches")
 
-        pickle.dump(self._processCache, open(self._operator.getPicklePath(typename="process"), "wb"), -1)
+        pickle.dump(self._processCache, open(
+            self._operator.getPicklePath(typename="process"),
+            "wb"
+        ), -1)
         self._processCache.clear()
 
         pickle.dump(self._jobCache, open(self._operator.getPicklePath(typename="job"), "wb"), -1)
@@ -199,7 +204,8 @@ class ProcessParser(DataParser):
         try:
           jobParser.addProcess(process=process)
         except NonUniqueRootException as e:
-          logging.error("%s: added second root node to tree with id %d - batchsystemId: %d" %(e, jobId, process.batchsystemId))
+          logging.error("%s: added second root node to tree with id %d - batchsystemId: %d" %
+                        (e, jobId, process.batchsystemId))
         except Exception:
           jobParser = JobParser()
           jobParser.addProcess(process=process)
@@ -213,7 +219,8 @@ class ProcessParser(DataParser):
         if tree is not None:
             path = self._operator.getPath(typename="process", jobId=jobId)
             with open(path, "w+") as csvfile:
-                csvfile.write("# Created by %s on %s\n" %("processparser.py", time.strftime("%Y%m%d")))
+                csvfile.write("# Created by %s on %s\n" %
+                              ("processparser.py", time.strftime("%Y%m%d")))
                 csvfile.write("# Input Data: Raw Stream Data\n")
                 csvfile.write("# Output Data: Combined Process Events\n")
                 csvfile.write("%s\n" %(tree.root.value.getHeader()))

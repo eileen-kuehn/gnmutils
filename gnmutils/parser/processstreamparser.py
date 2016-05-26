@@ -8,16 +8,17 @@ from utility.exceptions import *
 
 
 class ProcessStreamParser(DataParser):
-    job_root_name = "sge_shepherd"
-
     """
-    The :py:class:`ProcessStreamParser` works on the log files produced by the GNM monitoring tool. One after the other
-    it parses the different lines belonging to one specific run on one specific workernode. It takes care in splitting
-    the data belonging to different :py:class:`job`s. As soon as one object has been finished it is given to the
-    :py:attrib:`DataSource` for further handling/storage.
+    The :py:class:`ProcessStreamParser` works on the log files produced by the GNM monitoring tool.
+    One after the other it parses the different lines belonging to one specific run on one specific
+    workernode. It takes care in splitting the data belonging to different :py:class:`job`s.
+    As soon as one object has been finished it is given to the :py:attrib:`DataSource` for further
+    handling/storage.
 
     As the completeness regarding the traffic cannot be determined automatically, it is ... what?!
     """
+    job_root_name = "sge_shepherd"
+
     def __init__(self, workernode=None, run=None, **kwargs):
         self._process_cache = ObjectCache()
         DataParser.__init__(self, **kwargs)
@@ -54,12 +55,30 @@ class ProcessStreamParser(DataParser):
 
     def archive_state(self, **kwargs):
         if self._data_source is not None:
-            self._data_source.write_object_data(data=self._data, name="data", **kwargs)
-            self._data_source.write_object_data(data=self._process_cache, name="process_cache", **kwargs)
-            self._data_source.write_object_data(data=self._configuration, name="configuration", **kwargs)
-            self._data_source.write_object_data(data=self._parsed_data, name="parsed_data", **kwargs)
+            self._data_source.write_object_data(
+                data=self._data,
+                name="data",
+                **kwargs
+            )
+            self._data_source.write_object_data(
+                data=self._process_cache,
+                name="process_cache",
+                **kwargs
+            )
+            self._data_source.write_object_data(
+                data=self._configuration,
+                name="configuration",
+                **kwargs
+            )
+            self._data_source.write_object_data(
+                data=self._parsed_data,
+                name="parsed_data",
+                **kwargs
+            )
         else:
-            logging.getLogger(self.__class__.__name__).warning("Archiving not done because of missing data_source")
+            logging.getLogger(self.__class__.__name__).warning(
+                "Archiving not done because of missing data_source"
+            )
 
     def pop_data(self):
         for key in self._data.objectCache.keys():
@@ -107,7 +126,10 @@ class ProcessStreamParser(DataParser):
         if process.gpid > 0:
             if "exit" in process.state:
                 # look for matching piece
-                object_index = self._process_cache.getObjectIndex(tme=process.exit_tme, pid=process.pid)
+                object_index = self._process_cache.getObjectIndex(
+                    tme=process.exit_tme,
+                    pid=process.pid
+                )
                 # load process object from cache
                 try:
                     matching_process = self._process_cache.objectCache[process.pid][object_index]
@@ -149,7 +171,8 @@ class ProcessStreamParser(DataParser):
         try:
             matching_job = self._data.objectCache[process.gpid][object_index]
         except KeyError as e:
-            logging.getLogger(self.__class__.__name__).debug("no matching job has been found %s" % process)
+            logging.getLogger(self.__class__.__name__).debug("no matching job has been found %s" %
+                                                             process)
         else:
             matching_job.add_process(process=process,
                                      is_root=(self.job_root_name in process.name))

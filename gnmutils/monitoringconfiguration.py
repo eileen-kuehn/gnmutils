@@ -1,5 +1,6 @@
 class MonitoringConfiguration(object):
-    def __init__(self, version=None, interval=20, level=None, grouping=None, skip_other_pids=False, **kwargs):
+    def __init__(self, version=None, interval=20, level=None, grouping=None, skip_other_pids=False,
+                 **kwargs):
         self._version = version
         self._interval = interval
         self._level = level
@@ -53,5 +54,6 @@ class MonitoringConfiguration(object):
 
     def __repr__(self):
         return "%s: version (%s), interval (%d), level (%s), grouping (%s), skipOtherPids (%s)" % (
-            self.__class__.__name__, self.version, self.interval, self.level, self.grouping, self.skip_other_pids
+            self.__class__.__name__, self.version, self.interval, self.level, self.grouping,
+            self.skip_other_pids
         )

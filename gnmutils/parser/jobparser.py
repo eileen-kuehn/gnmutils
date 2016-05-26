@@ -6,8 +6,9 @@ from gnmutils.utils import *
 
 class JobParser(DataParser):
     """
-    The :py:class:`JobParser` is able to :py:func:`parse` raw information on :py:class:`gnmutils.process.Process` es as
-    well as :py:class:`gnmutils.traffic.Traffic` into a single :py:class:`gnmutils.job.Job`.
+    The :py:class:`JobParser` is able to :py:func:`parse` raw information on
+    :py:class:`gnmutils.process.Process` es as well as :py:class:`gnmutils.traffic.Traffic` into
+    a single :py:class:`gnmutils.job.Job`.
     """
     def __init__(self, **kwargs):
         DataParser.__init__(self, **kwargs)
@@ -18,8 +19,8 @@ class JobParser(DataParser):
 
     def clear_caches(self):
         """
-        Overwrites method not implemented by :py:class:`DataParser`. The implementation takes care of deleting
-        the actual data and creating a new :py:class:`Job`.
+        Overwrites method not implemented by :py:class:`DataParser`. The implementation takes
+        care of deleting the actual data and creating a new :py:class:`Job`.
         """
         self._data.clear_caches()
 

@@ -1,5 +1,6 @@
 from feature import *
 
+
 class TreeFeature(Feature):
     def __init__(self, id=None, degrees=None, height=None, count=None,
             leaves=None, uid=None):
