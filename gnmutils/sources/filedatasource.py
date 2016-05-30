@@ -2,6 +2,10 @@ import time
 import inspect
 import pickle
 import zipfile
+import os
+import re
+import logging
+import sys
 
 from gnmutils.sources.datasource import DataSource
 from gnmutils.reader.csvreader import CSVReader
@@ -10,9 +14,8 @@ from gnmutils.parser.processstreamparser import ProcessStreamParser
 from gnmutils.parser.trafficstreamparser import TrafficStreamParser
 from gnmutils.parser.trafficparser import TrafficParser
 from gnmutils.parser.networkstatisticsparser import NetworkStatisticsParser
-from gnmutils.utils import *
+from gnmutils.utils import relevant_directories
 
-from utility.exceptions import *
 from evenmoreutils import path as pathutils
 from evenmoreutils import csv as csvutils
 
@@ -34,7 +37,7 @@ class FileDataSource(DataSource):
             if re.search(kwargs.get("pattern", ".pkl"), dir_entry):
                 file_path = os.path.join(kwargs.get("path", self.default_path), dir_entry)
                 logging.getLogger(self.__class__.__name__).debug(
-                    "reading %s for object data" % file_path
+                    "reading %s for object data", file_path
                 )
                 data = pickle.load(open(file_path, "rb"))
                 yield data
@@ -87,17 +90,18 @@ class FileDataSource(DataSource):
                     run=run,
                     data_source=self,
                     path=current_path,
-                    data_reader=converter)
+                    data_reader=converter
+                )
                 converter.parser = parser
                 for traffic in self._read_stream(
-                    path=current_path,
-                    data_path=os.path.join(os.path.join(
-                        kwargs.get("data_path", self.default_path), workernode), run),
-                    workernode=workernode,
-                    run=run,
-                    stateful=kwargs.get("stateful", False),
-                    pattern="^[0-9]{10}-traffic.log-[0-9]{8}",
-                    converter=converter
+                        path=current_path,
+                        data_path=os.path.join(os.path.join(
+                            kwargs.get("data_path", self.default_path), workernode), run),
+                        workernode=workernode,
+                        run=run,
+                        stateful=kwargs.get("stateful", False),
+                        pattern="^[0-9]{10}-traffic.log-[0-9]{8}",
+                        converter=converter
                 ):
                     yield traffic
 
@@ -115,11 +119,11 @@ class FileDataSource(DataSource):
             for base_path, workernode, run in relevant_directories(path=path):
                 current_path = os.path.join(os.path.join(base_path, workernode), run)
                 for dir_entry in sorted(os.listdir(current_path)):
-                    m = re.match(kwargs.get("pattern", "(\d*)-process.csv"), dir_entry)
-                    if m:
+                    matches = re.match(kwargs.get("pattern", "(\d*)-process.csv"), dir_entry)
+                    if matches:
                         yield self.read_job(
                             path=current_path,
-                            name=m.group(1),
+                            name=matches.group(1),
                             converter=converter
                         )
         else:
@@ -153,7 +157,7 @@ class FileDataSource(DataSource):
         :return:
         """
         path = kwargs.get("path", self.default_path)
-        for base_path, workernode, run in relevant_directories(path=path):
+        for base_path, workernode, run in ~relevant_directories(path=path):
             current_path = os.path.join(os.path.join(base_path, workernode), run)
             converter = CSVReader()
             parser = NetworkStatisticsParser(
@@ -165,12 +169,12 @@ class FileDataSource(DataSource):
             )
             converter.parser = parser
             for statistics in self._read_stream(
-                path=current_path,
-                workernode=workernode,
-                run=run,
-                stateful=kwargs.get("stateful", False),
-                pattern="^[0-9]{10}-(process|traffic).log-[0-9]{8}",
-                converter=converter
+                    path=current_path,
+                    workernode=workernode,
+                    run=run,
+                    stateful=kwargs.get("stateful", False),
+                    pattern="^[0-9]{10}-(process|traffic).log-[0-9]{8}",
+                    converter=converter
             ):
                 yield statistics
 
@@ -221,23 +225,21 @@ class FileDataSource(DataSource):
         path = pathutils.ensureDirectory(kwargs.get("path", self.default_path))
         base_path = os.path.join(os.path.join(path, job.workernode), job.run)
         pathutils.ensureDirectory(base_path)
-        with open(os.path.join(
-                base_path, "%s-process.csv" %job.db_id
-        ), "w") as job_file:
-                header_initialized = False
-                for process in job.processes():
-                    if not header_initialized:
-                        # write header
-                        comment_string = "# Created by %s (%s) on %s" % (
-                            self.__class__.__name__,
-                            inspect.currentframe().f_code.co_name,
-                            time.strftime("%Y%m%d")
-                        )
-                        job_file.write("%s\n" % comment_string)
-                        job_file.write("%s\n" % job.configuration.getRow())
-                        job_file.write("%s\n" % process.getHeader())
-                        header_initialized = True
-                    job_file.write("%s\n" % process.getRow())
+        with open(os.path.join(base_path, "%s-process.csv" % job.db_id), "w") as job_file:
+            header_initialized = False
+            for process in job.processes():
+                if not header_initialized:
+                    # write header
+                    comment_string = "# Created by %s (%s) on %s" % (
+                        self.__class__.__name__,
+                        inspect.currentframe().f_code.co_name,
+                        time.strftime("%Y%m%d")
+                    )
+                    job_file.write("%s\n" % comment_string)
+                    job_file.write("%s\n" % job.configuration.getRow())
+                    job_file.write("%s\n" % process.getHeader())
+                    header_initialized = True
+                job_file.write("%s\n" % process.getRow())
 
     def write_payload(self, **kwargs):
         self._write_payload(**kwargs)
@@ -308,34 +310,33 @@ class FileDataSource(DataSource):
         current_path = pathutils.ensureDirectory(
             os.path.join(os.path.join(path, payload.workernode), payload.run)
         )
-        with open(os.path.join(
-                current_path, "%s-process.csv" % payload.db_id), "w") as process_file, \
-            open(os.path.join(
-                current_path, "%s-traffic.csv" % payload.db_id), "w") as traffic_file:
-                for process in payload.processes():
-                    # write process information
-                    if process_file.tell() == 0:
+        with open(os.path.join(current_path, "%s-process.csv" % payload.db_id), "w") \
+                as process_file, open(os.path.join(current_path, "%s-traffic.csv" % payload.db_id), "w") \
+                as traffic_file:
+            for process in payload.processes():
+                # write process information
+                if process_file.tell() == 0:
+                    comment_string = "# Created by %s (%s) on %s" % (
+                        self.__class__.__name__,
+                        inspect.currentframe().f_code.co_name,
+                        time.strftime("%Y%m%d")
+                    )
+                    process_file.write("%s\n" % comment_string)
+                    # write header
+                    process_file.write("%s\n" % process.getHeader())
+                process_file.write("%s\n" % process.getRow())
+                # write traffic information
+                for traffic in process.traffic:
+                    if traffic_file.tell() == 0:
                         comment_string = "# Created by %s (%s) on %s" % (
                             self.__class__.__name__,
                             inspect.currentframe().f_code.co_name,
                             time.strftime("%Y%m%d")
                         )
-                        process_file.write("%s\n" % comment_string)
                         # write header
-                        process_file.write("%s\n" % process.getHeader())
-                    process_file.write("%s\n" % process.getRow())
-                    # write traffic information
-                    for traffic in process.traffic:
-                        if traffic_file.tell() == 0:
-                            comment_string = "# Created by %s (%s) on %s" % (
-                                self.__class__.__name__,
-                                inspect.currentframe().f_code.co_name,
-                                time.strftime("%Y%m%d")
-                            )
-                            # write header
-                            traffic_file.write("%s\n" % comment_string)
-                            traffic_file.write("%s\n" % traffic.getHeader())
-                        traffic_file.write("%s\n" % traffic.getRow())
+                        traffic_file.write("%s\n" % comment_string)
+                        traffic_file.write("%s\n" % traffic.getHeader())
+                    traffic_file.write("%s\n" % traffic.getRow())
 
     def write_network_statistics(self, **kwargs):
         network_statistics = kwargs.get("data", None)
@@ -370,26 +371,26 @@ class FileDataSource(DataSource):
         name = "%s.zip" % kwargs.get("name", "jobarchive")
         archive_path = os.path.join(current_path, name)
         try:
-            with zipfile.ZipFile(archive_path, mode="a", allowZip64=True) as zf:
+            with zipfile.ZipFile(archive_path, mode="a", allowZip64=True) as zip_file:
                 process_source = os.path.join(current_path, "%s-process.csv" % job.db_id)
                 traffic_source = os.path.join(current_path, "%s-traffic.csv" % job.db_id)
                 if os.path.isfile(process_source) and \
                         os.path.isfile(traffic_source):
-                    zf.write(process_source, os.path.basename(process_source))
-                    zf.write(traffic_source, os.path.basename(traffic_source))
-                if zf.testzip() is None:
+                    zip_file.write(process_source, os.path.basename(process_source))
+                    zip_file.write(traffic_source, os.path.basename(traffic_source))
+                if zip_file.testzip() is None:
                     os.remove(process_source)
                     os.remove(traffic_source)
                 else:
                     logging.getLogger(self.__class__.__name__).critical(
-                        "something is wrong with zipfile %s for file %s" %
-                        (archive_path, zf.testzip())
+                        "something is wrong with zipfile %s for file %s",
+                        archive_path, zip_file.testzip()
                     )
         except zipfile.BadZipfile as e:
             logging.getLogger(self.__class__.__name__).critical(
-                "%s: Received bad zipfile error for zipfile %s" % (e, archive_path))
+                "%s: Received bad zipfile error for zipfile %s", e, archive_path)
             sys.exit(1)
         except zipfile.LargeZipFile as e:
             logging.getLogger(self.__class__.__name__).critical(
-                "%s: Received large zipfile error for zipfile %s" % (e, archive_path))
+                "%s: Received large zipfile error for zipfile %s", e, archive_path)
             sys.exit(1)
