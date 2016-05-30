@@ -11,5 +11,6 @@ setup(
         author_email="eileen.kuehn@kit.edu",
         url="https://bitbucket.org/eileenkuehn/gnmutils",
         packages=setuptools.find_packages(),
+        install_requires=['psycopg2'],
 )
 
