@@ -1,10 +1,11 @@
 import bisect
+import logging
 
 from gnmutils.objectcache import ObjectCache
 from gnmutils.monitoringconfiguration import MonitoringConfiguration
-from evenmoreutils.tree import Tree, Node
+from gnmutils.exceptions import NonUniqueRootException
 
-from exceptions import *
+from evenmoreutils.tree import Tree, Node
 
 
 class Job(object):
@@ -43,56 +44,122 @@ class Job(object):
 
     @property
     def data_source(self):
+        """
+        Property that returns the current DataSource.
+
+        :return: DataSource
+        """
         return self._data_source
 
     @data_source.setter
     def data_source(self, value):
+        """
+        Method to set the DataSource in use.
+
+        :param value: the new DataSource
+        """
         self._data_source = value
 
     @property
     def last_tme(self):
+        """
+        Method to return the last known tme within the job.
+
+        :return: last known tme
+        """
         return self._last_tme or self.exit_tme
 
     @last_tme.setter
     def last_tme(self, value):
+        """
+        Method to set the last known tme.
+
+        :param value: the last tme to set
+        """
         self._last_tme = value
 
     @property
     def configuration(self):
+        """
+        Method to return the configuration the job was created/recorded with.
+
+        :return: extracted configuration
+        """
         if self._configuration is None:
             return MonitoringConfiguration(version="alpha", level="treeconnection")
         return self._configuration
 
     @configuration.setter
     def configuration(self, value=None):
+        """
+        Method to set the configuration the job was created/recorded with.
+
+        :param value: the configuration to set
+        """
         self._configuration = value
 
     @property
     def workernode(self):
+        """
+        Method to return the workernode where the job was recorded.
+
+        :return: workernode identifier
+        """
         return self._workernode
 
     @workernode.setter
     def workernode(self, workernode=None):
+        """
+        Method to set the workernode the job was recorded on.
+
+        :param workernode: the workernode to set
+        """
         self._workernode = workernode
 
     @property
     def run(self):
+        """
+        Method to return the run when the job was recorded.
+
+        :return: run identifier
+        """
         return self._run
 
     @run.setter
     def run(self, run=None):
+        """
+        Method to set the run the job was recorded in.
+
+        :param run: the run to set
+        """
         self._run = run
 
     @property
     def db_id(self):
+        """
+        Method to return the associated id of the job within the database.
+
+        :return: job identifier in database
+        """
         return self._db_id or self.job_id
 
     @db_id.setter
     def db_id(self, value=None):
+        """
+        Method to set the associated id of the job within the database.
+
+        :param value: job identifier in database to set
+        """
         self._db_id = value
 
     @property
     def job_id(self):
+        """
+        Method returns the job id. If a valid id from the batchsystem can be extracted, it is
+        returned instead of a self-assigned one.
+
+        :return: batchsystem job id or self-assigned
+        """
         try:
             batchsystem_id = self._root.value.batchsystemId
             if batchsystem_id is not None:
@@ -104,10 +171,20 @@ class Job(object):
 
     @job_id.setter
     def job_id(self, job_id=None):
+        """
+        Method to set a self-assigned job identifier.
+
+        :param job_id: job identifier to be set
+        """
         self._job_id = job_id
 
     @property
     def gpid(self):
+        """
+        Method that returns the associated group identifier of the job.
+
+        :return: group identifier
+        """
         try:
             return self._root.value.gpid
         except:
@@ -115,6 +192,12 @@ class Job(object):
 
     @property
     def uid(self):
+        """
+        Method that returns the associated user identifier of the job. As the root process
+        has uid 0, the first valid uid that is found in the process hierarchy is used.
+
+        :return: first valid uid for job
+        """
         process_cache = self._process_cache.objectCache
         for pid in process_cache:
             for node in process_cache[pid]:
@@ -124,6 +207,11 @@ class Job(object):
 
     @property
     def tme(self):
+        """
+        Method that returns the tme when the job was started.
+
+        :return: tme of the job
+        """
         try:
             return self._root.value.tme
         except:
@@ -131,6 +219,14 @@ class Job(object):
 
     @property
     def exit_tme(self):
+        """
+        Method that returns the exit_tme when the job was finished.
+        Attention: this does not necessarily have to be the last known tme!
+
+        This method returns None if the job has not been finished so far.
+
+        :return: Exit_tme or None if unfinished
+        """
         try:
             return self._root.value.exit_tme
         except AttributeError:
@@ -138,35 +234,87 @@ class Job(object):
 
     @property
     def exit_code(self):
+        """
+        Method returns the exit_code of the job.
+
+        :return: exit_code of job
+        """
         return self._root.value.exit_code
 
     @property
     def tree(self):
+        """
+        Method returns the assigned tree of the job.
+
+        :return: process tree of job
+        """
         return self._get_tree()
 
     @property
     def process_cache(self):
+        """
+        This method gives access to the actual process cache used for building the job.
+
+        :return: process_cache
+        """
         return self._process_cache.objectCache
 
     @property
     def faulty_nodes(self):
+        """
+        This method gives access to faulty nodes that have not correctly been assigned to the job.
+
+        :return: faultyNodes
+        """
         return self._process_cache.faultyNodes
 
     def regenerate_tree(self):
+        """
+        Method to re-generate the assigned tree. The actual tree is cached. If a change has been
+        applied to the job after the tree was generated, it should be regenerated because it is
+        internally cached.
+
+        :return: re-generated process tree of job
+        """
         return self._get_tree(reinitialize=True)
 
     def add_node_object(self, node=None, is_root=False):
+        """
+        Method adds a process that is already encapsulated into a node to the current job.
+
+        :param node: node to be added
+        :param is_root: is the process root of the tree
+        """
         self._add(node=node, is_root=is_root)
 
     def add_process(self, process=None, is_root=False):
+        """
+        Method that adds a process to the current job.
+
+        :param process: process to be added
+        :param is_root: is the process root of the tree
+        """
         node = Node(value=process)
         self._add(node=node, is_root=is_root)
 
     def add_traffic(self, traffic=None):
+        """
+        Method to add traffic to the current job.
+
+        :param traffic: traffic to be added
+        """
         process_node = self._process_cache.getNodeObject(tme=traffic.tme, pid=traffic.pid)
         process_node.value.traffic.append(traffic)
 
     def is_valid(self):
+        """
+        Method that checks if the current job is valid. Therefore it validates that only for one
+        process no parent was found (root process). It also checks that a root is existent at all.
+        Method also recursively checks if all processes are valid. This means, each process needs
+        a start and exit event.
+
+        :return: true if job seems to be valid, false otherwise
+        """
         if len(self._process_cache.faultyNodes) > 1 or self._root is None:
             return False
         process_cache = self._process_cache.objectCache
@@ -177,13 +325,25 @@ class Job(object):
         return True
 
     def is_complete(self):
+        """
+        Method that tells if the job is completed by checking if the actual process tree can be
+        generated.
+        Attention: true does not mean it is complete. There might still be some processes missing.
+
+        :return: true if tree can be generated, false otherwise
+        """
         tree = self.tree
         return tree is not None
 
     def processes(self):
+        """
+        Generator that returns processes of the job in depth first order.
+
+        :return: process generator of the job
+        """
         tree = self.tree
         if tree is not None:
-            for node, depth in tree.walkDFS():
+            for node, _ in tree.walkDFS():
                 yield node.value
         else:
             logging.getLogger(self.__class__.__name__).warning("There is no tree for current job")
@@ -193,6 +353,11 @@ class Job(object):
                     yield node.value
 
     def process_count(self):
+        """
+        Method that returns the count of the processes inside the job.
+
+        :return: process count
+        """
         count = 0
         process_cache = self._process_cache.objectCache
         for pid in process_cache:
@@ -238,8 +403,9 @@ class Job(object):
             if (len(self._process_cache.faultyNodes) <= 1 and self._root and
                     (Tree(self._root).getVertexCount() == self.process_count())):
                 self._tree = Tree(self._root)
-        logging.getLogger(self.__class__.__name__).info("faulty nodes: %s" %
-                                                        self._process_cache.faultyNodes)
+        logging.getLogger(self.__class__.__name__).info(
+            "faulty nodes: %s", self._process_cache.faultyNodes
+        )
         return self._tree
 
     @staticmethod
@@ -258,9 +424,9 @@ class Job(object):
                                                            rememberError=True)
                 if parent:
                     parent.add(node, orderPosition=self._add_function)
-        logging.getLogger(self.__class__.__name__).info("no parents found for %d nodes" % (
-            len(self._process_cache.faultyNodes)
-        ))
+        logging.getLogger(self.__class__.__name__).info(
+            "no parents found for %d nodes", len(self._process_cache.faultyNodes)
+        )
 
         if len(self._process_cache.faultyNodes) <= 1 and self._root:
             # set depth
@@ -269,8 +435,7 @@ class Job(object):
 
     def __repr__(self):
         return "%s: db_id (%s), job_id (%s), gpid (%d), workernode (%s), configuration (%s), " \
-               "run (%s), tme (%d), root (%s), process_cache (%s), tree_initialized (%s)" % (
-            self.__class__.__name__, self.db_id, self.job_id, self.gpid, self.workernode,
-            self.configuration, self.run, self.tme, (self._root and self._root.value),
-            self._process_cache, self._tree_initialized
-        )
+               "run (%s), tme (%d), root (%s), process_cache (%s), tree_initialized (%s)" % \
+               (self.__class__.__name__, self.db_id, self.job_id, self.gpid, self.workernode,
+                self.configuration, self.run, self.tme, (self._root and self._root.value),
+                self._process_cache, self._tree_initialized)
