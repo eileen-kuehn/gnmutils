@@ -1,4 +1,4 @@
-from evenmoreutils import string as stringutils
+from evenmoreutils import strings as stringutils
 
 from gnmutils.exceptions import ProcessMismatchException
 

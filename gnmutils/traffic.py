@@ -1,7 +1,7 @@
 import re
 import logging
 
-from evenmoreutils import string as stringutils
+from evenmoreutils import strings as stringutils
 
 
 class Traffic(object):
