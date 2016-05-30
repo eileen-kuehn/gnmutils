@@ -10,8 +10,8 @@ class JobParser(DataParser):
     :py:class:`gnmutils.process.Process` es as well as :py:class:`gnmutils.traffic.Traffic` into
     a single :py:class:`gnmutils.job.Job`.
     """
-    def __init__(self, **kwargs):
-        DataParser.__init__(self, **kwargs)
+    def __init__(self, data_source=None, data_reader=None, **kwargs):
+        DataParser.__init__(self, data_source, data_reader, **kwargs)
         self._data = Job(data_source=self._data_source, path=kwargs.get("path", None))
 
     def data_id(self, value):

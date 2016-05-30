@@ -3,8 +3,8 @@ from gnmutils.traffic import Traffic
 
 
 class TrafficParser(DataParser):
-    def __init__(self, **kwargs):
-        DataParser.__init__(self, **kwargs)
+    def __init__(self, data_source=None, data_reader=None, **kwargs):
+        DataParser.__init__(self, data_source, data_reader, **kwargs)
         self._data = []
 
     def clear_caches(self):

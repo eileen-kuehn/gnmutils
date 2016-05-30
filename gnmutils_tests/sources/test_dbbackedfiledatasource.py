@@ -1,4 +1,6 @@
 import unittest
+import os
+import gnmutils_tests
 
 from gnmutils.sources.dbbackedfiledatasource import DBBackedFileDataSource
 from utility.exceptions import *
@@ -7,6 +9,10 @@ from utility.exceptions import *
 class TestDBBackedFileDataSource(unittest.TestCase):
     def setUp(self):
         self.dataSource = DBBackedFileDataSource()
+        self.path = os.path.join(
+            os.path.dirname(gnmutils_tests.__file__),
+            "data/c00-001-001/1/"
+        )
 
     def test_setUp(self):
         connection = None
@@ -29,7 +35,7 @@ class TestDBBackedFileDataSource(unittest.TestCase):
 
     def test_jobs(self):
         count = 0
-        for job in self.dataSource.jobs():
+        for _ in self.dataSource.jobs(path=self.path):
             count += 1
         self.assertEqual(0, count, "Count should be zero with empty database")
 

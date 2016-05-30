@@ -1,3 +1,5 @@
+import bisect
+
 from gnmutils.objectcache import ObjectCache
 from gnmutils.monitoringconfiguration import MonitoringConfiguration
 from evenmoreutils.tree import Tree, Node
@@ -240,6 +242,11 @@ class Job(object):
                                                         self._process_cache.faultyNodes)
         return self._tree
 
+    @staticmethod
+    def _add_function(child, children):
+        tmes = [node.value.tme for node in children]
+        return bisect.bisect_left(tmes, child.value.tme)
+
     def _initialize_tree(self):
         logging.getLogger(self.__class__.__name__).info("Initializing tree structure")
         process_cache = self._process_cache.objectCache
@@ -250,7 +257,7 @@ class Job(object):
                                                            pid=node.value.ppid,
                                                            rememberError=True)
                 if parent:
-                    parent.add(node)
+                    parent.add(node, orderPosition=self._add_function)
         logging.getLogger(self.__class__.__name__).info("no parents found for %d nodes" % (
             len(self._process_cache.faultyNodes)
         ))

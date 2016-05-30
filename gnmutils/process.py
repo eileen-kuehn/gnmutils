@@ -3,46 +3,112 @@ from evenmoreutils import string as stringutils
 from gnmutils.exceptions import ProcessMismatchException
 
 
+def check_id(value=None):
+    try:
+        return int(value)
+    except TypeError:
+        return 0
+
+
+def check_tme(value=None):
+    try:
+        return int(value)
+    except TypeError:
+        return 0
+
+
 class Process(object):
-    def __init__ (self, name=None, cmd=None, pid=None, ppid=None, uid=None, tme=None, exit_tme=None,
-                  error_code=None, signal=None, exit_code=0, gpid=None, state=None, job_id=None,
-                  int_in_volume=None, int_out_volume=None, ext_in_volume=None, ext_out_volume=None,
-                  tree_depth=None, process_type=None, color=None, valid=False, traffic=None):
-        self._name = self._check_is_none(value=name)
-        self._cmd = self._check_is_none(value=cmd)
-        self._pid = self._check_is_none(value=pid)
-        self._ppid = self._check_is_none(value=ppid)
-        self._uid = self._check_is_none(value=uid)
-        self._gpid = self._check_is_none(value=gpid)
+    default_key_type = {
+        'name': stringutils.xstr,
+        'cmd': stringutils.xstr,
+        'pid': check_id,
+        'ppid': check_id,
+        'uid': check_id,
+        'gpid': check_id,
+        'tme': check_tme,
+        'exit_tme': check_tme,
+        'error_code': int,
+        'signal': int,
+        'exit_code': int,
+        'state': stringutils.xstr,
+        'job_id': str,
+        'int_in_volume': stringutils.xfloat,
+        'int_out_volume': stringutils.xfloat,
+        'ext_in_volume': stringutils.xfloat,
+        'ext_out_volume': stringutils.xfloat,
+        'valid': int,
+        # not relevant in many cases
+        'tree_depth': int,
+        'process_type': str,
+        'color': str,
+        'traffic': list
+    }
+
+    def __init__(self, name=None, cmd=None, pid=None, ppid=None, uid=None, tme=None, exit_tme=None,
+                 error_code=None, signal=None, exit_code=0, gpid=None, state=None, job_id=None,
+                 int_in_volume=None, int_out_volume=None, ext_in_volume=None, ext_out_volume=None,
+                 tree_depth=None, process_type=None, color=None, valid=False, traffic=None):
+        self.name = self._convert_to_default_type("name", name)
+        self.cmd = self._convert_to_default_type("cmd", cmd)
+        self.pid = self._convert_to_default_type("pid", pid)
+        self.ppid = self._convert_to_default_type("ppid", ppid)
+        self.uid = self._convert_to_default_type("uid", uid)
+        self.gpid = self._convert_to_default_type("gpid", gpid)
+
+        self.tme = self._convert_to_default_type("tme", tme)
+        self.exit_tme = self._convert_to_default_type("exit_tme", exit_tme)
+
+        self.state = self._convert_to_default_type("state", state)
+
         self._valid = valid
         self._traffic = traffic or []
 
-        self._tme = self._check_is_none(value=tme)
-        self._exit_tme = self._check_is_none(value=exit_tme)
-        self._state = stringutils.xstr(state)
-
         # set exit_code first, but can be overwritten by error_code and signal
-        if self._check_is_none(value=str(exit_code)) is not None:
-            self._setExitCode(exit_code)
-        else:
-            self._error_code = self._check_is_none(value=error_code)
-            self._signal = self._check_is_none(value=signal)
+        if exit_code is not None:
+            self._set_exit_code(exit_code)
+        self.error_code = self._convert_to_default_type("error_code", error_code)
+        self.signal = self._convert_to_default_type("signal", signal)
 
-        self.job_id = self._check_is_none(value=job_id)
-        self.tree_depth = self._check_is_none(value=tree_depth)
-        self.process_type = self._check_is_none(value=process_type)
-        self.color = self._check_is_none(value=color)
+        self.job_id = self._convert_to_default_type("job_id", job_id)
+        self.tree_depth = self._convert_to_default_type("tree_depth", tree_depth)
+        self.process_type = self._convert_to_default_type("process_type", process_type)
+        self.color = self._convert_to_default_type("color", color)
 
-        self.int_in_volume = stringutils.xfloat(int_in_volume)
-        self.int_out_volume = stringutils.xfloat(int_out_volume)
-        self.ext_in_volume = stringutils.xfloat(ext_in_volume)
-        self.ext_out_volume = stringutils.xfloat(ext_out_volume)
+        self.int_in_volume = self.default_key_type["int_in_volume"](int_in_volume)
+        self.int_out_volume = self.default_key_type["int_out_volume"](int_out_volume)
+        self.ext_in_volume = self.default_key_type["ext_in_volume"](ext_in_volume)
+        self.ext_out_volume = self.default_key_type["ext_out_volume"](ext_out_volume)
 
-    def _check_is_none(self, value=None):
-        if value is not None and len(str(value)) > 0:
-            return str(value)
-        return None
+    @staticmethod
+    def process_from_row(row):
+        """
+        Convert all known items of a row to their appropriate types
 
+        :param row: Row dictionary
+        """
+        for key, value in row.iteritems():
+            try:
+                row[key] = Process.default_key_type[key](value)
+            except ValueError:
+                if not value:  # empty string -> type default
+                    row[key] = Process.default_key_type[key]()
+                else:
+                    raise
+            except KeyError:
+                pass
+        return Process(**row)
+
+    def _convert_to_default_type(self, key, value):
+        try:
+            result = self.default_key_type[key](value)
+        except TypeError:
+            if not value:
+                result = self.default_key_type[key]()
+            else:
+                raise
+        except KeyError:
+            pass
+        return result
 
     @property
     def traffic(self):
@@ -55,84 +121,26 @@ class Process(object):
         return None
 
     @property
-    def state(self):
-        return stringutils.xstr(self._state)
-
-    @property
-    def cmd(self):
-        return stringutils.xstr(self._cmd)
-
-    @property
-    def name(self):
-        return stringutils.xstr(self._name)
-
-    @property
-    def pid(self):
-        try:
-            return int(self._pid)
-        except TypeError:
-            return 0
-
-    @property
-    def ppid(self):
-        try:
-            return int(self._ppid)
-        except TypeError:
-            return 0
-
-    @property
-    def uid(self):
-        try:
-            return int(self._uid)
-        except TypeError:
-            return 0
-
-    @property
-    def gpid(self):
-        try:
-            return int(self._gpid)
-        except TypeError:
-            return 0
-
-    @property
-    def tme(self):
-        try:
-            return int(self._tme)
-        except TypeError:
-            return 0
-
-    @property
-    def exit_tme(self):
-        try:
-            return int(self._exit_tme)
-        except TypeError:
-            return 0
-
-    @property
-    def signal(self):
-        return int(self._signal)
-
-    @property
     def exit_code(self):
-        return self._error_code and self._signal and ((self._error_code << 8) + self._signal)
+        return self.error_code and self.signal and ((self.error_code << 8) + self.signal)
         
     @property
     def valid(self):
         return int(self._valid)
 
     def getDuration(self):
-        return self._valid and (self.exit_tme - self.tme)
+        return self._valid and self.exit_tme >= self.tme and (self.exit_tme - self.tme)
 
     def getRow(self):
         return ("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%s,%s"
-                %(stringutils.xint(self._tme), stringutils.xint(self._exit_tme),
-                    stringutils.xint(self._pid), stringutils.xint(self._ppid),
-                    stringutils.xint(self._gpid), stringutils.xint(self._uid),
-                    self.name, self.cmd, stringutils.xint(self._error_code),
-                    stringutils.xint(self._signal), self.valid, self.int_in_volume,
+                %(stringutils.xint(self.tme), stringutils.xint(self.exit_tme),
+                    stringutils.xint(self.pid), stringutils.xint(self.ppid),
+                    stringutils.xint(self.gpid), stringutils.xint(self.uid),
+                    self.name, self.cmd, stringutils.xint(self.error_code),
+                    stringutils.xint(self.signal), self.valid, self.int_in_volume,
                     self.int_out_volume, self.ext_in_volume, self.ext_out_volume,
                     stringutils.xint(self.tree_depth), stringutils.xstr(self.process_type),
-                    stringutils.xstr(self.color), self._state))
+                    stringutils.xstr(self.color), self.state))
 
     def getHeader(self):
         return ("tme,exit_tme,pid,ppid,gpid,uid,name,cmd,error_code,"\
@@ -151,33 +159,34 @@ class Process(object):
 
     def addProcessEvent(self, name=None, cmd=None, pid=None, ppid=None,
             uid=None, tme=None, exit_code=None, gpid=None, state=None):
-        if self._pid and self.pid != pid and self.ppid != ppid and \
+        if self.pid and self.pid != pid and self.ppid != ppid and \
                         self.name not in name and self.cmd not in cmd:
             raise ProcessMismatchException
         if "exit" in state:
-            if self._state != ".":
+            if self.state != ".":
                 self._valid = True
-            self._setExitCode(exit_code)
-            self._exit_tme = tme
-            self._state = state
+            self._set_exit_code(exit_code)
+            self.exit_tme = tme
+            self.state = state
         else:
             # maybe exit process event arrives first...
-            if "exit" in self._state and state != ".":
+            if "exit" in self.state and state != ".":
                 self._valid = True
-            elif "exit" in self._state and state == ".":
+            elif "exit" in self.state and state == ".":
                 self._valid = False
-            self._tme = self._tme or tme
-        self._state = self._state or state
-        self._name = self._name or name
-        self._cmd = self._cmd or cmd
-        self._pid = self._pid or pid
-        self._ppid = self._ppid or ppid
-        self._uid = self._uid or uid
-        self._gpid = self._gpid or gpid
+            self.tme = self.tme or tme
+        self.state = self.state or state
+        self.name = self.name or name
+        self.cmd = self.cmd or cmd
+        self.pid = self.pid or pid
+        self.ppid = self.ppid or ppid
+        self.uid = self.uid or uid
+        self.gpid = self.gpid or gpid
 
-    def _setExitCode(self, exit_code):
-        self._error_code = int(exit_code) >> 8
-        self._signal = int(exit_code) & 255
+    def _set_exit_code(self, exit_code):
+        exit_code = self._convert_to_default_type("exit_code", exit_code)
+        self.error_code = exit_code >> 8
+        self._signal = exit_code & 255
 
     def __repr__(self):
         return "%s: name (%s), cmd (%s), pid (%d), ppid (%d), uid (%d), gpid (%d), valid (%s), " \

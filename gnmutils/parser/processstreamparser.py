@@ -19,9 +19,9 @@ class ProcessStreamParser(DataParser):
     """
     job_root_name = "sge_shepherd"
 
-    def __init__(self, workernode=None, run=None, **kwargs):
+    def __init__(self, data_source=None, data_reader=None, workernode=None, run=None, **kwargs):
         self._process_cache = ObjectCache()
-        DataParser.__init__(self, **kwargs)
+        DataParser.__init__(self, data_source, data_reader, **kwargs)
         self._data = self._data or ObjectCache()
         self._workernode = workernode
         self._run = run

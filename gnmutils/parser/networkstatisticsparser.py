@@ -11,8 +11,8 @@ from utility.exceptions import *
 
 
 class NetworkStatisticsParser(DataParser):
-    def __init__(self, workernode=None, run=None, **kwargs):
-        DataParser.__init__(self, **kwargs)
+    def __init__(self, data_source=None, data_reader=None, workernode=None, run=None, **kwargs):
+        DataParser.__init__(self, data_source, data_reader, **kwargs)
         self._data = self._data or {}
         self._workernode = workernode
         self._run = run

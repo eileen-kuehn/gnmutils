@@ -26,27 +26,6 @@ class CSVReader(DataReader):
         self._header = None
         self._tme = None
 
-    @property
-    def parser(self):
-        """
-        This methods returns the parser that is currently in use for parsing the valid rows found
-        in CSV.
-
-        :return: parser being used for row parsing
-        :rtype: :py:class:`JobParser`, :py:class:`ProcessParser` or :py:class:`TrafficParser`
-        """
-        return self._parser
-
-    @parser.setter
-    def parser(self, value):
-        """
-        Setting the actual subclass of :py:class:`DataReader`.
-
-        :param value: the parser to be used
-        :type value: Instance of subclass of :py:class:`DataReader`
-        """
-        self._parser = value
-
     # prepare for next CSV file to be read
     def clearCaches(self):
         """

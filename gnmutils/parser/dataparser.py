@@ -5,9 +5,9 @@ from utility.exceptions import *
 
 
 class DataParser(object):
-    def __init__(self, **kwargs):
-        self._data_source = kwargs.get("data_source", None)
-        self._data_reader = kwargs.get("data_reader", None)
+    def __init__(self, data_source=None, data_reader=None, **kwargs):
+        self._data_source = data_source
+        self.data_reader = data_reader
         self._changed = True
         self._data = None
         self._configuration = None
@@ -32,14 +32,6 @@ class DataParser(object):
 
     def data_id(self, value):
         raise NotImplementedError
-
-    @property
-    def data_reader(self):
-        return self._data_reader
-
-    @data_reader.setter
-    def data_reader(self, value):
-        self._data_reader = value
 
     @property
     def parsed_data(self):
@@ -96,7 +88,7 @@ class DataParser(object):
         :param path:
         :return:
         """
-        for data_dict in self._data_reader.data(path=kwargs.get("path", None)):
+        for data_dict in self.data_reader.data(path=kwargs.get("path", None)):
             if data_dict is not None:
                 piece = self._piece_from_dict(data_dict)
                 data = self.add_piece(piece=piece)

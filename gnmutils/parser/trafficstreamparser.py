@@ -43,8 +43,8 @@ class TrafficStreamParser(DataParser):
     At the time when splitting the stream, it does not matter, if the single traffic entries are
     matched to existing :py:class:`Process`es. They just need to appear in csv files.
     """
-    def __init__(self, workernode=None, run=None, **kwargs):
-        DataParser.__init__(self, **kwargs)
+    def __init__(self, data_source=None, data_reader=None, workernode=None, run=None, **kwargs):
+        DataParser.__init__(self, data_source, data_reader, **kwargs)
         if self._data_source is not None:
             self._data = next(self._data_source.object_data(
                 pattern="traffic_data.pkl",

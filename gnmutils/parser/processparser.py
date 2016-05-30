@@ -14,7 +14,8 @@ class ProcessParser(DataParser):
     Complete processes belonging to the same job can then be joined by using a
     :py:class:`JobParser`.
     """
-    def __init__(self, converter=None, operator=None, processCache=None, jobCache=None):
+    # FIXME: does this class not need information from DataParser?!
+    def __init__(self, data_source=None, data_reader=None, converter=None, operator=None, processCache=None, jobCache=None):
         self._converter = converter
         self._operator = operator
 
