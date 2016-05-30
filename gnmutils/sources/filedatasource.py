@@ -20,9 +20,6 @@ from evenmoreutils import csv as csvutils
 class FileDataSource(DataSource):
     default_path = "/Users/eileen/projects/Dissertation/Development/data/raw"
 
-    def __init__(self):
-        pass
-
     def is_available(self):
         return True
 
