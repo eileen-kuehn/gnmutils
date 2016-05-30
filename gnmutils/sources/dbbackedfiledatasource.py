@@ -12,8 +12,7 @@ from utility.exceptions import *
 class DBBackedFileDataSource(FileDataSource):
     def __init__(self):
         FileDataSource.__init__(self)
-        self._db_data_source = DBDataSource(connectionString="dbname=gnm user=gnm",
-                                            providerName="PostgresDBProvider")
+        self._db_data_source = DBDataSource(connectionName="default")
         self._db_operator = DBOperator(data_source=self._db_data_source)
 
     def is_available(self):
