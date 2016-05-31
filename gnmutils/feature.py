@@ -1,3 +1,6 @@
+from gnmutils.objects.gnm_object import GNMObject
+
+
 class FeatureFactory:
     factories = {}
 
@@ -11,5 +14,17 @@ class FeatureFactory:
             FeatureFactory.factories[id] = eval(id + '.Factory()')
         return FeatureFactory.factories[id].craete(**kwargs)
 
-class Feature(object): pass
 
+class Feature(GNMObject):
+    def __init__(self, uid, tme):
+        GNMObject.__init__(uid=uid, tme=tme)
+
+    def getRow(self):
+        raise NotImplementedError
+
+    def getHeader(self):
+        raise NotImplementedError
+
+    @staticmethod
+    def default_header(length, **kwargs):
+        raise NotImplementedError
