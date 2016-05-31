@@ -1,4 +1,4 @@
-from feature import *
+from gnmutils.feature import Feature
 
 
 class TreeFeature(Feature):

@@ -1,7 +1,10 @@
+import os
+import re
+
 from gnmutils.parser.dataparser import DataParser
 from gnmutils.objects.process import Process
 from gnmutils.job import Job
-from gnmutils.utils import *
+from gnmutils.utils import path_components
 
 
 class JobParser(DataParser):

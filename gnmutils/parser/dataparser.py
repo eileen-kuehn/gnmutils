@@ -1,11 +1,11 @@
 """
 Module offers abstract definition of a :py:class:`DataParser`.
 """
+import logging
+
 from gnmutils.exceptions import ParserNotInitializedException
 
 from evenmoreutils.tree import Node
-
-from utility.exceptions import *
 
 
 class DataParser(object):
