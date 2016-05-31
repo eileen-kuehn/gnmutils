@@ -1,7 +1,7 @@
 import unittest
 
 from gnmutils.job import Job
-from gnmutils.process import Process
+from gnmutils.objects.process import Process
 
 
 class TestJobFunctions(unittest.TestCase):

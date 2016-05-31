@@ -1,5 +1,5 @@
 from gnmutils.parser.dataparser import DataParser
-from gnmutils.process import Process
+from gnmutils.objects.process import Process
 from gnmutils.job import Job
 from gnmutils.utils import *
 

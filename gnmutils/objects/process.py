@@ -1,23 +1,10 @@
 from evenmoreutils import strings as stringutils
 
+from gnmutils.objects.gnm_object import GNMObject, check_id, check_tme
 from gnmutils.exceptions import ProcessMismatchException
 
 
-def check_id(value=None):
-    try:
-        return int(value)
-    except TypeError:
-        return 0
-
-
-def check_tme(value=None):
-    try:
-        return int(value)
-    except TypeError:
-        return 0
-
-
-class Process(object):
+class Process(GNMObject):
     default_key_type = {
         'name': stringutils.xstr,
         'cmd': stringutils.xstr,
@@ -48,14 +35,10 @@ class Process(object):
                  error_code=None, signal=None, exit_code=0, gpid=None, state=None, job_id=None,
                  int_in_volume=None, int_out_volume=None, ext_in_volume=None, ext_out_volume=None,
                  tree_depth=None, process_type=None, color=None, valid=False, traffic=None):
+        GNMObject.__init__(self, pid=pid, ppid=ppid, uid=uid, tme=tme, gpid=gpid)
         self.name = self._convert_to_default_type("name", name)
         self.cmd = self._convert_to_default_type("cmd", cmd)
-        self.pid = self._convert_to_default_type("pid", pid)
-        self.ppid = self._convert_to_default_type("ppid", ppid)
-        self.uid = self._convert_to_default_type("uid", uid)
-        self.gpid = self._convert_to_default_type("gpid", gpid)
 
-        self.tme = self._convert_to_default_type("tme", tme)
         self.exit_tme = self._convert_to_default_type("exit_tme", exit_tme)
 
         self.state = self._convert_to_default_type("state", state)
@@ -97,18 +80,6 @@ class Process(object):
             except KeyError:
                 pass
         return Process(**row)
-
-    def _convert_to_default_type(self, key, value):
-        try:
-            result = self.default_key_type[key](value)
-        except TypeError:
-            if not value:
-                result = self.default_key_type[key]()
-            else:
-                raise
-        except KeyError:
-            pass
-        return result
 
     @property
     def traffic(self):

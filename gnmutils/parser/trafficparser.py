@@ -1,5 +1,5 @@
 from gnmutils.parser.dataparser import DataParser
-from gnmutils.traffic import Traffic
+from gnmutils.objects.traffic import Traffic
 
 
 class TrafficParser(DataParser):

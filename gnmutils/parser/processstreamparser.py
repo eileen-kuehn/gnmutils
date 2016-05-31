@@ -1,6 +1,6 @@
 from gnmutils.parser.dataparser import DataParser
 from gnmutils.objectcache import ObjectCache
-from gnmutils.process import Process
+from gnmutils.objects.process import Process
 from gnmutils.job import Job
 from gnmutils.exceptions import ProcessMismatchException
 

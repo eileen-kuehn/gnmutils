@@ -1,7 +1,7 @@
 import unittest
 
 from gnmutils.objectcache import ObjectCache
-from gnmutils.process import Process
+from gnmutils.objects.process import Process
 
 
 class TestObjectCacheFunctions(unittest.TestCase):

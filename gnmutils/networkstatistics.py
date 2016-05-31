@@ -1,4 +1,4 @@
-from gnmutils.traffic import Traffic
+from gnmutils.objects.traffic import Traffic
 
 
 class NetworkStatistics(object):

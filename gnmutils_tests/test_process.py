@@ -1,6 +1,6 @@
 import unittest
 
-from gnmutils.process import Process
+from gnmutils.objects.process import Process
 
 
 class TestProcessFunctions(unittest.TestCase):

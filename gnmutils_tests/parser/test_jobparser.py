@@ -1,7 +1,7 @@
 import unittest
 
 from gnmutils.parser.jobparser import JobParser
-from gnmutils.process import Process
+from gnmutils.objects.process import Process
 from gnmutils.exceptions import *
 
 

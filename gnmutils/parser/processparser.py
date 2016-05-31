@@ -3,7 +3,7 @@ import cPickle as pickle
 import logging
 
 from gnmutils.parser.dataparser import DataParser
-from gnmutils.process import Process
+from gnmutils.objects.process import Process
 from gnmutils.objectcache import ObjectCache
 from gnmutils.parser.jobparser import JobParser
 from gnmutils.exceptions import NonUniqueRootException
