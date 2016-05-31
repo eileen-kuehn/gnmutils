@@ -1,4 +1,4 @@
-from utility.exceptions import *
+from utility.exceptions import BasicException
 
 
 class NonUniqueRootException(BasicException):
@@ -38,4 +38,5 @@ class DataNotInCacheException(BasicException):
     Thrown when the data that is looked for in ObjectCache cannot be identified
     """
     def __init__(self, key=None, value=None):
-        BaseException.__init__(self, "Element for key %s at %d cannot be identified" % (key, value))
+        BasicException.__init__(self, "Element for key %s at %d cannot be identified" %
+                                (key, value))
