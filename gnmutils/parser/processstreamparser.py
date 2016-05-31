@@ -1,10 +1,13 @@
+"""
+The module implements the parsing of original output files from GNM tool.
+"""
+import logging
+
 from gnmutils.parser.dataparser import DataParser
 from gnmutils.objectcache import ObjectCache
 from gnmutils.objects.process import Process
 from gnmutils.job import Job
 from gnmutils.exceptions import ProcessMismatchException
-
-from utility.exceptions import *
 
 
 class ProcessStreamParser(DataParser):
@@ -23,8 +26,8 @@ class ProcessStreamParser(DataParser):
         self._process_cache = ObjectCache()
         DataParser.__init__(self, data_source, data_reader, **kwargs)
         self._data = self._data or ObjectCache()
-        self._workernode = workernode
-        self._run = run
+        self.workernode = workernode
+        self.run = run
 
     def load_archive_state(self, path=None):
         if self._data_source is not None:
@@ -33,25 +36,9 @@ class ProcessStreamParser(DataParser):
                 path=path
             ), ObjectCache())
 
-    # TODO: fix naming of method
-    def defaultHeader(self, **kwargs):
+    @staticmethod
+    def defaultHeader(**kwargs):
         return Job.default_header(**kwargs)
-
-    @property
-    def workernode(self):
-        return self._workernode
-
-    @workernode.setter
-    def workernode(self, value=None):
-        self._workernode = value
-
-    @property
-    def run(self):
-        return self._run
-
-    @run.setter
-    def run(self, value=None):
-        self._run = value
 
     def archive_state(self, **kwargs):
         if self._data_source is not None:
@@ -134,13 +121,14 @@ class ProcessStreamParser(DataParser):
                 try:
                     matching_process = self._process_cache.object_cache[process.pid][object_index]
                     process.addProcessEvent(**matching_process.toProcessEvent())
-                except KeyError as e:
+                except KeyError as exception:
                     # exit state received first
                     logging.getLogger(self.__class__.__name__).warning(
-                        "received exit event of process before actual start event: %s" % e)
+                        "received exit event of process before actual start event: %s", exception
+                    )
                     self._process_cache.add_data(data=process)
-                except ProcessMismatchException as e:
-                    logging.getLogger(self.__class__.__name__).warning(e)
+                except ProcessMismatchException as exception:
+                    logging.getLogger(self.__class__.__name__).warning(exception)
                     self._process_cache.add_data(data=process)
                 else:
                     self._process_cache.remove_data(data=matching_process, key=matching_process.pid)
@@ -153,14 +141,14 @@ class ProcessStreamParser(DataParser):
             else:
                 if self.job_root_name in process.name:
                     # create new dummy job
-                    self._data.add_data(data=Job(
-                        workernode=self.workernode,
-                        run=self.run,
-                        tme=process.tme,
-                        gpid=process.gpid,
-                        job_id=process.batchsystemId,
-                        configuration=self.configuration,
-                        data_source=self._data_source),
+                    self._data.add_data(
+                        data=Job(workernode=self.workernode,
+                                 run=self.run,
+                                 tme=process.tme,
+                                 gpid=process.gpid,
+                                 job_id=process.batchsystemId,
+                                 configuration=self.configuration,
+                                 data_source=self._data_source),
                         key=process.gpid,
                         value=process.tme)
                 self._process_cache.add_data(data=process)
@@ -169,9 +157,10 @@ class ProcessStreamParser(DataParser):
         object_index = self._data.data_index(value=process.tme, key=process.gpid)
         try:
             matching_job = self._data.object_cache[process.gpid][object_index]
-        except KeyError as e:
-            logging.getLogger(self.__class__.__name__).debug("no matching job has been found %s" %
-                                                             process)
+        except KeyError:
+            logging.getLogger(self.__class__.__name__).debug(
+                "no matching job has been found %s", process
+            )
         else:
             matching_job.add_process(process=process,
                                      is_root=(self.job_root_name in process.name))
