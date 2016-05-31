@@ -1,18 +1,21 @@
+"""
+This module implements a :py:class:`DataParser` that creates a single CSV file of traffic data
+from the stream received from the GNM tool.
+"""
+import logging
+
 from gnmutils.parser.dataparser import DataParser
 from gnmutils.objectcache import ObjectCache
 from gnmutils.objects.traffic import Traffic
 from gnmutils.job import Job
 
-from utility.exceptions import *
-
 
 class TrafficWrapper(object):
-    pid = None
-    tme = None
-    exit_tme = None
-
     def __init__(self, job=None, configuration=None):
         self._traffic = {}
+        self.pid = None
+        self.tme = None
+        self.exit_tme = None
         if job is not None:
             self.pid = job.gpid
             self.tme = job.tme
@@ -25,10 +28,23 @@ class TrafficWrapper(object):
 
     @property
     def traffic(self):
+        """
+        Enables access to the underlying dictionary that contains relevant information about
+        the traffic.
+
+        :return: dictionary containing relevant traffic information
+        :rtype: dict
+        """
         return self._traffic
 
     @property
     def data(self):
+        """
+        Returns the array that contains the traffic entries.
+
+        :return: traffic data
+        :rtype: list
+        """
         return self._traffic["data"]
 
 
@@ -37,7 +53,7 @@ class TrafficStreamParser(DataParser):
     First the :py:class:`TrafficStreamParser` follows a very simple approach. When a traffic entry
     is going to be parsed, it checks if it already knows the :py:class:`Job` it belongs to.
     If no :py:class:`Job` can be found, a streamlined version (just identified by unique constraint
-    values) is loaded an put into the cache. This cache is used to attache the single
+    values) is loaded and put into the cache. This cache is used to attach the single
     :py:class:`Traffic` objects in form of an array.
 
     At the time when splitting the stream, it does not matter, if the single traffic entries are
@@ -56,8 +72,8 @@ class TrafficStreamParser(DataParser):
             ), set())
         else:
             self._data = ObjectCache()
-        self._workernode = workernode
-        self._run = run
+        self.workernode = workernode
+        self.run = run
         self._last_tme = None
 
     def pop_data(self):
@@ -70,7 +86,7 @@ class TrafficStreamParser(DataParser):
         if not self._changed:
             return
         for traffic in self._data.unfound.copy():
-            finished, appended, matched_wrapper = self._match_traffic(traffic=traffic)
+            _, appended, _ = self._match_traffic(traffic=traffic)
             if appended:
                 self._data.unfound.discard(traffic)
 
@@ -80,22 +96,6 @@ class TrafficStreamParser(DataParser):
     # TODO: fix naming of method
     def defaultHeader(self, **kwargs):
         return Traffic.default_header(**kwargs)
-
-    @property
-    def workernode(self):
-        return self._workernode
-
-    @workernode.setter
-    def workernode(self, value=None):
-        self._workernode = value
-
-    @property
-    def run(self):
-        return self._run
-
-    @run.setter
-    def run(self, value=None):
-        self._run = value
 
     def archive_state(self, **kwargs):
         if self._data_source is not None:
@@ -122,7 +122,7 @@ class TrafficStreamParser(DataParser):
     def _add_piece(self, piece=None):
         self._changed = True
         # look for matching job
-        finished, appended, matching_wrapper = self._match_traffic(traffic=piece)
+        finished, _, matching_wrapper = self._match_traffic(traffic=piece)
         if finished and object is not None:
             self._data.removeObject(matching_wrapper)
             return matching_wrapper.traffic
@@ -136,7 +136,6 @@ class TrafficStreamParser(DataParser):
         # load job object from cache
         matching_traffic_wrapper = None
         finished = False
-        appended = False
         try:
             matching_traffic_wrapper = self._data.objectCache[traffic.gpid][object_index]
             if traffic.tme - self._interval() <= matching_traffic_wrapper.exit_tme:
@@ -146,10 +145,10 @@ class TrafficStreamParser(DataParser):
                 # remember and remove old wrapper
                 finished = True
                 appended = self._match_with_new_wrapper(traffic=traffic)
-        except IndexError as e:
+        except IndexError:
             # no wrapper is known
             appended = self._match_with_new_wrapper(traffic=traffic)
-        except KeyError as e:
+        except KeyError:
             # no wrapper is known
             appended = self._match_with_new_wrapper(traffic=traffic)
         return finished, appended, matching_traffic_wrapper
@@ -173,8 +172,9 @@ class TrafficStreamParser(DataParser):
             return True
         else:
             logging.getLogger(self.__class__.__name__).warning(
-                "was not able to get job for traffic (gpid: %s, tme: %s, workernode: %s, run: %s)" %
-                (traffic.gpid, traffic.tme, self.workernode, self.run))
+                "was not able to get job for traffic (gpid: %s, tme: %s, workernode: %s, run: %s)",
+                traffic.gpid, traffic.tme, self.workernode, self.run
+            )
             self._data.unfound.add(traffic)
         return False
 
