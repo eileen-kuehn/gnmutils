@@ -1,12 +1,21 @@
+"""
+This module implements a :py:class:`DataSource` that solely works based on a database and reads from
+the file system.
+"""
+import logging
+import os
+
 from gnmutils.sources.filedatasource import FileDataSource
 from gnmutils.db.dbobjects import DBJobObject, DBPayloadObject, DBPayloadResultObject, \
     DBWorkernodeObject
 from gnmutils.db.dboperator import DBOperator
-from gnmutils.utils import *
+from gnmutils.utils import relevant_directories, directory_level, \
+    RUN_LEVEL, WORKERNODE_LEVEL, BASE_LEVEL
 
 from dbutils.datasource import DataSource as DBDataSource
 from dbutils.sqlcommand import SQLCommand
-from utility.exceptions import *
+
+from utility.exceptions import BasicError, RethrowException
 
 
 class DBBackedFileDataSource(FileDataSource):
@@ -33,12 +42,12 @@ class DBBackedFileDataSource(FileDataSource):
             for job in FileDataSource.jobs(self, **kwargs):
                 yield job
         else:
-            with SQLCommand(dataSource=self._db_data_source) as sqlCommand:
+            with SQLCommand(dataSource=self._db_data_source) as sql_command:
                 path = kwargs.get("path", self.default_path)
                 level = directory_level(path)
                 job_object = DBJobObject(valid=True, completed=True)
                 if level == RUN_LEVEL:
-                    base_path, workernode, run = next(relevant_directories(path=path),
+                    _, workernode, run = next(relevant_directories(path=path),
                                                       (None, None, None))
                     job_object.run = run
                     workernode_object = self._db_operator.load_or_create_workernode(data=workernode)
@@ -48,12 +57,13 @@ class DBBackedFileDataSource(FileDataSource):
                     workernode_object = self._db_operator.load_or_create_workernode(data=workernode)
                     job_object.workernode_id = workernode_object.id_value
 
-                for job_result in sqlCommand.find(job_object):
+                for job_result in sql_command.find(job_object):
                     current_path = path
                     if level == BASE_LEVEL:
                         # join different workernodes and runs
                         workernode_object = self._db_operator.load_one(
-                            DBWorkernodeObject(id=job_result.workernode_id))
+                            data=DBWorkernodeObject(id=job_result.workernode_id)
+                        )
                         current_path = os.path.join(os.path.join(path, workernode_object.name),
                                                     job_result.run)
                     elif level == WORKERNODE_LEVEL:
@@ -61,9 +71,9 @@ class DBBackedFileDataSource(FileDataSource):
                         current_path = os.path.join(path, job_result.run)
 
                     for job in FileDataSource.read_job(
-                        self,
-                        path=current_path,
-                        name=job_result.id_value):
+                            self,
+                            path=current_path,
+                            name=job_result.id_value):
                         yield job
 
     def read_job(self, **kwargs):
@@ -86,16 +96,18 @@ class DBBackedFileDataSource(FileDataSource):
             raise RethrowException("The job has not been found")
         else:
             if job_object is not None:
-                logging.getLogger(self.__class__.__name__).debug("loaded job %d from database" %
-                                                                 job_object.id_value)
+                logging.getLogger(self.__class__.__name__).debug(
+                    "loaded job %d from database", job_object.id_value
+                )
                 return FileDataSource.read_job(
                     self,
                     path=kwargs.get("path", self.default_path),
                     name=job_object.id_value)
             else:
                 logging.getLogger(self.__class__.__name__).warning(
-                        "did not find job (run=%s, gpid=%s, tme=%s, workernode_id=%s) in database" %
-                        (job.run, job.gpid, job.tme, workernode_object.id_value))
+                        "did not find job (run=%s, gpid=%s, tme=%s, workernode_id=%s) in database",
+                        job.run, job.gpid, job.tme, workernode_object.id_value
+                )
                 return None
 
     def write_job(self, **kwargs):
@@ -116,7 +128,9 @@ class DBBackedFileDataSource(FileDataSource):
         except:
             raise RethrowException("The job could not be created")
         else:
-            logging.debug("saved job for index %s" % job_object.id_value)
+            logging.getLogger(self.__class__.__name__).debug(
+                "saved job for index %s", job_object.id_value
+            )
             return job
 
     def write_payload(self, **kwargs):
@@ -126,31 +140,34 @@ class DBBackedFileDataSource(FileDataSource):
         :return:
         """
         payload = kwargs["data"]
-        with SQLCommand(dataSource=self._db_data_source) as sqlCommand:
+        with SQLCommand(dataSource=self._db_data_source) as sql_command:
             payload_object = DBPayloadObject(id=payload.db_id,
                                              tme=payload.tme,
                                              exit_tme=payload.exit_tme,
                                              exit_code=payload.exit_code,
                                              job_id=payload.job_id)
             try:
-                sqlCommand.startTransaction()
-                payload_object = sqlCommand.save(payload_object)
+                sql_command.startTransaction()
+                payload_object = sql_command.save(payload_object)
                 self._write_payload(**kwargs)
-                sqlCommand.commitTransaction()
+                sql_command.commitTransaction()
             except:
-                sqlCommand.rollbackTransaction()
+                sql_command.rollbackTransaction()
                 raise RethrowException("The payload could not be created")
             else:
-                logging.debug("saved payload for index %s" % payload_object.id_value)
+                logging.getLogger(self.__class__.__name__).debug(
+                    "saved payload for index %s", payload_object.id_value
+                )
                 return payload_object
 
     def write_payload_result(self, **kwargs):
         # TODO: maybe put the operations into one single SQLCommand, how to realize?
         payload_result = kwargs["data"]
-        with SQLCommand(dataSource=self._db_data_source) as sqlCommand:
-            workernode_object = self._db_operator.load_or_create_workernode(sql_command=sqlCommand,
-                                                                            data=kwargs.get(
-                                                                                "workernode", None))
+        with SQLCommand(dataSource=self._db_data_source) as sql_command:
+            workernode_object = self._db_operator.load_or_create_workernode(
+                sql_command=sql_command,
+                data=kwargs.get("workernode", None)
+            )
             payload_result_object = DBPayloadResultObject(
                 job_id=payload_result["jobId"],
                 task_monitor_id=payload_result["TaskMonitorId"],
@@ -162,7 +179,7 @@ class DBBackedFileDataSource(FileDataSource):
                 status_reason=payload_result["gridStatusReason"],
                 workernode_id=workernode_object.id_value
             )
-            workernode_object = self._db_operator.save_or_update(sql_command=sqlCommand,
+            workernode_object = self._db_operator.save_or_update(sql_command=sql_command,
                                                                  data=payload_result_object)
         return workernode_object
 
@@ -174,9 +191,10 @@ class DBBackedFileDataSource(FileDataSource):
                                  workernode_id=workernode_object.id_value)
         try:
             job_object = self._db_operator.load_job(data=job_object)
-        except Exception as e:
+        except Exception as exception:
             logging.getLogger(self.__class__.__name__).info(
-                "No matching job has been found (%s)" % e)
+                "No matching job has been found (%s)", exception
+            )
             return None
         else:
             # trying to fix a bug where job_object is none and therefore no access possible

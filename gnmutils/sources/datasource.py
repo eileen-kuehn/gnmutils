@@ -1,5 +1,22 @@
+"""
+Base implementation of a :py:class:`DataSource`.
+It is used as an interface for further implementations.
+"""
+
+
 class DataSource(object):
+    """
+    A :py:class:`DataSource` provides basic methods to work (reading and writing) with available
+    data. There is also a convenience method to get the best available :py:class:`DataSource`:
+    :py:meth:`best_available_data_source`.
+    """
     def is_available(self):
+        """
+        Method that returns if the :py:class:`DataSource` itself is available and can be used.
+
+        :return: `True`, if :py:class:`DataSource` is usable, `False` otherwise
+        :rtype: bool
+        """
         raise NotImplementedError
 
     @staticmethod

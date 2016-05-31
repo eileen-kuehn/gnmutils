@@ -1,3 +1,6 @@
+"""
+This module implements a data source that solely works based on the file system.
+"""
 import time
 import inspect
 import pickle
@@ -21,6 +24,11 @@ from evenmoreutils import csv as csvutils
 
 
 class FileDataSource(DataSource):
+    """
+    The class FileDataSource works based on the filesystem and does not depend on a database.
+    Attention: Currently it is not possible to get files that are only managed on the filesystem
+    into the database by using implemented methods/classes.
+    """
     default_path = "/Users/eileen/projects/Dissertation/Development/data/raw"
 
     def is_available(self):
@@ -310,9 +318,11 @@ class FileDataSource(DataSource):
         current_path = pathutils.ensureDirectory(
             os.path.join(os.path.join(path, payload.workernode), payload.run)
         )
-        with open(os.path.join(current_path, "%s-process.csv" % payload.db_id), "w") \
-                as process_file, open(os.path.join(current_path, "%s-traffic.csv" % payload.db_id), "w") \
-                as traffic_file:
+        with open(os.path.join(
+                current_path, "%s-process.csv" % payload.db_id
+        ), "w") as process_file, open(os.path.join(
+            current_path, "%s-traffic.csv" % payload.db_id
+        ), "w") as traffic_file:
             for process in payload.processes():
                 # write process information
                 if process_file.tell() == 0:
