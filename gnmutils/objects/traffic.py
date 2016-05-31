@@ -1,3 +1,6 @@
+"""
+Module implements a representation of traffic that is attached to a :py:class:`Process`.
+"""
 import re
 import logging
 
@@ -7,6 +10,9 @@ from evenmoreutils import strings as stringutils
 
 
 class Traffic(GNMObject):
+    """
+    Implementation of a traffic entry that is monitored from GNM tool.
+    """
     default_key_type = {
         'pid': check_id,
         'ppid': check_id,
@@ -35,13 +41,11 @@ class Traffic(GNMObject):
         'conn': str,
     }
 
-    def __init__(
-            self, conn=None, pid=None, ppid=None, uid=None, tme=None, in_rate=None, out_rate=None,
-            in_cnt=None, out_cnt=None, gpid=None, source_ip=None, dest_ip=None, source_port=None,
-            dest_port=None, conn_cat=None, workernode=None, interval=20, ext_in_rate=None,
-            int_in_rate=None, ext_out_rate=None, int_out_rate=None, ext_in_cnt=None,
-            int_in_cnt=None, ext_out_cnt=None, int_out_cnt=None
-    ):
+    def __init__(self, conn=None, pid=None, ppid=None, uid=None, tme=None, in_rate=None,
+                 out_rate=None, in_cnt=None, out_cnt=None, gpid=None, source_ip=None, dest_ip=None,
+                 source_port=None, dest_port=None, conn_cat=None, workernode=None, interval=20,
+                 ext_in_rate=None, int_in_rate=None, ext_out_rate=None, int_out_rate=None,
+                 ext_in_cnt=None, int_in_cnt=None, ext_out_cnt=None, int_out_cnt=None):
         GNMObject.__init__(self, pid=pid, ppid=ppid, uid=uid, tme=tme, gpid=gpid)
         self.source_ip = self._convert_to_default_type("source_ip", source_ip)
         self.dest_ip = self._convert_to_default_type("dest_ip", dest_ip)
@@ -55,43 +59,62 @@ class Traffic(GNMObject):
         self.interval = self._convert_to_default_type("interval", interval)
         if conn:
             self.setConnection(conn=conn, workernode=workernode)
-        if ((ext_out_cnt or ext_in_cnt or ext_out_rate or ext_in_rate) and
-                (float(ext_out_cnt) > 0 or float(ext_in_cnt) > 0 or float(ext_out_rate) > 0 or
-                         float(ext_in_rate) > 0)):
-            if "ext" not in self.conn_cat:
-                logging.getLogger(self.__class__.__name__).warning(
-                    "The calculated connection category %s does not match that of "
-                    "log file %s for ip %s", self.conn_cat, "ext", self.dest_ip
-                )
-            self.in_rate = ext_in_rate
-            self.out_rate = ext_out_rate
-            self.in_cnt = ext_in_cnt
-            self.out_cnt = ext_out_cnt
-        if ((int_out_cnt or int_in_cnt or int_out_rate or int_in_rate) and
-                (float(int_out_cnt) > 0 or float(int_in_cnt) > 0 or float(int_out_rate) > 0 or
-                         float(int_in_rate) > 0)):
-            if "int" not in self.conn_cat:
-                logging.getLogger(self.__class__.__name__).warning(
-                    "The calculated connection category %s does not match that of "
-                    "log file %s for ip %s", self.conn_cat, "int", self.dest_ip
-                )
-            self.in_rate = int_in_rate
-            self.out_rate = int_out_rate
-            self.in_cnt = int_in_cnt
-            self.out_cnt = int_out_cnt
+        if ext_out_cnt or ext_in_cnt or ext_out_rate or ext_in_rate:
+            if (self._convert_to_default_type("ext_out_cnt", ext_out_cnt) > 0 or
+                    self._convert_to_default_type("ext_in_cnt", ext_in_cnt) > 0 or
+                    self._convert_to_default_type("ext_out_rate", ext_out_rate) > 0 or
+                    self._convert_to_default_type("ext_in_rate", ext_in_rate) > 0):
+                if "ext" not in self.conn_cat:
+                    logging.getLogger(self.__class__.__name__).warning(
+                        "The calculated connection category %s does not match that of "
+                        "log file %s for ip %s", self.conn_cat, "ext", self.dest_ip
+                    )
+                self.in_rate = self._convert_to_default_type("ext_in_rate", ext_in_rate)
+                self.out_rate = self._convert_to_default_type("ext_out_rate", ext_out_rate)
+                self.in_cnt = self._convert_to_default_type("ext_in_cnt", ext_in_cnt)
+                self.out_cnt = self._convert_to_default_type("ext_out_cnt", ext_out_cnt)
+        if int_out_cnt or int_in_cnt or int_out_rate or int_in_rate:
+            if (self._convert_to_default_type("int_out_cnt", int_out_cnt) > 0 or
+                    self._convert_to_default_type("int_in_cnt", int_in_cnt) > 0 or
+                    self._convert_to_default_type("int_out_rate", int_out_rate) > 0 or
+                    self._convert_to_default_type("int_in_rate", int_in_rate)):
+                if "int" not in self.conn_cat:
+                    logging.getLogger(self.__class__.__name__).warning(
+                        "The calculated connection category %s does not match that of "
+                        "log file %s for ip %s", self.conn_cat, "int", self.dest_ip
+                    )
+                self.in_rate = self._convert_to_default_type("int_in_rate", int_in_rate)
+                self.out_rate = self._convert_to_default_type("int_out_rate", int_out_rate)
+                self.in_cnt = self._convert_to_default_type("int_in_cnt", int_in_cnt)
+                self.out_cnt = self._convert_to_default_type("int_out_cnt", int_out_cnt)
 
     @staticmethod
-    def is_conform(**kwargs):
-        if (kwargs.get("in_rate", None) is not None or
-                    kwargs.get("out_rate", None) is not None or
-                    kwargs.get("int_in_rate", None) is not None or
-                    kwargs.get("int_out_rate", None) is not None or
-                    kwargs.get("ext_in_rate", None) is not None or
-                    kwargs.get("ext_out_rate", None) is not None):
-            return True
-        return False
+    def from_dict(row):
+        """
+        Convert all known items of a row to their appropriate types
+
+        :param row: Row dictionary
+        # TODO: still need to do stuff that is done in init!
+        """
+        for key, value in row.iteritems():
+            try:
+                row[key] = Traffic.default_key_type[key](value)
+            except ValueError:
+                if not value:  # empty string -> type default
+                    row[key] = Traffic.default_key_type[key]()
+                else:
+                    raise
+            except KeyError:
+                pass
+        return Traffic(**row)
 
     def setConnection(self, conn=None, workernode=None):
+        """
+        Method to set the connection of traffic object.
+
+        :param str conn: the connection to set
+        :param str workernode: the workernode to set
+        """
         splitted_connection = conn.split("-")
         splitted_source = splitted_connection[0].split(":")
         splitted_target = splitted_connection[1].split(":")
@@ -144,7 +167,7 @@ class Traffic(GNMObject):
                    stringutils.xstr(self.out_rate),
                    stringutils.xstr(self.in_cnt),
                    stringutils.xstr(self.out_cnt),
-                   stringutils.xstr(self._gpid),
+                   stringutils.xstr(self.gpid),
                    stringutils.xstr(self.source_ip),
                    stringutils.xstr(self.dest_ip),
                    stringutils.xstr(self.source_port),

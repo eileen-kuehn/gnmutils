@@ -212,7 +212,7 @@ class ProcessParser(DataParser):
         self._job_cache.clear()
 
     def _create_process(self, row=None, header_cache=None):
-        process = Process.process_from_row(row=dict(zip(header_cache, row)))
+        process = Process.from_dict(row=dict(zip(header_cache, row)))
         self._process_cache.add_data(data=process)
         return process
 

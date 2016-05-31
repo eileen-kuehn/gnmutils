@@ -73,7 +73,7 @@ class Process(GNMObject):
         self.ext_out_volume = self.default_key_type["ext_out_volume"](ext_out_volume)
 
     @staticmethod
-    def process_from_row(row):
+    def from_dict(row):
         """
         Convert all known items of a row to their appropriate types
 

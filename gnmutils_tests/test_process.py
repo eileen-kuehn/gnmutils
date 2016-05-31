@@ -56,7 +56,7 @@ class TestProcessFunctions(unittest.TestCase):
         row_header = "tme,exit_tme,pid,ppid,gpid,uid,name,cmd,error_code,signal,valid," \
                      "int_in_volume,int_out_volume,ext_in_volume,ext_out_volume,tree_depth," \
                      "process_type,color,state"
-        process = Process.process_from_row(dict(zip(row_header.split(","), row_string.split(","))))
+        process = Process.from_dict(dict(zip(row_header.split(","), row_string.split(","))))
         self.assertIsNotNone(process)
         self.assertEqual(process.getDuration(), 54250)
         self.assertEqual(process.getHeader(), row_header)
@@ -64,7 +64,7 @@ class TestProcessFunctions(unittest.TestCase):
 
         row_string = "1405011331,,30726,7733,30726,0,(sge_shepherd)," \
                      "sge_shepherd-4165419,0,0,1,,,,,0,,,exit"
-        process = Process.process_from_row(dict(zip(row_header.split(","), row_string.split(","))))
+        process = Process.from_dict(dict(zip(row_header.split(","), row_string.split(","))))
         self.assertIsNotNone(process)
         self.assertEqual(process.getDuration(), 0)
         self.assertEqual(process.getHeader(), row_header)
