@@ -17,6 +17,9 @@ class JobParser(DataParser):
     def data_id(self, value):
         self._data.db_id = value
 
+    def check_caches(self, **kwargs):
+        pass
+
     def clear_caches(self):
         """
         Overwrites method not implemented by :py:class:`DataParser`. The implementation takes
