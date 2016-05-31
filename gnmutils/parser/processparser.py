@@ -1,3 +1,7 @@
+"""
+The module contains the class :py:class:`ProcessParser` that accumulates different process events
+to complete processes that can be stored as CSV.
+"""
 import time
 import cPickle as pickle
 import logging
@@ -24,20 +28,29 @@ class ProcessParser(DataParser):
 
         try:
             self._process_cache = pickle.load(open(processCache, "rb"))
-        except Exception as e:
+        except Exception as exception:
             self._process_cache = ObjectCache()
-            logging.warn("%s: did not load pickled ProcessCache" % e)
+            logging.getLogger(self.__class__.__name__).warn(
+                "%s: did not load pickled ProcessCache", exception
+            )
         else:
-            logging.info("Initialized with pickled ProcessCache")
+            logging.getLogger(self.__class__.__name__).info(
+                "Initialized with pickled ProcessCache"
+            )
         try:
             self._job_cache = pickle.load(open(jobCache, "rb"))
-        except Exception as e:
+        except Exception as exception:
             self._job_cache = ObjectCache()
-            logging.warn("%s: did not load pickled JobCache" % e)
+            logging.getLogger(self.__class__.__name__).warn(
+                "%s: did not load pickled JobCache", exception
+            )
         else:
-            logging.info("Initialized with pickled JobCache")
+            logging.getLogger(self.__class__.__name__).info(
+                "Initialized with pickled JobCache"
+            )
 
-    def defaultHeader(self, length=9):
+    @staticmethod
+    def defaultHeader(length=9):
         """
         Returns a dictionary of fields and positions in default configuration of header.
 
@@ -54,14 +67,14 @@ class ProcessParser(DataParser):
         if process.exit_tme > job.last_tme:
             job.last_tme = process.exit_tme
             self._operator.updateJob(job)
-        self._move_process(process=process, jobId=(job.id_value or 0))
+        self._move_process(process=process, job_id=(job.id_value or 0))
 
         # job is complete so remember and save it
         if "sge_shepherd" in process.cmd:
             job.exit_tme = process.exit_tme
 
             job_parser = self._job_cache.get_data(key=job.id_value, value=0)
-            if not self._save_and_delete_job(jobParser=job_parser, jobId=job.id_value, job=job):
+            if not self._save_and_delete_job(job_parser=job_parser, job_id=job.id_value, job=job):
                 logging.info("waiting for more processes to complete job...")
 
                 # remove dbJob from Cache
@@ -81,7 +94,9 @@ class ProcessParser(DataParser):
                     if (row[headerCache['name']] not in process.name and
                                 row[headerCache['cmd']] not in process.cmd):
                         # wrong process selected!
-                        logging.warning("process %s has not been logged" %row)
+                        logging.getLogger(self.__class__.__name__).warning(
+                            "process %s has not been logged", row
+                        )
                         process = Process(name=row[headerCache['name']],
                                           cmd=row[headerCache['cmd']],
                                           pid=row[headerCache['pid']],
@@ -124,7 +139,7 @@ class ProcessParser(DataParser):
             else:
                 # a new process is getting to know
                 # process has been started, so create and remember
-                process = self._create_process(row=row, headerCache=headerCache)
+                process = self._create_process(row=row, header_cache=headerCache)
                 if "sge_shepherd" in process.cmd:
                     # new pilot is starting
                     try:
@@ -136,18 +151,20 @@ class ProcessParser(DataParser):
                                                      gpid=int(row[headerCache['gpid']]),
                                                      batchsystemId=process.batchsystemId)
                         else:
-                            logging.error("ATTENTION: job was not created as it already seems to "
-                                          "be existent - job_id from DB %d vs CSV %d" %
-                                          (job.job_id, process.batchsystemId))
+                            logging.getLogger(self.__class__.__name__).error(
+                                "ATTENTION: job was not created as it already seems to be "
+                                "existent - job_id from DB %d vs CSV %d", job.job_id,
+                                process.batchsystemId
+                            )
                     except Exception:
                         self._operator.createJob(tme=tme,
                                                  gpid=int(row[headerCache['gpid']]),
                                                  batchsystemId=process.batchsystemId)
         else:
             # load object
-            self._create_process(row=row, headerCache=headerCache)
+            self._create_process(row=row, header_cache=headerCache)
 
-    def checkCaches(self, tme=None):
+    def check_caches(self, tme=None):
         logging.debug("checking caches")
 
         # check unfound nodes if a job already exists
@@ -169,16 +186,16 @@ class ProcessParser(DataParser):
         for jid in self._job_cache.object_cache.keys():
             for job_parser in self._job_cache.object_cache[jid][:]:
                 if jid == 0:
-                    self._save_raw_processes(jobParser=job_parser, jobId=jid)
+                    self._save_raw_processes(job_parser=job_parser, job_id=jid)
                 else:
-                    result = self._save_and_delete_job(jobParser=job_parser, jobId=jid)
+                    result = self._save_and_delete_job(job_parser=job_parser, job_id=jid)
                     if not result:
                         # check if job is already too old and remove it
                         job = self._operator.getJobById(jobId=jid)
                         if job.last_tme and (tme - job.last_tme >= 86400):
-                            self._save_raw_processes(jobParser=job_parser, jobId=jid)
+                            self._save_raw_processes(job_parser=job_parser, job_id=jid)
 
-    def clearCaches(self):
+    def clear_caches(self, **kwargs):
         """
         Method clears the current caches and takes care to pickle the uncompleted processes
         and jobs.
@@ -194,32 +211,34 @@ class ProcessParser(DataParser):
         pickle.dump(self._job_cache, open(self._operator.getPicklePath(typename="job"), "wb"), -1)
         self._job_cache.clear()
 
-    def _create_process(self, row=None, headerCache=None):
-        process = Process.process_from_row(row=dict(zip(headerCache, row)))
+    def _create_process(self, row=None, header_cache=None):
+        process = Process.process_from_row(row=dict(zip(header_cache, row)))
         self._process_cache.add_data(data=process)
         return process
 
-    def _move_process(self, process=None, jobId=None):
-        if jobId == 0:
+    def _move_process(self, process=None, job_id=None):
+        if job_id == 0:
             logging.info("received jobId 0")
-        job_parser = self._job_cache.get_data(value=0, key=jobId)
+        job_parser = self._job_cache.get_data(value=0, key=job_id)
         try:
             job_parser.addProcess(process=process)
-        except NonUniqueRootException as e:
-            logging.error("%s: added second root node to tree with id %d - batchsystemId: %d" %
-                          (e, jobId, process.batchsystemId))
+        except NonUniqueRootException as exception:
+            logging.getLogger(self.__class__.__name__).error(
+                "%s: added second root node to tree with id %d - batchsystemId: %d", exception,
+                job_id, process.batchsystemId
+            )
         except Exception:
             job_parser = JobParser()
             job_parser.add_piece(piece=process)
             # add tme field for ObjectCache
             job_parser.tme = 0
-            self._job_cache.add_data(data=job_parser, key=jobId)
+            self._job_cache.add_data(data=job_parser, key=job_id)
         self._process_cache.remove_data(data=process)
 
-    def _save_and_delete_job(self, jobParser=None, jobId=None, job=None):
-        tree = jobParser.regenerateTree()
+    def _save_and_delete_job(self, job_parser=None, job_id=None, job=None):
+        tree = job_parser.regenerateTree()
         if tree is not None:
-            path = self._operator.getPath(typename="process", jobId=jobId)
+            path = self._operator.getPath(typename="process", jobId=job_id)
             with open(path, "w+") as csvfile:
                 csvfile.write("# Created by %s on %s\n" %
                               ("processparser.py", time.strftime("%Y%m%d")))
@@ -230,32 +249,34 @@ class ProcessParser(DataParser):
                     csvfile.write("%s\n" %(node.value.getRow()))
 
             if job is None:
-                job = self._operator.getJobById(jobId)
+                job = self._operator.getJobById(job_id)
             if job is not None:
-                job.valid = jobParser.isValid()
+                job.valid = job_parser.isValid()
                 job.completed = True
-                job.uid = jobParser.uid
+                job.uid = job_parser.uid
                 self._operator.saveAndDeleteJob(job)
-            self._job_cache.remove_data(data=jobParser, key=jobId)
+            self._job_cache.remove_data(data=job_parser, key=job_id)
             return True
         # otherwise keep job in cache and wait for more...
         return False
 
-    def _save_raw_processes(self, jobParser=None, jobId=None):
-        process_cache = jobParser.processCache
-        if jobId > 0:
-            logging.error("have not been able to write tree with %d "
-                          "processes for job %d, writing without tree"
-                          % (jobParser.processCount(), jobId))
+    def _save_raw_processes(self, job_parser=None, job_id=None):
+        process_cache = job_parser.processCache
+        if job_id > 0:
+            logging.getLogger(self.__class__.__name__).error(
+                "have not been able to write tree with %d processes for job %d, writing without "
+                "tree", job_parser.processCount(), job_id
+            )
             for pid in process_cache:
                 for node in process_cache[pid]:
-                    self._operator.dumpData(typename="process", data=node.value, jobId=jobId)
+                    self._operator.dumpData(typename="process", data=node.value, jobId=job_id)
         else:
-            logging.error("have not been able to write tree with %d "
-                          "processes, writing without tree"
-                          % (jobParser.processCount()))
+            logging.getLogger(self.__class__.__name__).error(
+                "have not been able to write tree with %d processes, writing without tree",
+                job_parser.processCount()
+            )
             for pid in process_cache:
                 for node in process_cache[pid]:
                     self._operator.dumpIncompletes(typename="process", data=node.value)
-        self._job_cache.remove_data(data=jobParser, key=jobId)
+        self._job_cache.remove_data(data=job_parser, key=job_id)
 

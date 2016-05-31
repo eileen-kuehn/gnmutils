@@ -27,7 +27,7 @@ class CSVReader(DataReader):
         self._tme = None
 
     # prepare for next CSV file to be read
-    def clearCaches(self):
+    def clear_caches(self):
         """
         Method explicitly clears the available caches.
         """
@@ -35,7 +35,7 @@ class CSVReader(DataReader):
         self._header = None
         self._tme = None
         if self._parser:
-            self._parser.clearCaches()
+            self._parser.clear_caches()
 
     def data(self, path=None):
         self._header = None
