@@ -1,3 +1,6 @@
+"""
+The module offers convenience methods to access objects from the database.
+"""
 import logging
 
 from gnmutils.db.dbobjects import DBWorkernodeObject, DBConfigurationObject, DBAffiliationObject
@@ -7,24 +10,48 @@ from dbutils.exceptions import UniqueConstrainedViolatedException
 
 
 class DBOperator(object):
+    """
+    The class :py:class:`DBOperator` offers convenience methods to load and look for different
+    domain objects for GNM workflow.
+    """
     def __init__(self, data_source=None):
         self._data_source = data_source
 
-    def load_one(self, **kwargs):
+    def load_one(self, data=None, **kwargs):
+        """
+        Method to load one specific object defined by :py:attrib:`data` from the actual database.
+
+        :param data: a database object describing the data to load
+        :param kwargs: additional arguments
+        :return: loaded object from database
+        """
         sql_command = kwargs.get("sql_command", SQLCommand(dataSource=self._data_source))
-        db_object = kwargs.get("data", None)
+        db_object = data
         try:
             db_object = sql_command.findOne(db_object)
-        except Exception as e:
+        except Exception:
             logging.getLogger(self.__class__.__name__).info("load_one: object has not been found")
             # TODO: create specific exception
             raise
         else:
             return db_object
 
-    def load_job(self, **kwargs):
+    def load_job(self, data=None, **kwargs):
+        """
+        This method takes care on loading a job from the database that is described by the given
+        attribute :py:attrib:`data`. For a job, it is checked that the job to load has a `tme`
+        bigger than `data.tme` and smaller then `data.exit_tme`.
+        If neither `last_tme` nor `exit_tme` is given, the `tme` is sorted descending and the first
+        one is returned.
+
+        Attention: only first of the selected jobs is returned.
+
+        :param data: description of object to load from database
+        :param kwargs: additional arguments
+        :return: object loaded from database
+        """
         sql_command = kwargs.get("sql_command", SQLCommand(dataSource=self._data_source))
-        job_object = kwargs.get("data", None)
+        job_object = data
         job_object.add_filter('tme', '<=')
         if not job_object.exit_tme and not job_object.last_tme:
             job_object.add_order_by('tme', 'DESC')
@@ -36,39 +63,69 @@ class DBOperator(object):
             job_object.add_filter('last_tme', '>=')
         return sql_command.findOne(job_object)
 
-    def load_or_create_affiliation(self, **kwargs):
+    def load_or_create_affiliation(self, data=None, **kwargs):
+        """
+        Method to either load an already existing affiliation from the database specified by given
+        `uid` in :py:attrib:`data` or create a knew one for unknown user.
+
+        :param data: data specifying the uid to use
+        :param kwargs: additional arguments
+        :return: loaded or created affiliation
+        :rtype: :py:class:`DBAffiliationObject`
+        :raise: Exception
+        """
         sql_command = kwargs.get("sql_command", SQLCommand(dataSource=self._data_source))
-        affiliation_object = DBAffiliationObject(uid=kwargs.get("data", None), name="unknown")
+        affiliation_object = DBAffiliationObject(uid=data, name="unknown")
         try:
             affiliation_object = self.load_one(sql_command=sql_command, data=affiliation_object)
-        except Exception as e:
+        except Exception:
             try:
                 sql_command.startTransaction()
                 affiliation_object = sql_command.save(affiliation_object)
                 sql_command.commitTransaction()
-            except Exception as e:
+            except Exception:
                 sql_command.rollbackTransaction()
                 raise
         return affiliation_object
 
-    def load_or_create_workernode(self, **kwargs):
+    def load_or_create_workernode(self, data=None, **kwargs):
+        """
+        Method to either load an already existing workernode from the database specified by given
+        `name` in :py:attrib:`data` or create a knew one.
+
+        :param data: data specifying the `name` to use
+        :param kwargs: additional arguments
+        :return: loaded or created workernode
+        :rtype: :py:class:`DBWorkernodeObject`
+        :raise: Exception
+        """
         sql_command = kwargs.get("sql_command", SQLCommand(dataSource=self._data_source))
-        workernode_object = DBWorkernodeObject(name=kwargs.get("data", None))
+        workernode_object = DBWorkernodeObject(name=data)
         try:
             workernode_object = self.load_one(sql_command=sql_command, data=workernode_object)
-        except Exception as e:
+        except Exception:
             try:
                 sql_command.startTransaction()
                 workernode_object = sql_command.save(workernode_object)
                 sql_command.commitTransaction()
-            except Exception as e:
+            except Exception:
                 sql_command.rollbackTransaction()
                 raise
         return workernode_object
 
-    def load_or_create_configuration(self, **kwargs):
+    def load_or_create_configuration(self, data=None, **kwargs):
+        """
+        Method to either load an already existing configuration from the database specified by given
+        :py:attrib:`data` or create a knew one.
+
+        :param data: data specifying the configuration
+        :param kwargs: additional arguments
+        :return: loaded or created configuration
+        :rtype: :py:class:`DBConfigurationObject`
+        :raise: Exception
+        """
         sql_command = kwargs.get("sql_command", SQLCommand(dataSource=self._data_source))
-        config = kwargs.get("data", None)
+        config = data
         configuration_object = DBConfigurationObject(
             version=config.version,
             interval=config.interval,
@@ -93,9 +150,17 @@ class DBOperator(object):
                 raise
         return configuration_object
 
-    def save_or_update(self, **kwargs):
+    def save_or_update(self, data=None, **kwargs):
+        """
+        Method to save or update an database object given in :py:attrib:`data`.
+
+        :param data: object to save or update
+        :param kwargs: additional arguments
+        :return: saved/updated database object
+        :rtype: :py:class:`DBObject`
+        """
         sql_command = kwargs.get("sql_command", SQLCommand(dataSource=self._data_source))
-        db_object = kwargs.get("data", None)
+        db_object = data
         if db_object and db_object.id_value:
             # update object
             try:
