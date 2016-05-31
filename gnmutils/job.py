@@ -3,7 +3,7 @@ import logging
 
 from gnmutils.objectcache import ObjectCache
 from gnmutils.monitoringconfiguration import MonitoringConfiguration
-from gnmutils.exceptions import NonUniqueRootException
+from gnmutils.exceptions import NonUniqueRootException, DataNotInCacheException
 
 from evenmoreutils.tree import Tree, Node
 
@@ -198,7 +198,7 @@ class Job(object):
 
         :return: first valid uid for job
         """
-        process_cache = self._process_cache.objectCache
+        process_cache = self._process_cache.object_cache
         for pid in process_cache:
             for node in process_cache[pid]:
                 if node.value.uid > 0:
@@ -257,16 +257,16 @@ class Job(object):
 
         :return: process_cache
         """
-        return self._process_cache.objectCache
+        return self._process_cache.object_cache
 
     @property
     def faulty_nodes(self):
         """
         This method gives access to faulty nodes that have not correctly been assigned to the job.
 
-        :return: faultyNodes
+        :return: faulty_nodes
         """
-        return self._process_cache.faultyNodes
+        return self._process_cache.faulty_nodes
 
     def regenerate_tree(self):
         """
@@ -303,7 +303,7 @@ class Job(object):
 
         :param traffic: traffic to be added
         """
-        process_node = self._process_cache.getNodeObject(tme=traffic.tme, pid=traffic.pid)
+        process_node = self._process_cache.get_data(value=traffic.tme, key=traffic.pid)
         process_node.value.traffic.append(traffic)
 
     def is_valid(self):
@@ -315,9 +315,9 @@ class Job(object):
 
         :return: true if job seems to be valid, false otherwise
         """
-        if len(self._process_cache.faultyNodes) > 1 or self._root is None:
+        if len(self._process_cache.faulty_nodes) > 1 or self._root is None:
             return False
-        process_cache = self._process_cache.objectCache
+        process_cache = self.process_cache
         for pid in process_cache:
             for node in process_cache[pid]:
                 if not node.value.valid:
@@ -347,7 +347,7 @@ class Job(object):
                 yield node.value
         else:
             logging.getLogger(self.__class__.__name__).warning("There is no tree for current job")
-            process_cache = self._process_cache.objectCache
+            process_cache = self.process_cache
             for pid in process_cache:
                 for node in process_cache[pid]:
                     yield node.value
@@ -359,7 +359,7 @@ class Job(object):
         :return: process count
         """
         count = 0
-        process_cache = self._process_cache.objectCache
+        process_cache = self.process_cache
         for pid in process_cache:
             count += len(process_cache[pid])
         return count
@@ -387,24 +387,24 @@ class Job(object):
             self._root = node
         if node.value.exit_tme > self._last_tme:
             self._last_tme = node.value.exit_tme
-        self._process_cache.addNodeObject(node)
+        self._process_cache.add_data(data=node, key=node.value.pid, value=node.value.tme)
 
     def _get_tree(self, reinitialize=False):
         if reinitialize or not self._tree_initialized:
             if reinitialize:
                 self._tree = None
-                self._process_cache.faultyNodes = set()
-                for pid in self._process_cache.objectCache:
-                    for node in self._process_cache.objectCache[pid]:
+                self._process_cache.faulty_nodes = set()
+                for pid in self.process_cache:
+                    for node in self.process_cache[pid]:
                         node.children = []
             self._initialize_tree()
             self._tree_initialized = True
         if self._tree is None:
-            if (len(self._process_cache.faultyNodes) <= 1 and self._root and
+            if (len(self._process_cache.faulty_nodes) <= 1 and self._root and
                     (Tree(self._root).getVertexCount() == self.process_count())):
                 self._tree = Tree(self._root)
         logging.getLogger(self.__class__.__name__).info(
-            "faulty nodes: %s", self._process_cache.faultyNodes
+            "faulty nodes: %s", self._process_cache.faulty_nodes
         )
         return self._tree
 
@@ -415,20 +415,24 @@ class Job(object):
 
     def _initialize_tree(self):
         logging.getLogger(self.__class__.__name__).info("Initializing tree structure")
-        process_cache = self._process_cache.objectCache
+        process_cache = self.process_cache
         # sort the keys first to get the correct ordering in the final tree
         for pid in sorted(process_cache.keys(), key=lambda item: int(item)):
             for node in process_cache[pid]:
-                parent = self._process_cache.getNodeObject(tme=node.value.tme,
-                                                           pid=node.value.ppid,
-                                                           rememberError=True)
-                if parent:
-                    parent.add(node, orderPosition=self._add_function)
+                try:
+                    parent = self._process_cache.get_data(value=node.value.tme,
+                                                          key=node.value.ppid,
+                                                          remember_error=True)
+                except DataNotInCacheException:
+                    pass
+                else:
+                    if parent:
+                        parent.add(node, orderPosition=self._add_function)
         logging.getLogger(self.__class__.__name__).info(
-            "no parents found for %d nodes", len(self._process_cache.faultyNodes)
+            "no parents found for %d nodes", len(self._process_cache.faulty_nodes)
         )
 
-        if len(self._process_cache.faultyNodes) <= 1 and self._root:
+        if len(self._process_cache.faulty_nodes) <= 1 and self._root:
             # set depth
             for node, depth in Tree(self._root).walkDFS():
                 node.value.tree_depth = depth

@@ -60,7 +60,7 @@ class ProcessParser(DataParser):
         if "sge_shepherd" in process.cmd:
             job.exit_tme = process.exit_tme
 
-            job_parser = self._job_cache.getObject(pid=job.id_value, tme=0)
+            job_parser = self._job_cache.get_data(key=job.id_value, value=0)
             if not self._save_and_delete_job(jobParser=job_parser, jobId=job.id_value, job=job):
                 logging.info("waiting for more processes to complete job...")
 
@@ -75,9 +75,9 @@ class ProcessParser(DataParser):
                 # load process and set exit arguments,
                 # afterwards remove it from cache
                 pid = int(row[headerCache['pid']])
-                process_index = self._process_cache.getObjectIndex(tme=tme, pid=pid)
+                process_index = self._process_cache.data_index(value=tme, key=pid)
                 try:
-                    process = self._process_cache.objectCache[pid][process_index]
+                    process = self._process_cache.object_cache[pid][process_index]
                     if (row[headerCache['name']] not in process.name and
                                 row[headerCache['cmd']] not in process.cmd):
                         # wrong process selected!
@@ -87,8 +87,8 @@ class ProcessParser(DataParser):
                                           pid=row[headerCache['pid']],
                                           ppid=row[headerCache['ppid']],
                                           uid=row[headerCache['uid']])
-                        self._process_cache.addObject(process)
-                        process_index = self._process_cache.getObjectIndex(tme=tme, pid=pid)
+                        self._process_cache.add_data(data=process)
+                        process_index = self._process_cache.data_index(value=tme, key=pid)
                 except KeyError:
                     # exit event received firsts
                     process = Process()
@@ -101,8 +101,8 @@ class ProcessParser(DataParser):
                                             exit_code=row[headerCache['exit_code']],
                                             gpid=row[headerCache['gpid']],
                                             state=row[headerCache['state']])
-                    self._process_cache.addObject(process)
-                    process_index = self._process_cache.getObjectIndex(tme=tme, pid=pid)
+                    self._process_cache.add_data(data=process)
+                    process_index = self._process_cache.data_index(value=tme, key=pid)
                 else:
                     process.addProcessEvent(tme=row[headerCache['tme']],
                                             exit_code=row[headerCache['exit_code']],
@@ -113,11 +113,11 @@ class ProcessParser(DataParser):
                 except BasicException:
                     # the job is currently not known so remember as unknown
                     self._process_cache.unfound.add(process)
-                    self._process_cache.removeObject(process, pid=pid)
+                    self._process_cache.remove_data(data=process, key=pid)
                 except Exception:
                     # the job is currently not known so remember as unknown
                     self._process_cache.unfound.add(process)
-                    self._process_cache.removeObject(process, pid=pid)
+                    self._process_cache.remove_data(data=process, key=pid)
                 else:
                     # job has been found, so save current data
                     self._finish_process(job=job, process=process)
@@ -166,8 +166,8 @@ class ProcessParser(DataParser):
                 self._finish_process(job=job, process=process)
                 self._process_cache.unfound.discard(process)
 
-        for jid in self._job_cache.objectCache.keys():
-            for job_parser in self._job_cache.objectCache[jid][:]:
+        for jid in self._job_cache.object_cache.keys():
+            for job_parser in self._job_cache.object_cache[jid][:]:
                 if jid == 0:
                     self._save_raw_processes(jobParser=job_parser, jobId=jid)
                 else:
@@ -196,13 +196,13 @@ class ProcessParser(DataParser):
 
     def _create_process(self, row=None, headerCache=None):
         process = Process.process_from_row(row=dict(zip(headerCache, row)))
-        self._process_cache.addObject(process)
+        self._process_cache.add_data(data=process)
         return process
 
     def _move_process(self, process=None, jobId=None):
         if jobId == 0:
             logging.info("received jobId 0")
-        job_parser = self._job_cache.getObject(tme=0, pid=jobId)
+        job_parser = self._job_cache.get_data(value=0, key=jobId)
         try:
             job_parser.addProcess(process=process)
         except NonUniqueRootException as e:
@@ -213,8 +213,8 @@ class ProcessParser(DataParser):
             job_parser.add_piece(piece=process)
             # add tme field for ObjectCache
             job_parser.tme = 0
-            self._job_cache.addObject(object=job_parser, pid=jobId)
-        self._process_cache.removeObject(process)
+            self._job_cache.add_data(data=job_parser, key=jobId)
+        self._process_cache.remove_data(data=process)
 
     def _save_and_delete_job(self, jobParser=None, jobId=None, job=None):
         tree = jobParser.regenerateTree()
@@ -236,7 +236,7 @@ class ProcessParser(DataParser):
                 job.completed = True
                 job.uid = jobParser.uid
                 self._operator.saveAndDeleteJob(job)
-            self._job_cache.removeObject(object=jobParser, pid=jobId)
+            self._job_cache.remove_data(data=jobParser, key=jobId)
             return True
         # otherwise keep job in cache and wait for more...
         return False
@@ -257,5 +257,5 @@ class ProcessParser(DataParser):
             for pid in process_cache:
                 for node in process_cache[pid]:
                     self._operator.dumpIncompletes(typename="process", data=node.value)
-        self._job_cache.removeObject(object=jobParser, pid=jobId)
+        self._job_cache.remove_data(data=jobParser, key=jobId)
 

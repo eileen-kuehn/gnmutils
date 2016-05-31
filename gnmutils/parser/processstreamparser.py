@@ -81,9 +81,9 @@ class ProcessStreamParser(DataParser):
             )
 
     def pop_data(self):
-        for key in self._data.objectCache.keys():
-            while self._data.objectCache[key]:
-                yield self._data.objectCache[key].pop()
+        for key in self._data.object_cache.keys():
+            while self._data.object_cache[key]:
+                yield self._data.object_cache[key].pop()
 
     def check_caches(self, **kwargs):
         if not self._changed:
@@ -126,50 +126,49 @@ class ProcessStreamParser(DataParser):
         if process.gpid > 0:
             if "exit" in process.state:
                 # look for matching piece
-                object_index = self._process_cache.getObjectIndex(
-                    tme=process.exit_tme,
-                    pid=process.pid
+                object_index = self._process_cache.data_index(
+                    value=process.exit_tme,
+                    key=process.pid
                 )
                 # load process object from cache
                 try:
-                    matching_process = self._process_cache.objectCache[process.pid][object_index]
+                    matching_process = self._process_cache.object_cache[process.pid][object_index]
                     process.addProcessEvent(**matching_process.toProcessEvent())
                 except KeyError as e:
                     # exit state received first
                     logging.getLogger(self.__class__.__name__).warning(
                         "received exit event of process before actual start event: %s" % e)
-                    self._process_cache.addObject(process)
+                    self._process_cache.add_data(data=process)
                 except ProcessMismatchException as e:
                     logging.getLogger(self.__class__.__name__).warning(e)
-                    self._process_cache.addObject(process)
+                    self._process_cache.add_data(data=process)
                 else:
-                    self._process_cache.removeObject(matching_process, pid=matching_process.pid)
+                    self._process_cache.remove_data(data=matching_process, key=matching_process.pid)
                     is_finished, job = self._finish_process(process=process)
                     if not is_finished and job is None:
                         self._process_cache.unfound.add(process)
                     elif is_finished:
-                        self._data.removeObject(job, pid=job.gpid)
+                        self._data.remove_data(data=job, key=job.gpid)
                         return job
             else:
                 if self.job_root_name in process.name:
                     # create new dummy job
-                    self._data.addObject(
-                        object=Job(
-                            workernode=self.workernode,
-                            run=self.run,
-                            tme=process.tme,
-                            gpid=process.gpid,
-                            job_id=process.batchsystemId,
-                            configuration=self.configuration,
-                            data_source=self._data_source),
-                        pid=process.gpid,
-                        tme=process.tme)
-                self._process_cache.addObject(process)
+                    self._data.add_data(data=Job(
+                        workernode=self.workernode,
+                        run=self.run,
+                        tme=process.tme,
+                        gpid=process.gpid,
+                        job_id=process.batchsystemId,
+                        configuration=self.configuration,
+                        data_source=self._data_source),
+                        key=process.gpid,
+                        value=process.tme)
+                self._process_cache.add_data(data=process)
 
     def _finish_process(self, process=None):
-        object_index = self._data.getObjectIndex(tme=process.tme, pid=process.gpid)
+        object_index = self._data.data_index(value=process.tme, key=process.gpid)
         try:
-            matching_job = self._data.objectCache[process.gpid][object_index]
+            matching_job = self._data.object_cache[process.gpid][object_index]
         except KeyError as e:
             logging.getLogger(self.__class__.__name__).debug("no matching job has been found %s" %
                                                              process)

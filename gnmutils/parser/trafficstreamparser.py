@@ -77,9 +77,9 @@ class TrafficStreamParser(DataParser):
         self._last_tme = None
 
     def pop_data(self):
-        for key in self._data.objectCache.keys():
-            while self._data.objectCache[key]:
-                wrapper = self._data.objectCache[key].pop()
+        for key in self._data.object_cache.keys():
+            while self._data.object_cache[key]:
+                wrapper = self._data.object_cache[key].pop()
                 yield wrapper.traffic
 
     def check_caches(self, **kwargs):
@@ -124,7 +124,7 @@ class TrafficStreamParser(DataParser):
         # look for matching job
         finished, _, matching_wrapper = self._match_traffic(traffic=piece)
         if finished and object is not None:
-            self._data.removeObject(matching_wrapper)
+            self._data.remove_data(data=matching_wrapper)
             return matching_wrapper.traffic
 
         # check for other finished jobs
@@ -132,12 +132,12 @@ class TrafficStreamParser(DataParser):
         return next(self._check_data(), None)
 
     def _match_traffic(self, traffic=None):
-        object_index = self._data.getObjectIndex(tme=traffic.tme, pid=traffic.gpid)
+        object_index = self._data.data_index(value=traffic.tme, key=traffic.gpid)
         # load job object from cache
         matching_traffic_wrapper = None
         finished = False
         try:
-            matching_traffic_wrapper = self._data.objectCache[traffic.gpid][object_index]
+            matching_traffic_wrapper = self._data.object_cache[traffic.gpid][object_index]
             if traffic.tme - self._interval() <= matching_traffic_wrapper.exit_tme:
                 matching_traffic_wrapper.data.append(traffic)
                 appended = True
@@ -168,7 +168,7 @@ class TrafficStreamParser(DataParser):
             wrapper = self._load_traffic_wrapper(traffic=traffic)
         if wrapper is not None:
             wrapper.data.append(traffic)
-            self._data.addObject(wrapper)
+            self._data.add_data(data=wrapper)
             return True
         else:
             logging.getLogger(self.__class__.__name__).warning(
@@ -202,9 +202,9 @@ class TrafficStreamParser(DataParser):
             yield data
 
     def _check_data(self):
-        for key in self._data.objectCache.keys():
-            for wrapper in self._data.objectCache[key][:]:
+        for key in self._data.object_cache.keys():
+            for wrapper in self._data.object_cache[key][:]:
                 if wrapper.exit_tme < self._last_tme:
-                    self._data.objectCache[key].remove(wrapper)
+                    self._data.object_cache[key].remove(wrapper)
                     yield wrapper.traffic
 
