@@ -1,5 +1,10 @@
+"""
+Module offers an implementation to parse CSV files and accumulate network statistics for further
+simulation purposes.
+"""
 import re
 import os
+import logging
 
 from gnmutils.parser.dataparser import DataParser
 from gnmutils.networkstatistics import NetworkStatistics
@@ -7,10 +12,14 @@ from gnmutils.networkstatistics import NetworkStatistics
 from gnmutils.objects.traffic import Traffic
 from gnmutils.job import Job
 
-from utility.exceptions import *
-
 
 class NetworkStatisticsParser(DataParser):
+    """
+    The :py:class:`NetworkStatisticsParser` parses process and traffic files from original GNM
+    monitoring data and accumulates the bytes needed to transfer all those data over the network.
+    Main purpose for this implementation is the generation of data that can be used for simulation.
+    The results can further be saved into CSV files.
+    """
     def __init__(self, data_source=None, data_reader=None, workernode=None, run=None, **kwargs):
         DataParser.__init__(self, data_source, data_reader, **kwargs)
         self._data = self._data or {}
@@ -18,8 +27,18 @@ class NetworkStatisticsParser(DataParser):
         self._run = run
         self._base_tme = 0
 
-    def defaultHeader(self, **kwargs):
-        length = kwargs.get("length", 0)
+    def data_id(self, value):
+        pass
+
+    def defaultHeader(self, length, **kwargs):
+        """
+        Method returns the default header for compatibility reasons.
+
+        :param length: expected length of header
+        :param kwargs: additional arguments
+        :return: header for network statistics
+        :rtype: dict
+        """
         row = kwargs.get("row", None)
         if row is not None and re.match(".*[A-Za-z]", row):
             # I guess it is a job
