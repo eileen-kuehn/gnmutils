@@ -30,7 +30,7 @@ def create_payloads():
     The payload ids are build from the job id from database and additionally the payload count.
     """
     print
-    print("Starting to extract payloads from CMS pilots")
+    print "Starting to extract payloads from CMS pilots"
     path = eval_input_path()
     output_path = eval_output_path()
     count = eval_cores()
@@ -236,14 +236,14 @@ def eval_cores():
         return 1
 
 
-def return_options(x):
+def return_options(input):
     """
     Function that evaluates the given input by user and maps to available workflows.
 
-    :param x: given input
+    :param input: given input
     :return: selected function signature
     """
-    print(x)
+    print input
     return {
         '1': prepare_raw_data,
         '2': create_payloads,
@@ -251,7 +251,7 @@ def return_options(x):
         'b': import_cms_dashboard_data,
         'c': generate_network_statistics,
         'q': exit
-    }.get(x, eval_options_choice)
+    }.get(input, eval_options_choice)
 
 
 def main():
@@ -262,9 +262,9 @@ def main():
     eval_options_choice()
 
 if __name__ == '__main__':
-    cli = argparse.ArgumentParser()
-    update_parser(cli)
-    argparse_init(cli.parse_args())
+    command_line_interface = argparse.ArgumentParser()
+    update_parser(command_line_interface)
+    argparse_init(command_line_interface.parse_args())
 
     logging.getLogger().setLevel(LVL.WARNING)
     logging.getLogger("EXCEPTION").setLevel(LVL.INFO)
