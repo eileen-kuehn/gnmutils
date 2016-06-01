@@ -1,10 +1,12 @@
 """
 This module implements a single process that is tracked by GNM tool
 """
+import logging
+
 from evenmoreutils import strings as stringutils
 
 from gnmutils.objects.gnm_object import GNMObject, check_id, check_tme
-from gnmutils.exceptions import ProcessMismatchException
+from gnmutils.exceptions import ProcessMismatchException, ArgumentNotDefinedException
 
 
 class Process(GNMObject):
@@ -42,7 +44,7 @@ class Process(GNMObject):
     }
 
     def __init__(self, name=None, cmd=None, pid=None, ppid=None, uid=None, tme=None, exit_tme=None,
-                 error_code=None, signal=None, exit_code=0, gpid=None, state=None, job_id=None,
+                 error_code=None, signal=None, exit_code=None, gpid=None, state=None, job_id=None,
                  int_in_volume=None, int_out_volume=None, ext_in_volume=None, ext_out_volume=None,
                  tree_depth=None, process_type=None, color=None, valid=False, traffic=None):
         GNMObject.__init__(self, pid=pid, ppid=ppid, uid=uid, tme=tme, gpid=gpid)
@@ -56,11 +58,10 @@ class Process(GNMObject):
         self._valid = valid
         self._traffic = traffic or []
 
-        # set exit_code first, but can be overwritten by error_code and signal
-        if exit_code is not None:
-            self._set_exit_code(exit_code)
         self.error_code = self._convert_to_default_type("error_code", error_code)
         self.signal = self._convert_to_default_type("signal", signal)
+        if exit_code is not None:
+            self._set_exit_code(exit_code)
 
         self.job_id = self._convert_to_default_type("job_id", job_id)
         self.tree_depth = self._convert_to_default_type("tree_depth", tree_depth)
@@ -88,7 +89,7 @@ class Process(GNMObject):
                 else:
                     raise
             except KeyError:
-                pass
+                raise ArgumentNotDefinedException(key, value)
         return Process(**row)
 
     @property
@@ -193,8 +194,9 @@ class Process(GNMObject):
         :param gpid: gpid of process
         :param state: state of process
         """
-        if self.pid and self.pid != pid and self.ppid != ppid and \
-                        self.name not in name and self.cmd not in cmd:
+        if (self.pid > 0 and self.pid != pid) or (self.ppid > 0 and self.ppid != ppid):
+            if self.name not in name or self.cmd not in cmd:
+                logging.getLogger(self.__class__.__name__).warning("names/cmds do not match... %s vs %s / %s vs %s" % (self.name, name, self.cmd, cmd))
             raise ProcessMismatchException
         if "exit" in state:
             if self.state != ".":
@@ -220,7 +222,7 @@ class Process(GNMObject):
     def _set_exit_code(self, exit_code):
         exit_code = self._convert_to_default_type("exit_code", exit_code)
         self.error_code = exit_code >> 8
-        self._signal = exit_code & 255
+        self.signal = exit_code & 255
 
     def __repr__(self):
         return "%s: name (%s), cmd (%s), pid (%d), ppid (%d), uid (%d), gpid (%d), valid (%s), " \
@@ -229,6 +231,6 @@ class Process(GNMObject):
                "int_out_volume (%s), ext_in_volume (%s), ext_out_volume (%s)" % \
                (self.__class__.__name__, self.name, self.cmd, self.pid, self.ppid, self.uid,
                 self.gpid, self.valid, self.tme, self.exit_tme, self.state,
-                stringutils.xint(self._error_code), self.signal, self.job_id, self.tree_depth,
+                stringutils.xint(self.error_code), self.signal, self.job_id, self.tree_depth,
                 self.process_type, self.color, self.int_in_volume, self.int_out_volume,
                 self.ext_in_volume, self.ext_out_volume)
