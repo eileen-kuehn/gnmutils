@@ -1,3 +1,6 @@
+from gnmutils.exceptions import ArgumentNotDefinedException
+
+
 def check_id(value=None):
     """
     Method converts any id value to an integer, if this fails, 0 is returned.
@@ -8,6 +11,8 @@ def check_id(value=None):
     try:
         return int(value)
     except TypeError:
+        return 0
+    except ValueError:
         return 0
 
 
@@ -22,12 +27,20 @@ def check_tme(value=None):
         return int(value)
     except TypeError:
         return 0
+    except ValueError:
+        return 0
 
 
 class GNMObject(object):
-    default_key_type = {}
+    default_key_type = {
+        "pid": check_id,
+        "ppid": check_id,
+        "uid": check_id,
+        "gpid": check_id,
+        "tme": check_tme,
+    }
 
-    def __init__(self, pid, ppid, uid, tme, gpid=None, **kwargs):
+    def __init__(self, pid=None, ppid=None, uid=None, tme=None, gpid=None, **kwargs):
         self.pid = self._convert_to_default_type("pid", pid)
         self.ppid = self._convert_to_default_type("ppid", ppid)
         self.uid = self._convert_to_default_type("uid", uid)
@@ -53,7 +66,7 @@ class GNMObject(object):
         raise NotImplementedError
 
     @staticmethod
-    def default_header(length, **kwargs):
+    def default_header(length=None, **kwargs):
         """
         Returns the default header of the current GNMObject in dependency of the expected length.
         This is mainly done for conversion between different versions of the GNM toolchain.
@@ -72,7 +85,7 @@ class GNMObject(object):
             else:
                 raise
         except KeyError:
-            pass
+            raise ArgumentNotDefinedException(key, value)
         return result
 
     def __repr__(self):

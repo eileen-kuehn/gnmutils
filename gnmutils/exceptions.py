@@ -40,3 +40,12 @@ class DataNotInCacheException(BasicException):
     def __init__(self, key=None, value=None):
         BasicException.__init__(self, "Element for key %s at %d cannot be identified" %
                                 (key, value))
+
+
+class ArgumentNotDefinedException(BasicException):
+    """
+    Thrown when a default mapping of an argument has not been defined in GNMObjects
+    """
+    def __init__(self, argument=None, value=None):
+        BasicException.__init__(self, "The argument %s (value: %s) cannot be mapped because it is "
+                                      "not specified" % (argument, value))
