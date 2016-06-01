@@ -25,6 +25,15 @@ class ProcessMismatchException(BasicException):
         BasicException.__init__(self, "Processes that should be combined do not match")
 
 
+class TrafficMismatchException(BasicException):
+    """
+    Thrown when trying to set a connection for a workernode that does not match
+    """
+    def __init__(self, conn=None, workernode=None):
+        BasicException.__init__(self, "Connection %s for workernode %s could not be matched" %
+                                (conn, workernode))
+
+
 class NoGNMDirectoryStructure(BasicException):
     """
     Thrown when trying to identify folder structure from gnm workflows

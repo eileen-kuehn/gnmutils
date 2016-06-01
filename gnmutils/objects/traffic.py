@@ -5,6 +5,7 @@ import re
 import logging
 
 from gnmutils.objects.gnm_object import GNMObject, check_tme, check_id
+from gnmutils.exceptions import ArgumentNotDefinedException, TrafficMismatchException
 
 from evenmoreutils import strings as stringutils
 
@@ -23,12 +24,12 @@ class Traffic(GNMObject):
         'out_rate': float,
         'in_cnt': int,
         'out_cnt': int,
-        'source_ip': str,
-        'dest_ip': str,
-        'source_port': int,
-        'dest_port': int,
-        'conn_cat': str,
-        'workernode': str,
+        'source_ip': stringutils.xstr,
+        'dest_ip': stringutils.xstr,
+        'source_port': stringutils.xfloat,
+        'dest_port': stringutils.xfloat,
+        'conn_cat': stringutils.xstr,
+        'workernode': stringutils.xstr,
         'interval': int,
         'ext_in_rate': float,
         'int_in_rate': float,
@@ -38,7 +39,7 @@ class Traffic(GNMObject):
         'int_in_cnt': int,
         'ext_out_cnt': int,
         'int_out_cnt': int,
-        'conn': str,
+        'conn': stringutils.xstr,
     }
 
     def __init__(self, conn=None, pid=None, ppid=None, uid=None, tme=None, in_rate=None,
@@ -105,10 +106,10 @@ class Traffic(GNMObject):
                 else:
                     raise
             except KeyError:
-                pass
+                raise ArgumentNotDefinedException(key, value)
         return Traffic(**row)
 
-    def setConnection(self, conn=None, workernode=None):
+    def setConnection(self, conn, workernode=None):
         """
         Method to set the connection of traffic object.
 
@@ -145,6 +146,7 @@ class Traffic(GNMObject):
                     "Calculated internal IP (%s) does not match anything (%s and %s)",
                     internal_ip, splitted_source, splitted_target
                 )
+                raise TrafficMismatchException(conn=conn, workernode=workernode)
 
         self.source_ip = splitted_source[0]
         self.source_port = splitted_source[1]
@@ -181,7 +183,11 @@ class Traffic(GNMObject):
         )
 
     @staticmethod
-    def default_header(length, **kwargs):
+    def default_header(length=None, **kwargs):
+        # TODO: here I seem to have some problems... I guess I have three different types of header?
+        # * one see above
+        # * two in the bottom
+        # :(
         if length > 10:
             return {"tme": 0, "pid": 1, "ppid": 2, "uid": 3, "int_in_rate": 4, "ext_in_rate": 5,
                     "int_out_rate": 6, "ext_out_rate": 7, "int_in_cnt": 8, "ext_in_cnt": 9,
