@@ -11,7 +11,7 @@ class Process(GNMObject):
     """
     A :py:class:`Process` is one of the most important objects within the GNM workflow. It is
     the actual UNIX process that is being monitored. Each process has some attributes as well
-    as :py:attrib:`traffic` attached.
+    as :py:attr:`traffic` attached.
     Associated processes can be read into a single :py:class:`Job`. Then their hierarchy becomes
     directly visible.
     """
@@ -117,7 +117,7 @@ class Process(GNMObject):
     def exit_code(self):
         """
         Method that returns the exit code of the process.
-        Attention: the exit code depends on the :py:attrib:`error_code` and :py:attrib:`signal` of
+        Attention: the exit code depends on the :py:attr:`error_code` and :py:attr:`signal` of
         the process. And is also needs to be finished, that the exit code can be existent.
 
         :return: exit_code
@@ -138,7 +138,7 @@ class Process(GNMObject):
     def getDuration(self):
         """
         Method returns the duration of the process. The duration is given by the start
-        :py:attrib:`tme` and the :py:attrib:`exit_tme`.
+        :py:attr:`tme` and the :py:attr:`exit_tme`.
 
         :return: duration
         :rtype: float

@@ -1,5 +1,6 @@
 """
-deprecated?
+.. deprecated:: 0.1
+    Don't do any imports from this module.
 """
 from feature import Feature
 
@@ -8,7 +9,8 @@ from gnmutils.objects.gnm_object import check_id, check_tme
 
 class TrafficFeature(Feature):
     """
-    This class might be deprecated...
+    .. deprecated:: 0.1
+        I guess this class is not used at all, so please don't.
     """
     default_key_type = {
         'uid': check_id,

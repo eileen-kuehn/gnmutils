@@ -1,12 +1,18 @@
+"""
+This module manages the different possibilities to start and work with GNM tool output.
+Conversion of different file types, etc.
+"""
 import argparse
 import multiprocessing
 import logging
+import os
+import re
 
 from gnmutils.sources.datasource import DataSource
 from gnmutils.sources.filedatasource import FileDataSource
 from gnmutils.sources.dbbackedfiledatasource import DBBackedFileDataSource
 from gnmutils.pilot import Pilot
-from gnmutils.utils import *
+from gnmutils.utils import directory_level, relevant_directories, RUN_LEVEL
 
 from utility.report import LVL, update_parser, argparse_init
 from utility.exceptions import ExceptionFrame, mainExceptionFrame
@@ -35,30 +41,34 @@ def create_payloads():
     do_multicore(
         count=count,
         target=_create_payloads,
-        data=[{
-                  "path": os.path.join(os.path.join(element[0], element[1]), element[2]),
-                  "output_path": output_path
-              } for element in list(relevant_directories(path))])
+        data=[{"path": os.path.join(os.path.join(element[0], element[1]), element[2]),
+               "output_path": output_path} for element in list(relevant_directories(path))])
 
 
 def import_cms_dashboard_data():
+    """
+    Method that starts the import of data from CMS dashboard.
+    """
     print
-    print("Starting to import cms data")
+    print "Starting to import cms data"
     path = eval_input_path()
     data_source = DBBackedFileDataSource()
     for data in data_source.object_data(path=path):
         if data is not None:
             for key in data:
                 for result in data[key]:
-                    payload_result_object = data_source.write_payload_result(
+                    data_source.write_payload_result(
                         data=result,
                         workernode=re.match("(^c\d{2}-\d{3}-\d{3})", result["WNHostName"]).group(1),
                         activity=key)
 
 
 def prepare_raw_data():
+    """
+    Function that starts the splitting of raw data that was directly retrieved by GNM tool.
+    """
     print
-    print("Starting to split data stream into jobs")
+    print "Starting to split data stream into jobs"
     path = eval_input_path()
     output_path = eval_output_path()
     count = eval_cores()
@@ -68,15 +78,16 @@ def prepare_raw_data():
     do_multicore(
         count=count,
         target=_prepare_raw_data,
-        data=[{
-                  "path": os.path.join(os.path.join(element[0], element[1]), element[2]),
-                  "output_path": output_path
-              } for element in list(relevant_directories(path))])
+        data=[{"path": os.path.join(os.path.join(element[0], element[1]), element[2]),
+               "output_path": output_path} for element in list(relevant_directories(path))])
 
 
 def archive_jobs():
+    """
+    Function that starts archival of written jobs into a single zip file.
+    """
     print
-    print("Starting to archive valid and complete jobs")
+    print "Starting to archive valid and complete jobs"
     path = eval_input_path()
     count = eval_cores()
     names = ["path", "workernode", "run"]
@@ -88,8 +99,11 @@ def archive_jobs():
 
 
 def generate_network_statistics():
+    """
+    Function that starts generation of network statistics based on available raw data.
+    """
     print
-    print("Starting to generate network statistics")
+    print "Starting to generate network statistics"
     path = eval_input_path()
     output_path = eval_output_path()
     count = eval_cores()
@@ -99,14 +113,19 @@ def generate_network_statistics():
     do_multicore(
         count=count,
         target=_generate_network_statistics,
-        data=[{
-            "path": os.path.join(os.path.join(element[0], element[1]), element[2]),
-            "output_path": output_path
-        } for element in list(relevant_directories(path))]
+        data=[{"path": os.path.join(os.path.join(element[0], element[1]), element[2]),
+               "output_path": output_path} for element in list(relevant_directories(path))]
     )
 
 
 def do_multicore(count=1, target=None, data=None):
+    """
+    Entry function that starts the actual functions using given :py:attr:`count` of cores.
+
+    :param count: number of cores to use for processing
+    :param target: target function to use for processing
+    :param data: data to use for processing
+    """
     pool = multiprocessing.Pool(processes=count)
     pool.map(target, data)
     pool.close()
@@ -122,7 +141,7 @@ def _create_payloads(args):
             pilot.__class__ = Pilot
             if pilot.is_cms_pilot():
                 pilot.prepare_traffic()
-                for payload, count in pilot.payloads():
+                for payload, _ in pilot.payloads():
                     # write file per payload
                     data_source.write_payload(path=output_path,
                                               data=payload)
@@ -139,10 +158,7 @@ def _archive_jobs(args):
         current_path = os.path.join(os.path.join(path, workernode), run)
         for job in data_source.jobs(path=current_path):
             if job.is_complete() and job.is_valid():
-                data_source.archive(
-                    data=job,
-                    path=path,
-                    name="jobarchive")
+                data_source.archive(data=job, path=path, name="jobarchive")
 
 
 def _generate_network_statistics(kwargs):
@@ -150,66 +166,70 @@ def _generate_network_statistics(kwargs):
         data_source = FileDataSource()
         path = kwargs.get("path", None)
         output_path = kwargs.get("output_path", None)
-        for stats in data_source.network_statistics(
-            path=path,
-            stateful=True
-        ):
-            data_source.write_network_statistics(
-                data=stats,
-                path=output_path
-            )
+        for stats in data_source.network_statistics(path=path,
+                                                    stateful=True):
+            data_source.write_network_statistics(data=stats, path=output_path)
+
 
 def _prepare_raw_data(kwargs):
     with ExceptionFrame():
         path = kwargs.get("path", None)
         output_path = kwargs.get("output_path", None)
         data_source = DataSource.best_available_data_source()
-        for job in data_source.jobs(
-                source="raw",
-                path=path,
-                data_path=output_path,
-                stateful=True
-        ):
-            job = data_source.write_job(
-                data=job,
-                path=output_path
-            )
-        for traffic in data_source.traffics(
-                source="raw",
-                path=path,
-                data_path=output_path,
-                stateful=True
-        ):
-            traffic = data_source.write_traffic(
-                data=traffic,
-                path=output_path
-            )
+        for job in data_source.jobs(source="raw",
+                                    path=path,
+                                    data_path=output_path,
+                                    stateful=True):
+            data_source.write_job(data=job, path=output_path)
+        for traffic in data_source.traffics(source="raw",
+                                            path=path,
+                                            data_path=output_path,
+                                            stateful=True):
+            data_source.write_traffic(data=traffic, path=output_path)
 
 
 def eval_options_choice():
-    print("What do you want to do now?")
-    print("\t1. split data stream into jobs")
-    print("\t2. extract payloads from jobs (currently just supported for CMS)")
+    """
+    Function that presents available workflows and takes the input from user.
+    """
+    print "What do you want to do now?"
+    print "\t1. split data stream into jobs"
+    print "\t2. extract payloads from jobs (currently just supported for CMS)"
     print
-    print("More workflows:")
-    print("\ta) put jobs into archive")
-    print("\tb) import CMS dashboard data")
-    print("\tc) generate data on byte size and number of events per interval")
+    print "More workflows:"
+    print "\ta) put jobs into archive"
+    print "\tb) import CMS dashboard data"
+    print "\tc) generate data on byte size and number of events per interval"
     print
     return_options(raw_input("Please choose: "))()
 
 
 def eval_input_path():
+    """
+    Function that takes the input path from the user.
+
+    :return: input path
+    """
     input_path = raw_input("Input Path: ")
     return input_path
 
 
 def eval_output_path():
+    """
+    Function that takes the output path from the user.
+
+    :return: output path
+    """
     output_path = raw_input("Output Path: ")
     return output_path
 
 
 def eval_cores():
+    """
+    Function that takes the number of cores to use from the user.
+
+    :return: number of cores, else 1
+    """
     try:
         return int(raw_input("Number of cores for processing (%d): " % multiprocessing.cpu_count()))
     except:
@@ -217,6 +237,12 @@ def eval_cores():
 
 
 def return_options(x):
+    """
+    Function that evaluates the given input by user and maps to available workflows.
+
+    :param x: given input
+    :return: selected function signature
+    """
     print(x)
     return {
         '1': prepare_raw_data,
@@ -229,7 +255,10 @@ def return_options(x):
 
 
 def main():
-    print("You started the main process for GNM workflows.")
+    """
+    Main starting point.
+    """
+    print "You started the main process for GNM workflows."
     eval_options_choice()
 
 if __name__ == '__main__':

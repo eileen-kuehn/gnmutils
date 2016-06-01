@@ -15,7 +15,7 @@ class ProcessStreamParser(DataParser):
     The :py:class:`ProcessStreamParser` works on the log files produced by the GNM monitoring tool.
     One after the other it parses the different lines belonging to one specific run on one specific
     workernode. It takes care in splitting the data belonging to different :py:class:`job`s.
-    As soon as one object has been finished it is given to the :py:attrib:`DataSource` for further
+    As soon as one object has been finished it is given to the :py:attr:`DataSource` for further
     handling/storage.
 
     As the completeness regarding the traffic cannot be determined automatically, it is ... what?!

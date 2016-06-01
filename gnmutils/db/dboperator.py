@@ -19,7 +19,7 @@ class DBOperator(object):
 
     def load_one(self, data=None, **kwargs):
         """
-        Method to load one specific object defined by :py:attrib:`data` from the actual database.
+        Method to load one specific object defined by :py:attr:`data` from the actual database.
 
         :param data: a database object describing the data to load
         :param kwargs: additional arguments
@@ -39,7 +39,7 @@ class DBOperator(object):
     def load_job(self, data=None, **kwargs):
         """
         This method takes care on loading a job from the database that is described by the given
-        attribute :py:attrib:`data`. For a job, it is checked that the job to load has a `tme`
+        attribute :py:attr:`data`. For a job, it is checked that the job to load has a `tme`
         bigger than `data.tme` and smaller then `data.exit_tme`.
         If neither `last_tme` nor `exit_tme` is given, the `tme` is sorted descending and the first
         one is returned.
@@ -66,7 +66,7 @@ class DBOperator(object):
     def load_or_create_affiliation(self, data=None, **kwargs):
         """
         Method to either load an already existing affiliation from the database specified by given
-        `uid` in :py:attrib:`data` or create a knew one for unknown user.
+        `uid` in :py:attr:`data` or create a knew one for unknown user.
 
         :param data: data specifying the uid to use
         :param kwargs: additional arguments
@@ -91,7 +91,7 @@ class DBOperator(object):
     def load_or_create_workernode(self, data=None, **kwargs):
         """
         Method to either load an already existing workernode from the database specified by given
-        `name` in :py:attrib:`data` or create a knew one.
+        `name` in :py:attr:`data` or create a knew one.
 
         :param data: data specifying the `name` to use
         :param kwargs: additional arguments
@@ -116,7 +116,7 @@ class DBOperator(object):
     def load_or_create_configuration(self, data=None, **kwargs):
         """
         Method to either load an already existing configuration from the database specified by given
-        :py:attrib:`data` or create a knew one.
+        :py:attr:`data` or create a knew one.
 
         :param data: data specifying the configuration
         :param kwargs: additional arguments
@@ -152,7 +152,7 @@ class DBOperator(object):
 
     def save_or_update(self, data=None, **kwargs):
         """
-        Method to save or update an database object given in :py:attrib:`data`.
+        Method to save or update an database object given in :py:attr:`data`.
 
         :param data: object to save or update
         :param kwargs: additional arguments

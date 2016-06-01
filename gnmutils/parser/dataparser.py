@@ -105,8 +105,8 @@ class DataParser(object):
     def archive_state(self, **kwargs):
         """
         Method that archives the current state of the :py:class:`DataParser`. It includes the
-        current :py:attrib:`data` that was read, the :py:attrib:`configuration` as well as already
-        :py:attrib:`parsed_data`.
+        current :py:attr:`data` that was read, the :py:attr:`configuration` as well as already
+        :py:attr:`parsed_data`.
 
         :param kwargs: additional attributes
         """
