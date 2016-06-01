@@ -16,8 +16,8 @@ class FeatureFactory:
 
 
 class Feature(GNMObject):
-    def __init__(self, uid, tme):
-        GNMObject.__init__(uid=uid, tme=tme)
+    def __init__(self, pid, uid, tme):
+        GNMObject.__init__(pid=pid, uid=uid, tme=tme)
 
     def getRow(self):
         raise NotImplementedError
