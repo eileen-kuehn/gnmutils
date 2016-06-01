@@ -26,14 +26,21 @@ class DataReader(object):
 
     def read(self, **kwargs):
         """
-        Method to be overwritten by actual subclasses.
+        Method to start reading.
 
         :param kwargs:
         :raises: `NotImplementedError`
         """
         raise NotImplementedError
 
-    def data(self, **kwargs):
+    def data(self, path=None, **kwargs):
+        """
+        Method that returns a generator of data that was read.
+
+        :param path: path to read data from
+        :param kwargs: additional arguments
+        :return: generator that returns actual data that was read
+        """
         raise NotImplementedError
 
     def parser_name(self):

@@ -1,3 +1,6 @@
+"""
+The module offers a reader to read CSV formats.
+"""
 import logging
 import re
 import gzip
@@ -37,16 +40,16 @@ class CSVReader(DataReader):
         if self._parser:
             self._parser.clear_caches()
 
-    def data(self, path=None):
+    def data(self, path=None, **kwargs):
         self._header = None
-        openFunction = open
+        open_function = open
         if re.match(".*.gz$", path):
-          openFunction = gzip.open
+            open_function = gzip.open
         if path in self._parser.parsed_data:
             yield None
         else:
-            logging.getLogger(self.__class__.__name__).info("starting to read %s" % path)
-            with openFunction(path, 'r') as csvfile:
+            logging.getLogger(self.__class__.__name__).info("starting to read %s", path)
+            with open_function(path, 'r') as csvfile:
                 tme = 0
                 # process every line in csvfile
                 for idx, line in enumerate(csvfile):
@@ -55,9 +58,9 @@ class CSVReader(DataReader):
                         # check if it is a line specifying the version of monitoring tool
                         if line.startswith("# version"):
                             try:
-                                configDict = dict(((val.strip() for val in values.split(":"))
-                                                   for values in line[1:].split(",")))
-                                configuration = MonitoringConfiguration(**configDict)
+                                config_dict = dict(((val.strip() for val in values.split(":"))
+                                                    for values in line[1:].split(",")))
+                                configuration = MonitoringConfiguration(**config_dict)
                                 self._parser.configuration = configuration
                             except KeyError:
                                 pass
@@ -78,17 +81,17 @@ class CSVReader(DataReader):
                         if "tme" not in row[0]:
                             self._header = self._parser.defaultHeader(length=len(row), row=line)
                         else:
-                            headerCache = {}
+                            header_cache = {}
                             for index, item in enumerate(line.split(",")):
-                                headerCache[item] = index
-                            self._header = headerCache
+                                header_cache[item] = index
+                            self._header = header_cache
                             continue
                     except ValueError:
                         # current line is header line
-                        headerCache = {}
+                        header_cache = {}
                         for index, item in enumerate(line.split(",")):
-                            headerCache[item] = index
-                        self._header = headerCache
+                            header_cache[item] = index
+                        self._header = header_cache
                         continue
                     while True:
                         try:
@@ -97,15 +100,14 @@ class CSVReader(DataReader):
                             if len(row) > len(self._header):
                                 logging.info(
                                     "Trying to fix wrong row length: row %d (%s:%d - %s) vs. "
-                                    "header %d" % (
-                                        len(row), path, idx, line, len(self._header))
+                                    "header %d", len(row), path, idx, line, len(self._header)
                                 )
                                 # check if additional "," are in command and remove
                                 while len(row) > len(self._header):
-                                    cmdIndex = self._header["cmd"]
-                                    cmdString = row[cmdIndex] + row[cmdIndex+1]
-                                    del row[cmdIndex+1]
-                                    row[cmdIndex] = cmdString
+                                    cmd_index = self._header["cmd"]
+                                    cmd_string = row[cmd_index] + row[cmd_index+1]
+                                    del row[cmd_index+1]
+                                    row[cmd_index] = cmd_string
                             # finally add the valid row to the parser
                             tme_in_row = row[self._header["tme"]]
                             if tme_in_row is None or len(tme_in_row) == 0:
@@ -114,13 +116,12 @@ class CSVReader(DataReader):
                             for key in self._header:
                                 data_dict[key] = row[self._header[key]]
                             yield data_dict
-                        except IndexError as e:
+                        except IndexError:
                             line = (line + csvfile.next())[:-1]
-                        except StopIteration as e:
+                        except StopIteration:
                             logging.getLogger(self.__class__.__name__).error(
                                 "there seems to be a wrong ending in the file for line %d (%s) "
-                                "in file %s" % (
-                                    idx, line, path)
+                                "in file %s", idx, line, path
                             )
                         else:
                             break
