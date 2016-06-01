@@ -42,15 +42,18 @@ class TestProcessFunctions(unittest.TestCase):
         row_start = ["1406555483", "9939", "9881", "0", "(sge_shepherd)", "sge_shepherd-5073566", "0", ".", "9939"]
         row_valid_start = ["1406555483", "9939", "9881", "0", "(sge_shepherd)", "sge_shepherd-5073566", "0", "fork", "9939"]
         row_end = ["1406556210", "9940", "9881", "0", "(sge_shephrd)", "sge_shepherd-5073567", "0", "exit", "9939"]
+        row_end2 = ["1406556210", "9940", "9881", "0", "(sge_shephrd)", "sge_shepherd-5073566", "0", "exit", "9939"]
         row_valid_end = ["1406556210", "9939", "9881", "0", "(sge_shepherd)", "sge_shepherd-5073566", "0", "exit", "9939"]
         data_start_dict = {}
         data_valid_start_dict = {}
         data_end_dict = {}
+        data_end_dict2 = {}
         data_valid_end_dict = {}
         for key in self.header:
             data_start_dict[key] = row_start[self.header[key]]
             data_valid_start_dict[key] = row_valid_start[self.header[key]]
             data_end_dict[key] = row_end[self.header[key]]
+            data_end_dict2[key] = row_end2[self.header[key]]
             data_valid_end_dict[key] = row_valid_end[self.header[key]]
 
         self.process.addProcessEvent(**data_start_dict)
@@ -76,6 +79,10 @@ class TestProcessFunctions(unittest.TestCase):
         process = Process()
         process.addProcessEvent(**data_valid_start_dict)
         self.assertRaises(ProcessMismatchException, process.addProcessEvent, **data_end_dict)
+
+        process = Process()
+        process.addProcessEvent(**data_valid_start_dict)
+        self.assertRaises(ProcessMismatchException, process.addProcessEvent, **data_end_dict2)
 
     def test_event_conversion(self):
         row_string = "1405011331,1405065581,30726,7733,30726,0,(sge_shepherd)," \
