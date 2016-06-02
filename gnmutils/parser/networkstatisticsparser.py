@@ -50,7 +50,7 @@ class NetworkStatisticsParser(DataParser):
 
     def load_archive_state(self, path=None):
         if self.data_source is not None:
-            self._configuration = next(self.data_source.object_data(
+            self.configuration = next(self.data_source.object_data(
                 pattern="^configuration.pkl",
                 path=path
             ), None)
@@ -77,19 +77,18 @@ class NetworkStatisticsParser(DataParser):
     def clear_caches(self):
         self._data = {}
 
-    def parse(self, **kwargs):
-        path = kwargs.get("path", None)
+    def parse(self, path, **kwargs):
         if self._base_tme == 0:
             self._base_tme = int(re.match(
                 "(\d*)-(process|traffic).log-[0-9]{8}",
                 os.path.split(path)[1]
             ).group(1))
-        return DataParser.parse(self, **kwargs)
+        return DataParser.parse(self, path=path, **kwargs)
 
     def _get_interval(self):
-        if self._configuration is None:
+        if self.configuration is None:
             return 20
-        return self._configuration.interval
+        return self.configuration.interval
 
     def _get_matching_tme(self, tme=None):
         value = (tme - self._base_tme) // self._get_interval()

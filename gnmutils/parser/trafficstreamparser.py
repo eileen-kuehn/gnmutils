@@ -105,7 +105,7 @@ class TrafficStreamParser(DataParser):
                 **kwargs
             )
             self.data_source.write_object_data(
-                data=self._configuration,
+                data=self.configuration,
                 name="configuration",
                 **kwargs
             )

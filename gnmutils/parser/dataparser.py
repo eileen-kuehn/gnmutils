@@ -43,7 +43,7 @@ class DataParser(object):
                 pattern="^data.pkl",
                 path=path
             ), None)
-            self._configuration = next(self.data_source.object_data(
+            self.configuration = next(self.data_source.object_data(
                 pattern="^configuration.pkl",
                 path=path
             ), None)
@@ -121,7 +121,7 @@ class DataParser(object):
                 **kwargs
             )
             self.data_source.write_object_data(
-                data=self._configuration,
+                data=self.configuration,
                 name="configuration",
                 path=path,
                 **kwargs

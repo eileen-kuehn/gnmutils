@@ -1,4 +1,6 @@
 from gnmutils.objects.traffic import Traffic
+from gnmutils.objects.process import Process
+from gnmutils.exceptions import ArgumentNotDefinedException
 
 
 class NetworkStatistics(object):
@@ -24,15 +26,19 @@ class NetworkStatistics(object):
             self.data_size += len(str(data_dict[key]))
         self.event_count += 1
 
+        # TODO: what about process data?!
         # check for traffic data on workernode itself
-        traffic = Traffic.from_dict(**data_dict)
-        if traffic is not None:
-            if traffic.gpid > 0:
-                self.traffic_in_size += float(traffic.in_rate) * self.interval
-                self.traffic_out_size += float(traffic.out_rate) * self.interval
-            else:
-                self.background_traffic_in_size += float(traffic.in_rate) * self.interval
-                self.background_traffic_out_size += float(traffic.out_rate) * self.interval
+        try:
+            traffic = Traffic.from_dict(data_dict)
+            if traffic is not None:
+                if traffic.gpid > 0:
+                    self.traffic_in_size += float(traffic.in_rate) * self.interval
+                    self.traffic_out_size += float(traffic.out_rate) * self.interval
+                else:
+                    self.background_traffic_in_size += float(traffic.in_rate) * self.interval
+                    self.background_traffic_out_size += float(traffic.out_rate) * self.interval
+        except ArgumentNotDefinedException:
+            pass
 
     def getRow(self):
         return "%s,%d,%.2f,%.2f,%.2f,%.2f,%.2f" % (
