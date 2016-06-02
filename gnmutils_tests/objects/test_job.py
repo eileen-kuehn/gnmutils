@@ -1,6 +1,6 @@
 import unittest
 
-from gnmutils.job import Job
+from gnmutils.objects.job import Job
 from gnmutils.objects.process import Process
 
 

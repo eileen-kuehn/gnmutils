@@ -17,8 +17,8 @@ class Job(object):
                  configuration=None, last_tme=None, **kwargs):
         self._db_id = db_id
         self._job_id = job_id
-        self._workernode = workernode
-        self._run = run
+        self.workernode = workernode
+        self.run = run
         self._tme = int(tme) if tme is not None else 0
         self._gpid = int(gpid) if gpid is not None else 0
         self._root = None
@@ -28,7 +28,7 @@ class Job(object):
         self._last_tme = last_tme
         self._tree = None
         # for lazy loading of traffic
-        self._data_source = kwargs.get("data_source", None)
+        self.data_source = kwargs.get("data_source", None)
         self._path = kwargs.get("path", None)
 
     def clear_caches(self):
@@ -41,24 +41,6 @@ class Job(object):
         for traffics in traffic:
             for element in traffics:
                 self.add_traffic(element)
-
-    @property
-    def data_source(self):
-        """
-        Property that returns the current DataSource.
-
-        :return: DataSource
-        """
-        return self._data_source
-
-    @data_source.setter
-    def data_source(self, value):
-        """
-        Method to set the DataSource in use.
-
-        :param value: the new DataSource
-        """
-        self._data_source = value
 
     @property
     def last_tme(self):
@@ -97,42 +79,6 @@ class Job(object):
         :param value: the configuration to set
         """
         self._configuration = value
-
-    @property
-    def workernode(self):
-        """
-        Method to return the workernode where the job was recorded.
-
-        :return: workernode identifier
-        """
-        return self._workernode
-
-    @workernode.setter
-    def workernode(self, workernode=None):
-        """
-        Method to set the workernode the job was recorded on.
-
-        :param workernode: the workernode to set
-        """
-        self._workernode = workernode
-
-    @property
-    def run(self):
-        """
-        Method to return the run when the job was recorded.
-
-        :return: run identifier
-        """
-        return self._run
-
-    @run.setter
-    def run(self, run=None):
-        """
-        Method to set the run the job was recorded in.
-
-        :param run: the run to set
-        """
-        self._run = run
 
     @property
     def db_id(self):

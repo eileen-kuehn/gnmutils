@@ -10,7 +10,7 @@ from gnmutils.parser.dataparser import DataParser
 from gnmutils.networkstatistics import NetworkStatistics
 
 from gnmutils.objects.traffic import Traffic
-from gnmutils.job import Job
+from gnmutils.objects.job import Job
 
 
 class NetworkStatisticsParser(DataParser):

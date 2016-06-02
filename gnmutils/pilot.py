@@ -1,4 +1,4 @@
-from gnmutils.job import Job
+from gnmutils.objects.job import Job
 from evenmoreutils.tree import Tree
 
 

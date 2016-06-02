@@ -7,7 +7,7 @@ import logging
 from gnmutils.parser.dataparser import DataParser
 from gnmutils.objectcache import ObjectCache
 from gnmutils.objects.traffic import Traffic
-from gnmutils.job import Job
+from gnmutils.objects.job import Job
 
 
 class TrafficWrapper(object):

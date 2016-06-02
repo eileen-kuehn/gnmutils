@@ -3,15 +3,15 @@ import re
 
 from gnmutils.parser.dataparser import DataParser
 from gnmutils.objects.process import Process
-from gnmutils.job import Job
+from gnmutils.objects.job import Job
 from gnmutils.utils import path_components
 
 
 class JobParser(DataParser):
     """
     The :py:class:`JobParser` is able to :py:func:`parse` raw information on
-    :py:class:`gnmutils.process.Process` es as well as :py:class:`gnmutils.traffic.Traffic` into
-    a single :py:class:`gnmutils.job.Job`.
+    :py:class:`gnmutils.objects.process.Process` es as well as
+    :py:class:`gnmutils.objects.traffic.Traffic` into a single :py:class:`gnmutils.objects.job.Job`.
     """
     def __init__(self, data_source=None, data_reader=None, **kwargs):
         DataParser.__init__(self, data_source, data_reader, **kwargs)
