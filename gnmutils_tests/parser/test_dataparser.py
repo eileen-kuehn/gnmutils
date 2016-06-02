@@ -2,7 +2,7 @@ import unittest
 
 from gnmutils.parser.dataparser import DataParser
 from gnmutils.sources.filedatasource import FileDataSource
-from gnmutils.exceptions import ParserNotInitializedException
+from gnmutils.exceptions import ParserNotInitializedException, FilePathException
 
 
 class TestDataParser(unittest.TestCase):
@@ -32,6 +32,20 @@ class TestDataParser(unittest.TestCase):
         parser = DataParser()
         self.assertRaises(NotImplementedError, parser.clear_caches)
 
-    def test_add_piece(self):
+    def test_piece(self):
         parser = DataParser()
         self.assertRaises(ParserNotInitializedException, parser.add_piece, piece=None)
+        self.assertRaises(NotImplementedError, parser._piece_from_dict, piece=None)
+
+    def test_archiving(self):
+        parser = DataParser()
+        self.assertRaises(FilePathException, parser.load_archive_state, path=None)
+        # TODO: add writing of archive
+
+    def test_pop(self):
+        parser = DataParser()
+        self.assertRaises(NotImplementedError, parser.pop_data)
+
+    def test_parsing_finished(self):
+        parser = DataParser()
+        self.assertIsNone(parser._parsing_finished().next())
