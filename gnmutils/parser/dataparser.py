@@ -105,7 +105,7 @@ class DataParser(object):
         """
         raise NotImplementedError
 
-    def archive_state(self, **kwargs):
+    def archive_state(self, path, **kwargs):
         """
         Method that archives the current state of the :py:class:`DataParser`. It includes the
         current :py:attr:`data` that was read, the :py:attr:`configuration` as well as already
@@ -117,16 +117,19 @@ class DataParser(object):
             self.data_source.write_object_data(
                 data=self._data,
                 name="data",
+                path=path,
                 **kwargs
             )
             self.data_source.write_object_data(
                 data=self._configuration,
                 name="configuration",
+                path=path,
                 **kwargs
             )
             self.data_source.write_object_data(
                 data=self._parsed_data,
                 name="parsed_data",
+                path=path,
                 **kwargs
             )
         else:
