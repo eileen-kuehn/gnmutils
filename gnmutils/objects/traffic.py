@@ -26,8 +26,8 @@ class Traffic(GNMObject):
         'out_cnt': int,
         'source_ip': stringutils.xstr,
         'dest_ip': stringutils.xstr,
-        'source_port': stringutils.xfloat,
-        'dest_port': stringutils.xfloat,
+        'source_port': stringutils.xint,
+        'dest_port': stringutils.xint,
         'conn_cat': stringutils.xstr,
         'workernode': stringutils.xstr,
         'interval': int,
@@ -148,18 +148,18 @@ class Traffic(GNMObject):
                 )
                 raise TrafficMismatchException(conn=conn, workernode=workernode)
 
-        self.source_ip = splitted_source[0]
-        self.source_port = splitted_source[1]
-        self.dest_ip = splitted_target[0]
-        self.dest_port = splitted_target[1]
+        self.source_ip = self._convert_to_default_type("source_ip", splitted_source[0])
+        self.source_port = self._convert_to_default_type("source_port", splitted_source[1])
+        self.dest_ip = self._convert_to_default_type("dest_ip", splitted_target[0])
+        self.dest_port = self._convert_to_default_type("dest_port", splitted_target[1])
 
         if ((re.match("^10\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})", self.dest_ip)) or
                 (re.match("^192\.108\.([0-9]{1,3})\.([0-9]{1,3})", self.dest_ip))):
             # internal interface
-            self.conn_cat = "int"
+            self.conn_cat = self._convert_to_default_type("conn_cat", "int")
         else:
             # external interface
-            self.conn_cat = "ext"
+            self.conn_cat = self._convert_to_default_type("conn_cat", "ext")
 
     def getRow(self):
         return ("%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s"
