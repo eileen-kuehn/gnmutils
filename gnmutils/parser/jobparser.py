@@ -15,7 +15,7 @@ class JobParser(DataParser):
     """
     def __init__(self, data_source=None, data_reader=None, **kwargs):
         DataParser.__init__(self, data_source, data_reader, **kwargs)
-        self._data = Job(data_source=self._data_source, path=kwargs.get("path", None))
+        self._data = Job(data_source=self.data_source, path=kwargs.get("path", None))
 
     def data_id(self, value):
         self._data.db_id = value
@@ -30,13 +30,14 @@ class JobParser(DataParser):
         """
         self._data.clear_caches()
 
-    def parse(self, **kwargs):
-        path = kwargs.get("path", None)
+    def parse(self, path, **kwargs):
+        if self._data.path is None:
+            self._data.path = "%s/%s/%s" % path_components(path)
         self._data.db_id = re.match("(\d*)-process.csv", os.path.split(path)[1]).group(1)
         base_path, workernode, run = path_components(path)
         self._data.workernode = workernode
         self._data.run = run
-        return DataParser.parse(self, **kwargs)
+        return DataParser.parse(self, path, **kwargs)
 
     def _piece_from_dict(self, data_dict=None):
         return Process(**data_dict)

@@ -3,7 +3,8 @@ import logging
 
 from gnmutils.objectcache import ObjectCache
 from gnmutils.monitoringconfiguration import MonitoringConfiguration
-from gnmutils.exceptions import NonUniqueRootException, DataNotInCacheException
+from gnmutils.exceptions import NonUniqueRootException, DataNotInCacheException, \
+    NoDataSourceException, FilePathException
 
 from evenmoreutils.tree import Tree, Node
 
@@ -29,7 +30,7 @@ class Job(object):
         self._tree = None
         # for lazy loading of traffic
         self.data_source = kwargs.get("data_source", None)
-        self._path = kwargs.get("path", None)
+        self.path = kwargs.get("path", None)
 
     def clear_caches(self):
         self._root = None
@@ -37,10 +38,15 @@ class Job(object):
         self._tree_initialized = False
 
     def prepare_traffic(self):
-        traffic = self._data_source.read_traffic(path=self._path, name=self.db_id)
-        for traffics in traffic:
-            for element in traffics:
-                self.add_traffic(element)
+        try:
+            traffic = self.data_source.read_traffic(path=self.path, name=self.db_id)
+            for traffics in traffic:
+                for element in traffics:
+                    self.add_traffic(element)
+        except AttributeError:
+            raise NoDataSourceException
+        except FilePathException:
+            raise
 
     @property
     def last_tme(self):

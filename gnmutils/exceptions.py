@@ -58,3 +58,20 @@ class ArgumentNotDefinedException(BasicException):
     def __init__(self, argument=None, value=None):
         BasicException.__init__(self, "The argument %s (value: %s) cannot be mapped because it is "
                                       "not specified" % (argument, value))
+
+
+class NoDataSourceException(BasicException):
+    """
+    Thrown when no :py:class:`DataSource` has been defined.
+    """
+    def __init__(self):
+        BasicException.__init__(self, "The objects does not have access to a data source.")
+
+
+class FilePathException(BasicException):
+    """
+    Thrown when there is a problem with the path in :py:class:`FileDataSource`.
+    """
+    def __init__(self, value):
+        BasicException.__init__(self, "There is a problem with the given path to read from (%s)" %
+                                value)

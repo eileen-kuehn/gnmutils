@@ -61,12 +61,12 @@ class TrafficStreamParser(DataParser):
     """
     def __init__(self, data_source=None, data_reader=None, workernode=None, run=None, **kwargs):
         DataParser.__init__(self, data_source, data_reader, **kwargs)
-        if self._data_source is not None:
-            self._data = next(self._data_source.object_data(
+        if self.data_source is not None:
+            self._data = next(self.data_source.object_data(
                 pattern="traffic_data.pkl",
                 path=kwargs.get("path", None)
             ), ObjectCache())
-            self._parsed_data = next(self._data_source.object_data(
+            self._parsed_data = next(self.data_source.object_data(
                 pattern="traffic_parsed_data.pkl",
                 path=kwargs.get("path", None)
             ), set())
@@ -98,18 +98,18 @@ class TrafficStreamParser(DataParser):
         return Traffic.default_header(**kwargs)
 
     def archive_state(self, **kwargs):
-        if self._data_source is not None:
-            self._data_source.write_object_data(
+        if self.data_source is not None:
+            self.data_source.write_object_data(
                 data=self._data,
                 name="traffic_data",
                 **kwargs
             )
-            self._data_source.write_object_data(
+            self.data_source.write_object_data(
                 data=self._configuration,
                 name="configuration",
                 **kwargs
             )
-            self._data_source.write_object_data(
+            self.data_source.write_object_data(
                 data=self._parsed_data,
                 name="traffic_parsed_data",
                 **kwargs
@@ -183,7 +183,7 @@ class TrafficStreamParser(DataParser):
                   run=self.run,
                   tme=traffic.tme + self._interval(),
                   gpid=traffic.gpid)
-        job = self._data_source.job_description(data=job)
+        job = self.data_source.job_description(data=job)
         if job is not None and job.last_tme > 0:
             wrapper = TrafficWrapper(
                 job=job,

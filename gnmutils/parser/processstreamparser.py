@@ -30,8 +30,8 @@ class ProcessStreamParser(DataParser):
         self.run = run
 
     def load_archive_state(self, path=None):
-        if self._data_source is not None:
-            self._process_cache = next(self._data_source.object_data(
+        if self.data_source is not None:
+            self._process_cache = next(self.data_source.object_data(
                 pattern="process_cache.pkl",
                 path=path
             ), ObjectCache())
@@ -41,23 +41,23 @@ class ProcessStreamParser(DataParser):
         return Job.default_header(**kwargs)
 
     def archive_state(self, **kwargs):
-        if self._data_source is not None:
-            self._data_source.write_object_data(
+        if self.data_source is not None:
+            self.data_source.write_object_data(
                 data=self._data,
                 name="data",
                 **kwargs
             )
-            self._data_source.write_object_data(
+            self.data_source.write_object_data(
                 data=self._process_cache,
                 name="process_cache",
                 **kwargs
             )
-            self._data_source.write_object_data(
+            self.data_source.write_object_data(
                 data=self._configuration,
                 name="configuration",
                 **kwargs
             )
-            self._data_source.write_object_data(
+            self.data_source.write_object_data(
                 data=self._parsed_data,
                 name="parsed_data",
                 **kwargs
@@ -87,8 +87,8 @@ class ProcessStreamParser(DataParser):
                     tme=process.tme,
                     gpid=process.gpid,
                     configuration=self.configuration,
-                    data_source=self._data_source)
-                job_reader = self._data_source.read_job(
+                    data_source=self.data_source)
+                job_reader = self.data_source.read_job(
                     data=job_object,
                     path=kwargs.get("path", None)
                 )
@@ -148,7 +148,7 @@ class ProcessStreamParser(DataParser):
                                  gpid=process.gpid,
                                  job_id=process.batchsystemId,
                                  configuration=self.configuration,
-                                 data_source=self._data_source),
+                                 data_source=self.data_source),
                         key=process.gpid,
                         value=process.tme)
                 self._process_cache.add_data(data=process)

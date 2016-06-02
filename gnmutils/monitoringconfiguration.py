@@ -52,6 +52,11 @@ class MonitoringConfiguration(object):
             self.version, self.interval, self.level, self.grouping, self.skip_other_pids
         )
 
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.__dict__ == other.__dict__
+        return False
+
     def __repr__(self):
         return "%s: version (%s), interval (%d), level (%s), grouping (%s), skipOtherPids (%s)" % (
             self.__class__.__name__, self.version, self.interval, self.level, self.grouping,

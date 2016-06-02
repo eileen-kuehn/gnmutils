@@ -18,6 +18,7 @@ from gnmutils.parser.trafficstreamparser import TrafficStreamParser
 from gnmutils.parser.trafficparser import TrafficParser
 from gnmutils.parser.networkstatisticsparser import NetworkStatisticsParser
 from gnmutils.utils import relevant_directories
+from gnmutils.exceptions import FilePathException
 
 from evenmoreutils import path as pathutils
 from evenmoreutils import csv as csvutils
@@ -29,19 +30,18 @@ class FileDataSource(DataSource):
     Attention: Currently it is not possible to get files that are only managed on the filesystem
     into the database by using implemented methods/classes.
     """
-    default_path = "/Users/eileen/projects/Dissertation/Development/data/raw"
+    default_path = None
 
     def is_available(self):
         return True
 
-    def object_data(self, **kwargs):
+    def object_data(self, path, **kwargs):
         """
         :param path:
         :param pattern:
         :return:
         """
-        for dir_entry in sorted(os.listdir(kwargs.get("path",
-                                                      self.default_path))):
+        for dir_entry in sorted(os.listdir(path)):
             if re.search(kwargs.get("pattern", ".pkl"), dir_entry):
                 file_path = os.path.join(kwargs.get("path", self.default_path), dir_entry)
                 logging.getLogger(self.__class__.__name__).debug(
@@ -293,7 +293,7 @@ class FileDataSource(DataSource):
         converter.parser = parser
         return parser.parse(path=os.path.join(path, "%s-process.csv" % name))
 
-    def read_traffic(self, path=None, name=None, converter=CSVReader()):
+    def read_traffic(self, path, name, converter=CSVReader()):
         """
         :param path:
         :param name:
@@ -302,7 +302,11 @@ class FileDataSource(DataSource):
         """
         parser = TrafficParser(data_reader=converter)
         converter.parser = parser
-        return parser.parse(path=os.path.join(path, "%s-traffic.csv" % name))
+        try:
+            file_path = os.path.join(path, "%s-traffic.csv" % name)
+        except AttributeError:
+            raise FilePathException(value="path=%s, name=%s" % (path, name))
+        return parser.parse(path=file_path)
 
     def _write_payload(self, **kwargs):
         """

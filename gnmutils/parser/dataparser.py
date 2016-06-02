@@ -3,7 +3,7 @@ Module offers abstract definition of a :py:class:`DataParser`.
 """
 import logging
 
-from gnmutils.exceptions import ParserNotInitializedException
+from gnmutils.exceptions import ParserNotInitializedException, FilePathException
 
 from evenmoreutils.tree import Node
 
@@ -18,16 +18,17 @@ class DataParser(object):
     * splitting of payloads
     * etc.
     """
-    def __init__(self, data_source=None, data_reader=None, **kwargs):
-        self._data_source = data_source
+    def __init__(self, data_source=None, data_reader=None, path=None, **kwargs):
+        self.data_source = data_source
         self.data_reader = data_reader
         self._changed = True
         self._data = None
         self.configuration = None
         self._parsed_data = set()
-        self.load_archive_state(path=kwargs.get("path", None))
+        if path:
+            self.load_archive_state(path=path)
 
-    def load_archive_state(self, path=None):
+    def load_archive_state(self, path):
         """
         Method takes care that an eventually saved state is loaded before going on with parsing.
         This is especially useful when considering different files and when stopping in the
@@ -35,16 +36,18 @@ class DataParser(object):
 
         :param str path: path to read archive files from
         """
-        if self._data_source is not None:
-            self._data = next(self._data_source.object_data(
+        if path is None:
+            raise FilePathException(value="path=%s" % path)
+        if self.data_source is not None:
+            self._data = next(self.data_source.object_data(
                 pattern="^data.pkl",
                 path=path
             ), None)
-            self._configuration = next(self._data_source.object_data(
+            self._configuration = next(self.data_source.object_data(
                 pattern="^configuration.pkl",
                 path=path
             ), None)
-            self._parsed_data = next(self._data_source.object_data(
+            self._parsed_data = next(self.data_source.object_data(
                 pattern="^parsed_data.pkl",
                 path=path
             ), set())
@@ -110,18 +113,18 @@ class DataParser(object):
 
         :param kwargs: additional attributes
         """
-        if self._data_source is not None:
-            self._data_source.write_object_data(
+        if self.data_source is not None:
+            self.data_source.write_object_data(
                 data=self._data,
                 name="data",
                 **kwargs
             )
-            self._data_source.write_object_data(
+            self.data_source.write_object_data(
                 data=self._configuration,
                 name="configuration",
                 **kwargs
             )
-            self._data_source.write_object_data(
+            self.data_source.write_object_data(
                 data=self._parsed_data,
                 name="parsed_data",
                 **kwargs
@@ -131,7 +134,7 @@ class DataParser(object):
                 "Archiving not done because of missing data_source"
             )
 
-    def parse(self, **kwargs):
+    def parse(self, path, **kwargs):
         """
         This method instantiates the parsing for file given by :py:param:`path` on specified
         :py:class:`DataReader`. It acts as a generator and yields all finished objects.
@@ -139,7 +142,7 @@ class DataParser(object):
         :param path:
         :return:
         """
-        for data_dict in self.data_reader.data(path=kwargs.get("path", None)):
+        for data_dict in self.data_reader.data(path=path):
             if data_dict is not None:
                 piece = self._piece_from_dict(data_dict)
                 data = self.add_piece(piece=piece)

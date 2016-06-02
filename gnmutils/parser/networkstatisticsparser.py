@@ -49,19 +49,19 @@ class NetworkStatisticsParser(DataParser):
         return Job.default_header(length=length)
 
     def load_archive_state(self, path=None):
-        if self._data_source is not None:
-            self._configuration = next(self._data_source.object_data(
+        if self.data_source is not None:
+            self._configuration = next(self.data_source.object_data(
                 pattern="^configuration.pkl",
                 path=path
             ), None)
-            self._parsed_data = next(self._data_source.object_data(
+            self._parsed_data = next(self.data_source.object_data(
                 pattern="statistics_parsed_data.pkl",
                 path=path
             ), set())
 
     def archive_state(self, **kwargs):
-        if self._data_source is not None:
-            self._data_source.write_object_data(
+        if self.data_source is not None:
+            self.data_source.write_object_data(
                 data=self._parsed_data,
                 name="statistics_parsed_data",
                 **kwargs
