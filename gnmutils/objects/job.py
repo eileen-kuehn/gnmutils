@@ -304,6 +304,46 @@ class Job(object):
                 for node in process_cache[pid]:
                     yield node.value
 
+    def processes_in_order(self):
+        """
+        Method that returns processes in order depending on tme and their pid. This is especially
+        useful when replaying a file as a stream.
+
+        :return: process generator of the job
+        """
+        tree = self.tree
+        processes = []
+        processes_in_order = []
+        # create the actual array
+        for node, _ in tree.walkDFS():
+            processes.append(node.value)
+        processes.sort(key=lambda x: x.tme)
+        current_tme = processes[0].tme
+        current_processes = []
+        current_pid = processes[0].gpid - 1  # to also include first pid in correct order
+        while processes:
+            if processes[0].tme == current_tme:
+                current_processes.append(processes.pop(0))
+            else:
+                # do sorting
+                ordered = self._create_order(current_processes, current_pid)
+                # reset values
+                current_tme = processes[0].tme
+                current_pid = ordered[-1].pid
+                processes_in_order.extend(ordered)
+                current_processes = []
+        for process in processes_in_order:
+            yield process
+
+    def _create_order(self, elements, start_pid):
+        elements_in_order = []
+        elements.sort(key=lambda x: x.pid)
+        bigger = [process for process in elements if process.pid > start_pid]
+        elements_in_order.extend(bigger)
+        smaller = [process for process in elements if process.pid <= start_pid]
+        elements_in_order.extend(smaller)
+        return elements_in_order
+
     def process_count(self):
         """
         Method that returns the count of the processes inside the job.
@@ -363,7 +403,16 @@ class Job(object):
     @staticmethod
     def _add_function(child, children):
         tmes = [node.value.tme for node in children]
-        return bisect.bisect_left(tmes, child.value.tme)
+        tme_index = bisect.bisect_left(tmes, child.value.tme)
+        # check for equality of following element
+        if tmes[tme_index] == child.value.tme or tmes[tme_index + 1] == child.value.tme \
+                if len(children) > tme_index + 1 else True:
+            # I also need to do a sorting regarding pid
+            # so first filter relevant elements with same tme
+            pids = [node.value.pid for node in children if node.value.tme == child.value.tme]
+            pid_index = bisect.bisect_left(pids, child.value.pid)
+            return tme_index + pid_index
+        return tme_index
 
     def _initialize_tree(self):
         logging.getLogger(self.__class__.__name__).info("Initializing tree structure")

@@ -122,3 +122,42 @@ class TestJobFunctions(unittest.TestCase):
                                                         "exit_code": 6,
                                                         "state": 7,
                                                         "gpid": 8})
+
+    def test_processes(self):
+        data_source = FileDataSource()
+        for job in data_source.jobs(path=self._file_path()):
+            for element in job:
+                tree = element.tree
+                count = 0
+                for node, depth in tree.walkDFS():
+                    count += 1
+                    # check pid order of children
+                    initial = 0
+                    last_tme = 0
+                    for process in node.children:
+                        self.assertTrue(
+                            process.value.pid >= initial or (process.value.pid < initial and last_tme < process.value.tme), "%d: initial %d differs %d (%s)" %(count, initial, process.value.pid, [(child.value.pid, child.value.tme) for child in node.children]))
+                        initial = process.value.pid
+                        last_tme = process.value.tme
+
+    def test_processes_in_order(self):
+        data_source = FileDataSource()
+        for job in data_source.jobs(path=self._file_path()):
+            for element in job:
+                last_tme = 0
+                last_pid = 0
+                for process in element.processes_in_order():
+                    self.assertTrue(process.tme >= last_tme)
+                    if last_tme == process.tme:
+                        # also check for pid
+                        self.assertTrue(process.pid > last_pid or ((last_pid + process.pid) % 32768 < 500), "%d vs %d" % (last_pid, process.pid))
+                        last_pid = process.pid
+                    else:
+                        last_pid = 0
+                    last_tme = process.tme
+
+    def _file_path(self):
+        return os.path.join(
+            os.path.dirname(gnmutils_tests.__file__),
+            "data/c00-001-001/1/1-process.csv"
+        )
