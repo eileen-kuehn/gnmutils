@@ -90,7 +90,7 @@ class FileDataSource(DataSource):
             pass
         else:
             # convert raw data
-            for base_path, workernode, run in relevant_directories(path=path):
+            for base_path, workernode, run, _ in relevant_directories(path=path):
                 current_path = os.path.join(os.path.join(base_path, workernode), run)
                 converter = CSVReader()
                 parser = TrafficStreamParser(
@@ -174,7 +174,7 @@ class FileDataSource(DataSource):
         :return:
         """
         path = kwargs.get("path", self.default_path)
-        for base_path, workernode, run in ~relevant_directories(path=path):
+        for base_path, workernode, run, _ in relevant_directories(path=path):
             current_path = os.path.join(os.path.join(base_path, workernode), run)
             converter = CSVReader()
             parser = NetworkStatisticsParser(

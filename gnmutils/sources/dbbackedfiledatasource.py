@@ -46,7 +46,7 @@ class DBBackedFileDataSource(FileDataSource):
                 level = directory_level(path)
                 job_object = DBJobObject(valid=True, completed=True)
                 if level == RUN_LEVEL:
-                    _, workernode, run = next(relevant_directories(path=path),
+                    _, workernode, run, _ = next(relevant_directories(path=path),
                                                       (None, None, None))
                     job_object.run = run
                     workernode_object = self._db_operator.load_or_create_workernode(data=workernode)
