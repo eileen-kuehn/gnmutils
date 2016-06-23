@@ -1,6 +1,8 @@
 """
 The module contains the class :py:class:`ProcessParser` that accumulates different process events
 to complete processes that can be stored as CSV.
+
+Attention: this parser does not seem to be used so far...
 """
 import time
 import cPickle as pickle
@@ -20,10 +22,9 @@ class ProcessParser(DataParser):
     Complete processes belonging to the same job can then be joined by using a
     :py:class:`JobParser`.
     """
-    def __init__(self, data_source=None, data_reader=None, converter=None, operator=None,
-                 processCache=None, jobCache=None):
+    def __init__(self, data_source=None, data_reader=None, operator=None, processCache=None,
+                 jobCache=None):
         DataParser.__init__(self, data_source=data_source, data_reader=data_reader)
-        self._converter = converter
         self._operator = operator
 
         try:
@@ -60,27 +61,6 @@ class ProcessParser(DataParser):
         """
         return {"tme": 0, "pid": 1, "ppid": 2, "uid": 3, "name": 4, "cmd": 5, "exit_code": 6,
                 "state": 7, "gpid": 8}
-
-    def _finish_process(self, job=None, process=None):
-        if not job.last_tme:
-            job.last_tme = process.exit_tme
-        if process.exit_tme > job.last_tme:
-            job.last_tme = process.exit_tme
-            self._operator.updateJob(job)
-        self._move_process(process=process, job_id=(job.id_value or 0))
-
-        # job is complete so remember and save it
-        if "sge_shepherd" in process.cmd:
-            job.exit_tme = process.exit_tme
-
-            job_parser = self._job_cache.get_data(key=job.id_value, value=0)
-            if not self._save_and_delete_job(job_parser=job_parser, job_id=job.id_value, job=job):
-                logging.info("waiting for more processes to complete job...")
-
-                # remove dbJob from Cache
-                job.valid = job_parser.isValid()
-                job.completed = False
-                self._operator.saveAndDeleteJob(job)
 
     def parseRow(self, row=None, headerCache=None, tme=None):
         if "state" in headerCache:
@@ -215,6 +195,27 @@ class ProcessParser(DataParser):
         process = Process.from_dict(row=dict(zip(header_cache, row)))
         self._process_cache.add_data(data=process)
         return process
+
+    def _finish_process(self, job=None, process=None):
+        if not job.last_tme:
+            job.last_tme = process.exit_tme
+        if process.exit_tme > job.last_tme:
+            job.last_tme = process.exit_tme
+            self._operator.updateJob(job)
+        self._move_process(process=process, job_id=(job.id_value or 0))
+
+        # job is complete so remember and save it
+        if "sge_shepherd" in process.cmd:
+            job.exit_tme = process.exit_tme
+
+            job_parser = self._job_cache.get_data(key=job.id_value, value=0)
+            if not self._save_and_delete_job(job_parser=job_parser, job_id=job.id_value, job=job):
+                logging.info("waiting for more processes to complete job...")
+
+                # remove dbJob from Cache
+                job.valid = job_parser.isValid()
+                job.completed = False
+                self._operator.saveAndDeleteJob(job)
 
     def _move_process(self, process=None, job_id=None):
         if job_id == 0:

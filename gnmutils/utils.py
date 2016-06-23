@@ -11,7 +11,7 @@ RUN_LEVEL = object()
 
 
 def directory_level(path=None):
-    path = _to_directory(path)
+    path, filename = _to_directory(path)
     if _match_workernode_level(path):
         return WORKERNODE_LEVEL
     splitted_path = os.path.split(path)
@@ -25,7 +25,7 @@ def directory_level(path=None):
 
 
 def path_components(path=None):
-    path = _to_directory(path)
+    path, filename = _to_directory(path)
     level = directory_level(path)
     if level == BASE_LEVEL:
         return path, None, None
@@ -39,7 +39,7 @@ def path_components(path=None):
 
 
 def relevant_directories(path=None):
-    path = _to_directory(path)
+    path, filename = _to_directory(path)
     try:
         level = directory_level(path)
     except NoGNMDirectoryStructure:
@@ -52,18 +52,18 @@ def relevant_directories(path=None):
                 if _match_workernode_level(directory):
                     for run_subdir in pathutils.getImmediateSubdirectories(directory):
                         if "unzipped" not in run_subdir:
-                            yield path, workernode_subdir, run_subdir
+                            yield path, workernode_subdir, run_subdir, filename
         if level == WORKERNODE_LEVEL:
             # get run directories
             for run_subdir in pathutils.getImmediateSubdirectories(path):
                 if "unzipped" not in run_subdir:
                     splitted = os.path.split(path)
-                    yield splitted[0], splitted[1], run_subdir
+                    yield splitted[0], splitted[1], run_subdir, filename
         if level == RUN_LEVEL:
             # identify former directories
             run = os.path.split(path)
             splitted = os.path.split(run[0])
-            yield splitted[0], splitted[1], run[1]
+            yield splitted[0], splitted[1], run[1], filename
 
 
 def _match_workernode_level(path=None):
@@ -73,5 +73,5 @@ def _match_workernode_level(path=None):
 
 def _to_directory(path=None):
     if os.path.isfile(path):
-        return os.path.dirname(path)
-    return os.path.abspath(path)
+        return os.path.dirname(path), os.path.basename(path)
+    return os.path.abspath(path), None

@@ -124,19 +124,28 @@ class FileDataSource(DataSource):
         path = kwargs.get("path", self.default_path)
         if "processed" in kwargs.get("source", "processed"):
             converter = CSVReader()
-            for base_path, workernode, run in relevant_directories(path=path):
+            for base_path, workernode, run, filename in relevant_directories(path=path):
                 current_path = os.path.join(os.path.join(base_path, workernode), run)
-                for dir_entry in sorted(os.listdir(current_path)):
-                    matches = re.match(kwargs.get("pattern", "(\d*)-process.csv"), dir_entry)
-                    if matches:
-                        yield self.read_job(
-                            path=current_path,
-                            name=matches.group(1),
-                            converter=converter
-                        )
+                if filename:
+                    for job in self.read_job(
+                        path=current_path,
+                        name=filename,
+                        converter=converter
+                    ):
+                        yield job
+                else:
+                    for dir_entry in sorted(os.listdir(current_path)):
+                        matches = re.match(kwargs.get("pattern", "(\d*)-process.csv"), dir_entry)
+                        if matches:
+                            for job in self.read_job(
+                                path=current_path,
+                                name=matches.group(1),
+                                converter=converter
+                            ):
+                                yield job
         else:
             # convert raw data
-            for base_path, workernode, run in relevant_directories(path=path):
+            for base_path, workernode, run, _ in relevant_directories(path=path):
                 current_path = os.path.join(os.path.join(base_path, workernode), run)
                 converter = CSVReader()
                 parser = ProcessStreamParser(
@@ -291,6 +300,8 @@ class FileDataSource(DataSource):
             data_reader=converter,
             path=path)
         converter.parser = parser
+        if ".csv" in name:
+            return parser.parse(path=os.path.join(path, name))
         return parser.parse(path=os.path.join(path, "%s-process.csv" % name))
 
     def read_traffic(self, path, name, converter=CSVReader()):
