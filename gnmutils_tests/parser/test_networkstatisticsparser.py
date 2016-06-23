@@ -26,6 +26,9 @@ class TestNetworkStatisticsParser(unittest.TestCase):
             for networkstats in data.values():
                 count += networkstats.event_count
         self.assertEqual(count, 19998)
+        parser.check_caches()
+        parser.clear_caches()
+        self.assertEqual(parser.data, {})
 
     def traffic_file_path(self):
         return os.path.join(
