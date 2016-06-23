@@ -47,7 +47,7 @@ class DataNotInCacheException(BasicException):
     Thrown when the data that is looked for in ObjectCache cannot be identified
     """
     def __init__(self, key=None, value=None):
-        BasicException.__init__(self, "Element for key %s at %d cannot be identified" %
+        BasicException.__init__(self, "Element for key %s at %s cannot be identified" %
                                 (key, value))
 
 
