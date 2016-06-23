@@ -143,18 +143,17 @@ class TestJobFunctions(unittest.TestCase):
     def test_processes_in_order(self):
         data_source = FileDataSource()
         for job in data_source.jobs(path=self._file_path()):
-            for element in job:
-                last_tme = 0
-                last_pid = 0
-                for process in element.processes_in_order():
-                    self.assertTrue(process.tme >= last_tme)
-                    if last_tme == process.tme:
-                        # also check for pid
-                        self.assertTrue(process.pid > last_pid or ((last_pid + process.pid) % 32768 < 500), "%d vs %d" % (last_pid, process.pid))
-                        last_pid = process.pid
-                    else:
-                        last_pid = 0
-                    last_tme = process.tme
+            last_tme = 0
+            last_pid = 0
+            for process in job.processes_in_order():
+                self.assertTrue(process.tme >= last_tme)
+                if last_tme == process.tme:
+                    # also check for pid
+                    self.assertTrue(process.pid > last_pid or ((last_pid + process.pid) % 32768 < 500), "%d vs %d" % (last_pid, process.pid))
+                    last_pid = process.pid
+                else:
+                    last_pid = 0
+                last_tme = process.tme
 
     def _file_path(self):
         return os.path.join(

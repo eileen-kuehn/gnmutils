@@ -255,7 +255,10 @@ class Job(object):
 
         :param traffic: traffic to be added
         """
-        process_node = self._process_cache.get_data(value=traffic.tme, key=traffic.pid)
+        process_node = self._process_cache.get_data(
+            value=traffic.tme + (self._configuration.interval if self._configuration else 20),
+            key=traffic.pid
+        )
         process_node.value.traffic.append(traffic)
 
     def is_valid(self):
@@ -332,6 +335,9 @@ class Job(object):
                 current_pid = ordered[-1].pid
                 processes_in_order.extend(ordered)
                 current_processes = []
+        if ordered:
+            ordered = self._create_order(current_processes, current_pid)
+            processes_in_order.extend(ordered)
         for process in processes_in_order:
             yield process
 
