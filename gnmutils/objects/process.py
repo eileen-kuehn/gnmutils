@@ -43,10 +43,11 @@ class Process(GNMObject):
         'traffic': list
     }
 
+    # TODO: changed tree_depth to -1; does it have effects on output? When yes, fix!
     def __init__(self, name=None, cmd=None, pid=None, ppid=None, uid=None, tme=None, exit_tme=None,
                  error_code=None, signal=None, exit_code=None, gpid=None, state=None, job_id=None,
                  int_in_volume=None, int_out_volume=None, ext_in_volume=None, ext_out_volume=None,
-                 tree_depth=None, process_type=None, color=None, valid=False, traffic=None):
+                 tree_depth=-1, process_type=None, color=None, valid=False, traffic=None):
         GNMObject.__init__(self, pid=pid, ppid=ppid, uid=uid, tme=tme, gpid=gpid)
         self.name = self._convert_to_default_type("name", name)
         self.cmd = self._convert_to_default_type("cmd", cmd)
