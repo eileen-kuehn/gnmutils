@@ -33,7 +33,11 @@ class JobParser(DataParser):
     def parse(self, path, **kwargs):
         if self._data.path is None:
             self._data.path = "%s/%s/%s" % path_components(path)
-        self._data.db_id = re.match("(\d*)-process.csv", os.path.split(path)[1]).group(1)
+        try:
+            self._data.db_id = re.match("(\d*)-process.csv", os.path.split(path)[1]).group(1)
+        except AttributeError:
+            # got a payload
+            self._data.db_id = re.match("(\d*)-(\d*)-process.csv", os.path.split(path)[1]).group(1)
         base_path, workernode, run = path_components(path)
         self._data.workernode = workernode
         self._data.run = run

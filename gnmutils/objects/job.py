@@ -335,7 +335,7 @@ class Job(object):
                 current_pid = ordered[-1].pid
                 processes_in_order.extend(ordered)
                 current_processes = []
-        if ordered:
+        if current_processes:
             ordered = self._create_order(current_processes, current_pid)
             processes_in_order.extend(ordered)
         for process in processes_in_order:
@@ -379,7 +379,7 @@ class Job(object):
                 "int_out_volume": 12, "ext_in_volume": 13, "ext_out_volume": 14}
 
     def _add(self, node=None, is_root=False):
-        if "sge_shepherd" in node.value.cmd or is_root:
+        if "sge_shepherd" in node.value.cmd or is_root or node.value.tree_depth == 0:
             if self._root is not None:
                 raise NonUniqueRootException
             self._root = node
@@ -407,16 +407,17 @@ class Job(object):
         return self._tree
 
     @staticmethod
-    def _add_function(child, children):
-        tmes = [node.value.tme for node in children]
+    def _add_function(child, children, tmes, pids):
         tme_index = bisect.bisect_left(tmes, child.value.tme)
         # check for equality of following element
+        # FIXME: removed, because now I have special function for orderings
         if tmes[tme_index] == child.value.tme or tmes[tme_index + 1] == child.value.tme \
                 if len(children) > tme_index + 1 else True:
+            right_index = bisect.bisect_right(tmes, child.value.tme)
+            pid_range = pids[tme_index:right_index]
             # I also need to do a sorting regarding pid
             # so first filter relevant elements with same tme
-            pids = [node.value.pid for node in children if node.value.tme == child.value.tme]
-            pid_index = bisect.bisect_left(pids, child.value.pid)
+            pid_index = bisect.bisect_left(pid_range, child.value.pid)
             return tme_index + pid_index
         return tme_index
 
