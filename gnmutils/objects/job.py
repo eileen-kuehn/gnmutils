@@ -47,6 +47,9 @@ class Job(object):
             raise NoDataSourceException
         except FilePathException:
             raise
+        except IOError:
+            # FIXME: here I should maybe do something about it...
+            pass
 
     @property
     def last_tme(self):
