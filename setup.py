@@ -7,7 +7,7 @@ from distutils.core import setup
 INSTALL_REQUIRES = ['evenmoreutils==0.1', 'utility==0.1']
 if 'pypy' not in platform.python_implementation().lower():
     INSTALL_REQUIRES.append('psycopg2')
-    INSTALL_REQUIRES.append('dbutils==0.1')'
+    INSTALL_REQUIRES.append('dbutils==0.1')
 
 setup(
         name="gnmutils",
