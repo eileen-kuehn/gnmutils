@@ -298,7 +298,8 @@ class FileDataSource(DataSource):
         parser = JobParser(
             data_source=self,
             data_reader=converter,
-            path=path)
+            path=path,
+            name=name)
         converter.parser = parser
         if ".csv" in name:
             return parser.parse(path=os.path.join(path, name))

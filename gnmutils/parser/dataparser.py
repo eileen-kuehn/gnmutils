@@ -25,7 +25,7 @@ class DataParser(object):
         self._data = None
         self.configuration = None
         self._parsed_data = set()
-        if path:
+        if path and kwargs.get("name", None) is None:
             self.load_archive_state(path=path)
 
     def load_archive_state(self, path):
