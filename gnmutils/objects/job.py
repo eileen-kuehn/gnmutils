@@ -365,8 +365,8 @@ class Job(object):
                 while candidate.pid in ppid_list:
                     candidate = candidate_generator.next()
             except StopIteration:
-                pass
-            if candidate:
+                candidate = None
+            if candidate is not None:
                 # check if there is something on the left to be taken...
                 # TODO: when it needs to go on from the back, I do have a problem so far...
                 possible_start_elements = [element.pid for element in elements if element.pid < candidate.pid]
