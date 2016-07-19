@@ -360,12 +360,23 @@ class Job(object):
         if base_tme - start_pid_tme > 100:
             ppid_list = [element.ppid for element in elements]
             try:
-                candidate = (element for element in elements if element.pid in ppid_list).next()
-                # check if there is something on the left to be taken...
-                # TODO: when it needs to go on from the back, I do have a problem so far...
-                start_pid = (element.pid for element in elements if element.pid < candidate.pid).next() - 1
+                candidate_generator = (element for element in elements if element.pid in ppid_list)
+                candidate = candidate_generator.next()
+                while candidate.pid in ppid_list:
+                    candidate = candidate_generator.next()
             except StopIteration:
                 pass
+            if candidate:
+                # check if there is something on the left to be taken...
+                # TODO: when it needs to go on from the back, I do have a problem so far...
+                possible_start_elements = [element.pid for element in elements if element.pid < candidate.pid]
+                last_valid = candidate.pid
+                possible_element = possible_start_elements.pop()
+                while last_valid - possible_element < 50 and len(possible_start_elements) > 0:
+                    last_valid = possible_element
+                    possible_element = possible_start_elements.pop()
+                start_pid = last_valid - 1
+
         bigger = [process for process in elements if process.pid > start_pid]
         elements_in_order.extend(bigger)
         smaller = [process for process in elements if process.pid <= start_pid]
@@ -470,7 +481,6 @@ class Job(object):
                     if self._root is not None and \
                             (node.value.tme < self._root.value.tme or
                                 node.value.exit_tme > self._root.value.exit_tme):
-                    #if int(node.value.uid) == 0 and self._root is not None and node != self._root:
                         # skip it manually
                         # it is valid here to remove the nodes...
                         self._process_cache.remove_data(node, node.value.pid, node.value.tme)
