@@ -16,7 +16,8 @@ class ObjectCache(object):
         self.faulty_nodes = set()
         self.unfound = set()
 
-    def add_data(self, data=None, key=None, value=None, key_name="pid", value_name="tme"):
+    def add_data(self, data=None, key=None, value=None, key_function=lambda data: data.pid,
+                 value_function=lambda data: data.tme):
         """
         This method takes care to add the given data object into the cache. The :py:attr:`key` and
         :py:attr:`value` to be stored can be given. Otherwise the method tries to access the
@@ -28,25 +29,24 @@ class ObjectCache(object):
         :param data: data object to store in cache
         :param key: discriminating key for data object
         :param value: discriminating value for key of data object
-        :param str key_name: name of key, defaults to pid
-        :param str value_name: name of value, defaults to tme
+        :param key_function: function to get the key from underlying data
+        :param value_function: function to get the value for comparison from underlying data
         """
         if key is None:
-            key = getattr(data, key_name)
+            key = key_function(data)
         if value is None:
-            value = getattr(data, value_name)
-        # Ensure that the actual discriminating value is also set in data object
-        if getattr(data, value_name, None) is None:
-            setattr(data, value_name, value)
+            value = value_function(data)
 
         try:
-            value_list = [getattr(process, value_name) for process in self._object_cache[key]]
+            value_list = [int(value_function(process)) for process in self._object_cache[key]]
             index = bisect.bisect_left(value_list, int(value))
             self._object_cache[key].insert(index, data)
         except KeyError:
             self._object_cache[key] = [data]
 
-    def get_data(self, value=None, key=None, remember_error=False, value_name="tme"):
+    def get_data(self, value=None, key=None, remember_error=False, validate_range=False,
+                 range_end_value_function=lambda data: data.exit_tme,
+                 value_function=lambda data: data.tme):
         """
         Method returns the closest matching data objects specified by given :py:attr:`key` and
         :py:attr:`value`. If no data is found, `None` is returned.
@@ -55,7 +55,10 @@ class ObjectCache(object):
         :param value: value to look for
         :param key: key to look for
         :param remember_error: remember unmatched keys, defaults to False
-        :param value_name: name of attribute to which :py:attr:`value` is compared
+        :param validate_range: bool if to check if value is in valid range given closest value
+        :param value_function: function to get the value for comparison from underlying data
+        :param range_end_value_function: function to get end value for range comparison from
+                underlying data
         :return: closest data object, otherwise `None`
         """
         try:
@@ -63,7 +66,9 @@ class ObjectCache(object):
                 value=value,
                 key=key,
                 remember_error=remember_error,
-                value_name=value_name
+                validate_range=validate_range,
+                value_function=value_function,
+                range_end_value_function=range_end_value_function
             )
         except DataNotInCacheException:
             raise
@@ -71,19 +76,19 @@ class ObjectCache(object):
             return self._object_cache[key][index]
         return None
 
-    def remove_data(self, data=None, key=None, key_name="pid"):
+    def remove_data(self, data=None, key=None, key_function=lambda data: data.pid):
         """
         Method that removes a given data object from cache. Returns `True` if the object could be
         removed otherwise `False`.
 
         :param data: data object to be removed
         :param key: key where data is stored
-        :param str key_name: attribute name in use as key, default pid
+        :param key_function: function to get the key from underlying data
         :return: `True` if removal was successful, `False` otherwise
         :rtype: bool
         """
         if key is None:
-            key = getattr(data, key_name)
+            key = key_function(data)
         try:
             data_array = self._object_cache[key]
             data_array.remove(data)
@@ -96,26 +101,41 @@ class ObjectCache(object):
             pass
         return False
 
-    def data_index(self, value=None, key=None, remember_error=False, value_name="tme"):
+    def data_index(self, value=None, key=None, remember_error=False, validate_range=False,
+                   value_function=lambda data: data.tme,
+                   range_end_value_function=lambda data: data.exit_tme):
         """
         Method returns index of closest value specified by :py:attr:`key` and :py:attr:`value`.
 
         :param value: value to look for
         :param key: key where data is stored
         :param remember_error: remember mismatched keys, defaults to `False`
-        :param value_name: attribute name in use for values, default tme
+        :param validate_range: bool if to check if value is in valid range given closest value
+        :param value_function: function to get the value for comparison from underlying data
+        :param range_end_value_function: function to get end value for range comparison from
+                underlying data
         :return: closest data object
         """
         try:
             data_array = self._object_cache[key]
-            value_array = [getattr(node, value_name) for node in data_array]
+            value_array = [value_function(node) for node in data_array]
             index = bisect.bisect_right(value_array, value) - 1
-            return index
         except KeyError:
             if remember_error:
                 self.faulty_nodes.add(key)
                 logging.getLogger(self.__class__.__name__).info("error for %s (%d)", key, value)
             raise DataNotInCacheException(key=key, value=value)
+        else:
+            if validate_range:
+                selected_object = self._object_cache[key][index]
+                start_value = value_function(selected_object)
+                end_value = range_end_value_function(selected_object)
+                if value < start_value or value > end_value:
+                    if remember_error:
+                        self.faulty_nodes.add(key)
+                        logging.getLogger(self.__class__.__name__).info("error for %s (%d)", key, value)
+                    raise DataNotInCacheException(key=key, value=value)
+            return index
 
     def addNodeObject(self, nodeObject):
         """

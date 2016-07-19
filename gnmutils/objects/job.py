@@ -38,6 +38,9 @@ class Job(object):
         self._tree_initialized = False
 
     def prepare_traffic(self):
+        # FIXME: the correct path is sometimes not built
+        # inside invalidated_exception/c01-007-102/1/112468-6-process.csv
+        # inside invalidated_exception/c01-007-102/1/112468-traffic.csv
         try:
             traffic = self.data_source.read_traffic(path=self.path, name=self.db_id)
             for traffics in traffic:
@@ -260,7 +263,8 @@ class Job(object):
         """
         process_node = self._process_cache.get_data(
             value=traffic.tme + (self._configuration.interval if self._configuration else 20),
-            key=traffic.pid
+            key=traffic.pid,
+            value_function=lambda data: data.value.tme
         )
         process_node.value.traffic.append(traffic)
 
@@ -327,30 +331,52 @@ class Job(object):
         current_tme = processes[0].tme
         current_processes = []
         current_pid = processes[0].gpid - 1  # to also include first pid in correct order
+        current_pid_tme = processes[0].tme
+        current_pid_exit_tme = processes[0].exit_tme
         while processes:
             if processes[0].tme == current_tme:
                 current_processes.append(processes.pop(0))
             else:
                 # do sorting
-                ordered = self._create_order(current_processes, current_pid)
+                ordered = self._create_order(current_processes, current_pid, current_pid_tme, current_pid_exit_tme)
                 # reset values
                 current_tme = processes[0].tme
                 current_pid = ordered[-1].pid
+                current_pid_tme = ordered[-1].tme
+                current_pid_exit_tme = ordered[-1].exit_tme
                 processes_in_order.extend(ordered)
                 current_processes = []
         if current_processes:
-            ordered = self._create_order(current_processes, current_pid)
+            ordered = self._create_order(current_processes, current_pid, current_pid_tme, current_pid_exit_tme)
             processes_in_order.extend(ordered)
         for process in processes_in_order:
             yield process
 
-    def _create_order(self, elements, start_pid):
+    def _create_order(self, elements, start_pid, start_pid_tme, start_pid_exit_tme):
         elements_in_order = []
         elements.sort(key=lambda x: x.pid)
+        # check if the tmes from start_pid are close, than we can directly consider start_pid
+        base_tme = elements[0].tme
+        if base_tme - start_pid_tme > 100:
+            ppid_list = [element.ppid for element in elements]
+            try:
+                candidate = (element for element in elements if element.pid in ppid_list).next()
+                # check if there is something on the left to be taken...
+                # TODO: when it needs to go on from the back, I do have a problem so far...
+                start_pid = (element.pid for element in elements if element.pid < candidate.pid).next() - 1
+            except StopIteration:
+                pass
         bigger = [process for process in elements if process.pid > start_pid]
         elements_in_order.extend(bigger)
         smaller = [process for process in elements if process.pid <= start_pid]
         elements_in_order.extend(smaller)
+        # as long as there are items that depend on others in the back, put them to the back of the list
+        pid_list = [element.pid for element in elements_in_order]
+        for index, element in enumerate(elements_in_order[:]):
+            if element.ppid in pid_list[index + 1:]:
+                # move element to back
+                elements_in_order.remove(element)
+                elements_in_order.append(element)
         return elements_in_order
 
     def process_count(self):
@@ -388,7 +414,8 @@ class Job(object):
             self._root = node
         if node.value.exit_tme > self._last_tme:
             self._last_tme = node.value.exit_tme
-        self._process_cache.add_data(data=node, key=node.value.pid, value=node.value.tme)
+        self._process_cache.add_data(data=node, key=node.value.pid, value=node.value.tme,
+                                     value_function=lambda data: data.value.tme)
 
     def _get_tree(self, reinitialize=False):
         if reinitialize or not self._tree_initialized:
@@ -429,13 +456,25 @@ class Job(object):
         process_cache = self.process_cache
         # sort the keys first to get the correct ordering in the final tree
         for pid in sorted(process_cache.keys(), key=lambda item: int(item)):
-            for node in process_cache[pid]:
+            for node in process_cache[pid][:]:
                 try:
-                    parent = self._process_cache.get_data(value=node.value.tme,
-                                                          key=node.value.ppid,
-                                                          remember_error=True)
+                    parent = self._process_cache.get_data(
+                        value=node.value.tme,
+                        key=node.value.ppid,
+                        remember_error=True,
+                        value_function=lambda data: data.value.tme,
+                        range_end_value_function=lambda data: data.value.exit_tme,
+                        validate_range=True)
                 except DataNotInCacheException:
-                    pass
+                    # TODO: maybe also check for exit tme
+                    if self._root is not None and \
+                            (node.value.tme < self._root.value.tme or
+                                node.value.exit_tme > self._root.value.exit_tme):
+                    #if int(node.value.uid) == 0 and self._root is not None and node != self._root:
+                        # skip it manually
+                        # it is valid here to remove the nodes...
+                        self._process_cache.remove_data(node, node.value.pid, node.value.tme)
+                        self._process_cache.faulty_nodes.remove(node.value.ppid)
                 else:
                     if parent:
                         parent.add(node, orderPosition=self._add_function)
