@@ -4,7 +4,7 @@ import logging
 from gnmutils.objectcache import ObjectCache
 from gnmutils.monitoringconfiguration import MonitoringConfiguration
 from gnmutils.exceptions import NonUniqueRootException, DataNotInCacheException, \
-    NoDataSourceException, FilePathException
+    NoDataSourceException, FilePathException, ObjectIsRootException
 
 from evenmoreutils.tree import Tree, Node
 
@@ -296,6 +296,20 @@ class Job(object):
         """
         tree = self.tree
         return tree is not None
+
+    def parent(self, process=None):
+        try:
+            parent = self._process_cache.get_data(
+                value=process.tme,
+                key=process.ppid,
+                value_function=lambda data: data.value.tme,
+                range_end_value_function=lambda data: data.value.exit_tme,
+                validate_range=True)
+        except DataNotInCacheException:
+            parent = None
+            if process == self._root.value:
+                raise ObjectIsRootException(process)
+        return parent
 
     def processes(self):
         """

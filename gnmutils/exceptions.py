@@ -75,3 +75,11 @@ class FilePathException(BasicException):
     def __init__(self, value):
         BasicException.__init__(self, "There is a problem with the given path to read from (%s)" %
                                 value)
+
+
+class ObjectIsRootException(BasicException):
+    """
+    Thrown when a parent is determined and the actual object is already root.
+    """
+    def __init__(self, value):
+        BasicException.__init__(self, "The process %s is already the root" % value)
