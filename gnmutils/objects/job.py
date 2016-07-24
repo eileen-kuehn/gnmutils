@@ -304,7 +304,7 @@ class Job(object):
                 key=process.ppid,
                 value_function=lambda data: data.value.tme,
                 range_end_value_function=lambda data: data.value.exit_tme,
-                validate_range=True)
+                validate_range=True).value
         except DataNotInCacheException:
             parent = None
             if process == self._root.value:
