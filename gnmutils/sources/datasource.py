@@ -28,11 +28,15 @@ class DataSource(object):
         :return: best available datasource
         :rtype: :py:class:`DBBackedFileDataSource` or :py:class:`FileDataSource`
         """
-        from dbbackedfiledatasource import DBBackedFileDataSource
+        try:
+            from dbbackedfiledatasource import DBBackedFileDataSource
+        except ImportError:
+            pass
+        else:
+            data_source = DBBackedFileDataSource()
+            if data_source.is_available():
+                return data_source
         from filedatasource import FileDataSource
-        data_source = DBBackedFileDataSource()
-        if data_source.is_available():
-            return data_source
         return FileDataSource()
 
     def object_data(self, **kwargs):

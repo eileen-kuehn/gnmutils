@@ -40,15 +40,15 @@ class DataParser(object):
             raise FilePathException(value="path=%s" % path)
         if self.data_source is not None:
             self._data = next(self.data_source.object_data(
-                pattern="^data.pkl",
+                pattern="data.pkl",
                 path=path
             ), None)
             self.configuration = next(self.data_source.object_data(
-                pattern="^configuration.pkl",
+                pattern="configuration.pkl",
                 path=path
             ), None)
             self._parsed_data = next(self.data_source.object_data(
-                pattern="^parsed_data.pkl",
+                pattern="parsed_data.pkl",
                 path=path
             ), set())
             self._changed = False

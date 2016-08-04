@@ -51,7 +51,7 @@ class NetworkStatisticsParser(DataParser):
     def load_archive_state(self, path=None):
         if self.data_source is not None:
             self.configuration = next(self.data_source.object_data(
-                pattern="^configuration.pkl",
+                pattern="configuration.pkl",
                 path=path
             ), None)
             self._parsed_data = next(self.data_source.object_data(

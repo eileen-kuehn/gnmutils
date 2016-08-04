@@ -41,14 +41,27 @@ class FileDataSource(DataSource):
         :param pattern:
         :return:
         """
-        for dir_entry in sorted(os.listdir(path)):
-            if re.search(kwargs.get("pattern", ".pkl"), dir_entry):
-                file_path = os.path.join(kwargs.get("path", self.default_path), dir_entry)
+        pattern = kwargs.get("pattern", None)
+        if pattern is not None:
+            try:
+                file_path = os.path.join(
+                    kwargs.get("path", self.default_path),
+                    kwargs.get("pattern", "data.pkl"))
                 logging.getLogger(self.__class__.__name__).debug(
                     "reading %s for object data", file_path
                 )
-                data = pickle.load(open(file_path, "rb"))
-                yield data
+                yield pickle.load(open(file_path, "rb"))
+            except IOError:
+                logging.getLogger(self.__class__.__name__).warn(
+                    "Object data has not been read, because it does not exist", file_path
+                )
+        else:
+            pattern = ".pkl"
+            for dir_entry in sorted(os.listdir(path)):
+                if re.search(pattern, dir_entry):
+                    file_path = os.path.join(kwargs.get("path", self.default_path), dir_entry)
+                    data = pickle.load(open(file_path, "rb"))
+                    yield data
 
     def write_object_data(self, **kwargs):
         """
