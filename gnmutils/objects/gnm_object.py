@@ -84,6 +84,12 @@ class GNMObject(object):
                 result = self.default_key_type[key]()
             else:
                 raise
+        except ValueError:
+            # FIXME: trying to fix trees that currently have no initialised tree depth
+            if "tree_depth" in key:
+                result = -1
+            else:
+                raise
         except KeyError:
             raise ArgumentNotDefinedException(key, value)
         return result
