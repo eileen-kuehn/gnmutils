@@ -478,12 +478,14 @@ class Job(object):
 
     def _initialize_tree(self):
         logging.getLogger(self.__class__.__name__).info("Initializing tree structure")
+        # rebind to local variables for faster lookup
         process_cache = self.process_cache
+        self_process_cache_get_data = self._process_cache.get_data
         # sort the keys first to get the correct ordering in the final tree
         for pid in sorted(process_cache.keys(), key=lambda item: int(item)):
             for node in process_cache[pid][:]:
                 try:
-                    parent = self._process_cache.get_data(
+                    parent = self_process_cache_get_data(
                         value=node.value.tme,
                         key=node.value.ppid,
                         remember_error=True,

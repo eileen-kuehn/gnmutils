@@ -145,10 +145,13 @@ class DataParser(object):
         :param path:
         :return:
         """
+        # rebind to local variables for faster lookup
+        _piece_from_dict = self._piece_from_dict
+        add_piece = self.add_piece
         for data_dict in self.data_reader.data(path=path):
             if data_dict is not None:
-                piece = self._piece_from_dict(data_dict)
-                data = self.add_piece(piece=piece)
+                piece = _piece_from_dict(data_dict)
+                data = add_piece(piece=piece)  # FIXME: add_piece returns nothing in many parsers
                 if data is not None:
                     yield data
         for new_data in self._parsing_finished():
