@@ -21,5 +21,6 @@ setup(
                             'git+ssh://git@bitbucket.org/eileenkuehn/dbutils.git@master#egg=dbutils-0.1',
                             'git+ssh://git@bitbucket.org/eileenkuehn/utility.git@master#egg=utility-0.1'],
         install_requires=INSTALL_REQUIRES,
+        # unit tests
+        test_suite='gnmutils_tests',
 )
-
