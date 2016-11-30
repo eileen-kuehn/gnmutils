@@ -7,7 +7,7 @@ from gnmutils.parser.dataparser import DataParser
 from gnmutils.objectcache import ObjectCache
 from gnmutils.objects.process import Process
 from gnmutils.objects.job import Job
-from gnmutils.exceptions import ProcessMismatchException
+from gnmutils.exceptions import ProcessMismatchException, DataNotInCacheException
 
 
 class ProcessStreamParser(DataParser):
@@ -154,7 +154,11 @@ class ProcessStreamParser(DataParser):
                 self._process_cache.add_data(data=process)
 
     def _finish_process(self, process=None):
-        object_index = self._data.data_index(value=process.tme, key=process.gpid)
+        try:
+            # FIXME: I have no idea why I currently have to add this...
+            object_index = self._data.data_index(value=process.tme, key=process.gpid)
+        except DataNotInCacheException:
+            return False, None
         try:
             matching_job = self._data.object_cache[process.gpid][object_index]
         except KeyError:
