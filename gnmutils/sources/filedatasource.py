@@ -53,7 +53,7 @@ class FileDataSource(DataSource):
                 yield pickle.load(open(file_path, "rb"))
             except IOError:
                 logging.getLogger(self.__class__.__name__).warn(
-                    "Object data has not been read, because it does not exist", file_path
+                    "Object data has not been read, because it does not exist (%s)", file_path
                 )
         else:
             pattern = ".pkl"
