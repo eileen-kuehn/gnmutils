@@ -314,7 +314,7 @@ class FileDataSource(DataSource):
             path=path,
             name=name)
         converter.parser = parser
-        if ".csv" in name:
+        if ".csv" in str(name):
             return parser.parse(path=os.path.join(path, name))
         return parser.parse(path=os.path.join(path, "%s-process.csv" % name))
 
