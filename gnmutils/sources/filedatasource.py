@@ -45,7 +45,7 @@ class FileDataSource(DataSource):
         if pattern is not None:
             try:
                 file_path = os.path.join(
-                    kwargs.get("path", self.default_path),
+                    path,
                     kwargs.get("pattern", "data.pkl"))
                 logging.getLogger(self.__class__.__name__).debug(
                     "reading %s for object data", file_path
