@@ -39,7 +39,8 @@ class DBBackedFileDataSource(FileDataSource):
         :return:
         """
         if "raw" in kwargs.get("source", "processed"):
-            yield FileDataSource.jobs(self, **kwargs)
+            for job in FileDataSource.jobs(self, **kwargs):
+                yield job
         else:
             with SQLCommand(dataSource=self._db_data_source) as sql_command:
                 path = kwargs.get("path", self.default_path)
