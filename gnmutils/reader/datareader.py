@@ -10,7 +10,7 @@ class DataReader(object):
         :return: parser being used for row parsing
         :rtype: :py:class:`JobParser`, :py:class:`ProcessParser` or :py:class:`TrafficParser`
         """
-        self._parser
+        return self._parser
 
     @parser.setter
     def parser(self, value):
