@@ -4,6 +4,7 @@ from the stream received from the GNM tool.
 """
 import logging
 
+from gnmutils.exceptions import DataNotInCacheException
 from gnmutils.parser.dataparser import DataParser
 from gnmutils.objectcache import ObjectCache
 from gnmutils.objects.traffic import Traffic
@@ -132,25 +133,29 @@ class TrafficStreamParser(DataParser):
         return next(self._check_data(), None)
 
     def _match_traffic(self, traffic=None):
-        object_index = self._data.data_index(value=traffic.tme, key=traffic.gpid)
         # load job object from cache
         matching_traffic_wrapper = None
         finished = False
         try:
-            matching_traffic_wrapper = self._data.object_cache[traffic.gpid][object_index]
-            if traffic.tme - self._interval() <= matching_traffic_wrapper.exit_tme:
-                matching_traffic_wrapper.data.append(traffic)
-                appended = True
-            else:
-                # remember and remove old wrapper
-                finished = True
+            object_index = self._data.data_index(value=traffic.tme, key=traffic.gpid)
+        except DataNotInCacheException:
+            appended = self._match_with_new_wrapper(traffic=traffic)
+        else:
+            try:
+                matching_traffic_wrapper = self._data.object_cache[traffic.gpid][object_index]
+                if traffic.tme - self._interval() <= matching_traffic_wrapper.exit_tme:
+                    matching_traffic_wrapper.data.append(traffic)
+                    appended = True
+                else:
+                    # remember and remove old wrapper
+                    finished = True
+                    appended = self._match_with_new_wrapper(traffic=traffic)
+            except IndexError:
+                # no wrapper is known
                 appended = self._match_with_new_wrapper(traffic=traffic)
-        except IndexError:
-            # no wrapper is known
-            appended = self._match_with_new_wrapper(traffic=traffic)
-        except KeyError:
-            # no wrapper is known
-            appended = self._match_with_new_wrapper(traffic=traffic)
+            except KeyError:
+                # no wrapper is known
+                appended = self._match_with_new_wrapper(traffic=traffic)
         return finished, appended, matching_traffic_wrapper
 
     def _piece_from_dict(self, data_dict=None):
