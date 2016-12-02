@@ -113,10 +113,13 @@ class ProcessStreamParser(DataParser):
         if process.gpid > 0:
             if "exit" in process.state:
                 # look for matching piece
-                object_index = self._process_cache.data_index(
-                    value=process.exit_tme,
-                    key=process.pid
-                )
+                try:
+                    object_index = self._process_cache.data_index(
+                        value=process.exit_tme,
+                        key=process.pid
+                    )
+                except DataNotInCacheException:
+                    self._process_cache.add_data(data=process)
                 # load process object from cache
                 try:
                     matching_process = self._process_cache.object_cache[process.pid][object_index]
