@@ -8,6 +8,7 @@ from gnmutils.exceptions import NoGNMDirectoryStructure
 BASE_LEVEL = object()
 WORKERNODE_LEVEL = object()
 RUN_LEVEL = object()
+FILE_LEVEL = object()
 
 
 def directory_level(path=None):
@@ -16,6 +17,8 @@ def directory_level(path=None):
         return WORKERNODE_LEVEL
     splitted_path = os.path.split(path)
     if _match_workernode_level(splitted_path[0]):
+        if filename is not None:
+            return FILE_LEVEL
         return RUN_LEVEL
     workernode_subdirs = pathutils.getImmediateSubdirectories(path)
     for workernode_subdir in workernode_subdirs:
@@ -32,7 +35,7 @@ def path_components(path=None):
     if level == WORKERNODE_LEVEL:
         components = os.path.split(path)
         return components[0], components[1]
-    if level == RUN_LEVEL:
+    if level == RUN_LEVEL or level == FILE_LEVEL:
         run = os.path.split(path)
         components = os.path.split(run[0])
         return components[0], components[1], run[1]
