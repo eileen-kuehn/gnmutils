@@ -10,7 +10,7 @@ from gnmutils.db.dbobjects import DBJobObject, DBPayloadObject, DBPayloadResultO
     DBWorkernodeObject
 from gnmutils.db.dboperator import DBOperator
 from gnmutils.utils import relevant_directories, directory_level, \
-    RUN_LEVEL, WORKERNODE_LEVEL, BASE_LEVEL
+    RUN_LEVEL, WORKERNODE_LEVEL, BASE_LEVEL, FILE_LEVEL
 
 from dbutils.datasource import DataSource as DBDataSource
 from dbutils.sqlcommand import SQLCommand
@@ -56,6 +56,9 @@ class DBBackedFileDataSource(FileDataSource):
                     workernode = os.path.split(path)[1]
                     workernode_object = self._db_operator.load_or_create_workernode(data=workernode)
                     job_object.workernode_id = workernode_object.id_value
+                elif level == FILE_LEVEL:
+                    job_object = DBJobObject(
+                        id=os.path.basename(path).split("-")[0], valid=True, completed=True)
 
                 for job_result in sql_command.find(job_object):
                     current_path = path
@@ -69,6 +72,8 @@ class DBBackedFileDataSource(FileDataSource):
                     elif level == WORKERNODE_LEVEL:
                         # join different runs
                         current_path = os.path.join(path, job_result.run)
+                    elif level == FILE_LEVEL:
+                        current_path = os.path.dirname(path)
 
                     for job in FileDataSource.read_job(
                             self,
