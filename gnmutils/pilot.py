@@ -36,7 +36,7 @@ class Pilot(Job):
                                       job_id="%s" % self._db_id,
                                       workernode=self.workernode,
                                       run=self.run,
-                                      data_source=self._data_source)
+                                      data_source=self.data_source)
                             for child_node, child_depth in Tree(child).walkDFS():
                                 if exclude_watchdog:
                                     if "crabWatchdog.sh" in child_node.value.name:
