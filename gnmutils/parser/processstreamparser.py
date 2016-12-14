@@ -121,26 +121,27 @@ class ProcessStreamParser(DataParser):
                 except DataNotInCacheException:
                     self._process_cache.add_data(data=process)
                 # load process object from cache
-                try:
-                    matching_process = self._process_cache.object_cache[process.pid][object_index]
-                    process.addProcessEvent(**matching_process.toProcessEvent())
-                except KeyError as exception:
-                    # exit state received first
-                    logging.getLogger(self.__class__.__name__).warning(
-                        "received exit event of process before actual start event: %s", exception
-                    )
-                    self._process_cache.add_data(data=process)
-                except ProcessMismatchException as exception:
-                    logging.getLogger(self.__class__.__name__).warning(exception)
-                    self._process_cache.add_data(data=process)
                 else:
-                    self._process_cache.remove_data(data=matching_process, key=matching_process.pid)
-                    is_finished, job = self._finish_process(process=process)
-                    if not is_finished and job is None:
-                        self._process_cache.unfound.add(process)
-                    elif is_finished:
-                        self._data.remove_data(data=job, key=job.gpid)
-                        return job
+                    try:
+                        matching_process = self._process_cache.object_cache[process.pid][object_index]
+                        process.addProcessEvent(**matching_process.toProcessEvent())
+                    except KeyError as exception:
+                        # exit state received first
+                        logging.getLogger(self.__class__.__name__).warning(
+                            "received exit event of process before actual start event: %s", exception
+                        )
+                        self._process_cache.add_data(data=process)
+                    except ProcessMismatchException as exception:
+                        logging.getLogger(self.__class__.__name__).warning(exception)
+                        self._process_cache.add_data(data=process)
+                    else:
+                        self._process_cache.remove_data(data=matching_process, key=matching_process.pid)
+                        is_finished, job = self._finish_process(process=process)
+                        if not is_finished and job is None:
+                            self._process_cache.unfound.add(process)
+                        elif is_finished:
+                            self._data.remove_data(data=job, key=job.gpid)
+                            return job
             else:
                 if self.job_root_name in process.name:
                     # create new dummy job
