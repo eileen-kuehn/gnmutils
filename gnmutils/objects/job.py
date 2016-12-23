@@ -46,6 +46,10 @@ class Job(object):
             for traffics in traffic:
                 for element in traffics:
                     self.add_traffic(element)
+        except DataNotInCacheException as e:
+            logging.getLogger(self.__class__.__name__).warning(
+                "Traffic object (%s) could not be appended to job: %s", traffic, e
+            )
         except AttributeError:
             raise NoDataSourceException
         except FilePathException:
