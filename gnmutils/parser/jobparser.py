@@ -15,7 +15,16 @@ class JobParser(DataParser):
     """
     def __init__(self, data_source=None, data_reader=None, **kwargs):
         DataParser.__init__(self, data_source, data_reader, **kwargs)
-        self._data = Job(data_source=self.data_source, path=kwargs.get("path", None))
+        try:
+            name = kwargs.get("name", None)
+            splitted = name.split("-")
+            variant = None
+            if len(splitted) > 2:
+                variant = splitted[1]
+        except AttributeError:
+            self._data = Job(data_source=self.data_source, path=kwargs.get("path", None))
+        else:
+            self._data = Job(data_source=self.data_source, path=kwargs.get("path", None), variant=variant)
 
     def data_id(self, value):
         self._data.db_id = value

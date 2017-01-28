@@ -31,6 +31,7 @@ class Job(object):
         # for lazy loading of traffic
         self.data_source = kwargs.get("data_source", None)
         self.path = kwargs.get("path", None)
+        self.variant = kwargs.get("variant", None)
 
     def clear_caches(self):
         self._root = None
@@ -42,7 +43,11 @@ class Job(object):
         # inside invalidated_exception/c01-007-102/1/112468-6-process.csv
         # inside invalidated_exception/c01-007-102/1/112468-traffic.csv
         try:
-            traffic = self.data_source.read_traffic(path=self.path, name=self.db_id)
+            if self.variant is not None:
+                traffic = self.data_source.read_traffic(path=self.path, name="%s-%s" % (
+                    self.db_id, self.variant))
+            else:
+                traffic = self.data_source.read_traffic(path=self.path, name=self.db_id)
             for traffics in traffic:
                 for element in traffics:
                     self.add_traffic(element)
