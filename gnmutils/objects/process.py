@@ -49,30 +49,37 @@ class Process(GNMObject):
                  int_in_volume=None, int_out_volume=None, ext_in_volume=None, ext_out_volume=None,
                  tree_depth=-1, process_type=None, color=None, valid=False, traffic=None):
         GNMObject.__init__(self, pid=pid, ppid=ppid, uid=uid, tme=tme, gpid=gpid)
-        self.name = self._convert_to_default_type("name", name)
-        self.cmd = self._convert_to_default_type("cmd", cmd)
+        _convert_to_default_type = self._convert_to_default_type
+        self.name = _convert_to_default_type("name", name)
+        self.cmd = _convert_to_default_type("cmd", cmd)
 
-        self.exit_tme = self._convert_to_default_type("exit_tme", exit_tme)
+        self.exit_tme = _convert_to_default_type("exit_tme", exit_tme)
 
-        self.state = self._convert_to_default_type("state", state)
+        self.state = _convert_to_default_type("state", state)
 
         self._valid = valid
         self._traffic = traffic or []
 
-        self.error_code = self._convert_to_default_type("error_code", error_code)
-        self.signal = self._convert_to_default_type("signal", signal)
+        self.error_code = _convert_to_default_type("error_code", error_code)
+        self.signal = _convert_to_default_type("signal", signal)
         if exit_code is not None:
             self._set_exit_code(exit_code)
 
-        self.job_id = self._convert_to_default_type("job_id", job_id)
-        self.tree_depth = self._convert_to_default_type("tree_depth", tree_depth)
-        self.process_type = self._convert_to_default_type("process_type", process_type)
-        self.color = self._convert_to_default_type("color", color)
+        self.job_id = _convert_to_default_type("job_id", job_id)
+        self.tree_depth = _convert_to_default_type("tree_depth", tree_depth)
+        self.process_type = _convert_to_default_type("process_type", process_type)
+        self.color = _convert_to_default_type("color", color)
 
-        self.int_in_volume = self.default_key_type["int_in_volume"](int_in_volume)
-        self.int_out_volume = self.default_key_type["int_out_volume"](int_out_volume)
-        self.ext_in_volume = self.default_key_type["ext_in_volume"](ext_in_volume)
-        self.ext_out_volume = self.default_key_type["ext_out_volume"](ext_out_volume)
+        self.int_in_volume = _convert_to_default_type("int_in_volume", int_in_volume)
+        self.int_out_volume = _convert_to_default_type("int_out_volume", int_out_volume)
+        self.ext_in_volume = _convert_to_default_type("ext_in_volume", ext_in_volume)
+        self.ext_out_volume = _convert_to_default_type("ext_out_volume", ext_out_volume)
+
+    @classmethod
+    def from_process_event(cls, **kwargs):
+        if "exit" in kwargs.get("state", None):
+            kwargs["exit_tme"] = kwargs.pop("tme")
+        return cls(**kwargs)
 
     @staticmethod
     def from_dict(row):
@@ -81,16 +88,16 @@ class Process(GNMObject):
 
         :param row: Row dictionary
         """
-        for key, value in row.iteritems():
-            try:
-                row[key] = Process.default_key_type[key](value)
-            except ValueError:
-                if not value:  # empty string -> type default
-                    row[key] = Process.default_key_type[key]()
-                else:
-                    raise
-            except KeyError:
-                raise ArgumentNotDefinedException(key, value)
+        # for key, value in row.iteritems():
+        #     try:
+        #         row[key] = Process.default_key_type[key](value)
+        #     except ValueError:
+        #         if not value:  # empty string -> type default
+        #             row[key] = Process.default_key_type[key]()
+        #         else:
+        #             raise
+        #     except KeyError:
+        #         raise ArgumentNotDefinedException(key, value)
         return Process(**row)
 
     @property
@@ -148,15 +155,11 @@ class Process(GNMObject):
         return self._valid and self.exit_tme >= self.tme and (self.exit_tme - self.tme)
 
     def getRow(self):
-        return ("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%s,%s,%s" %
-                (stringutils.xint(self.tme), stringutils.xint(self.exit_tme),
-                 stringutils.xint(self.pid), stringutils.xint(self.ppid),
-                 stringutils.xint(self.gpid), stringutils.xint(self.uid),
-                 self.name, self.cmd, stringutils.xint(self.error_code),
-                 stringutils.xint(self.signal), self.valid, self.int_in_volume,
-                 self.int_out_volume, self.ext_in_volume, self.ext_out_volume,
-                 stringutils.xint(self.tree_depth), stringutils.xstr(self.process_type),
-                 stringutils.xstr(self.color), self.state))
+        return ("%d,%d,%d,%d,%d,%d,%s,%s,%d,%d,%d,%s,%s,%s,%s,%d,%s,%s,%s" %
+                (self.tme, self.exit_tme, self.pid, self.ppid, self.gpid, self.uid,
+                 self.name, self.cmd, self.error_code, self.signal, self.valid, self.int_in_volume,
+                 self.int_out_volume, self.ext_in_volume, self.ext_out_volume, self.tree_depth,
+                 stringutils.xstr(self.process_type), stringutils.xstr(self.color), self.state))
 
     def getHeader(self):
         return "tme,exit_tme,pid,ppid,gpid,uid,name,cmd,error_code,"\
@@ -195,9 +198,20 @@ class Process(GNMObject):
         :param gpid: gpid of process
         :param state: state of process
         """
+        # perform converts first...
+        name = self._convert_to_default_type("name", name)
+        cmd = self._convert_to_default_type("cmd", cmd)
+        pid = self._convert_to_default_type("pid", pid)
+        ppid = self._convert_to_default_type("ppid", ppid)
+        uid = self._convert_to_default_type("uid", uid)
+        tme = self._convert_to_default_type("tme", tme)
+        gpid = self._convert_to_default_type("gpid", gpid)
+        state = self._convert_to_default_type("state", state)
+
         if (self.pid > 0 and self.pid != pid) or (self.ppid > 0 and self.ppid != ppid):
             if self.name not in name or self.cmd not in cmd:
-                logging.getLogger(self.__class__.__name__).warning("names/cmds do not match... %s vs %s / %s vs %s" % (self.name, name, self.cmd, cmd))
+                logging.getLogger(self.__class__.__name__).warning(
+                    "names/cmds do not match... %s vs %s / %s vs %s" % (self.name, name, self.cmd, cmd))
             raise ProcessMismatchException
         if "exit" in state:
             if self.state != ".":
