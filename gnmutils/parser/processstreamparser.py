@@ -68,17 +68,20 @@ class ProcessStreamParser(DataParser):
             )
 
     def pop_data(self):
-        for key in self._data.object_cache.keys():
-            while self._data.object_cache[key]:
-                yield self._data.object_cache[key].pop()
+        _data = self._data
+        for key in _data.object_cache.keys():
+            while _data.object_cache[key]:
+                yield _data.object_cache[key].pop()
 
     def check_caches(self, **kwargs):
         if not self._changed:
             return
+        _finish_process = self._finish_process
+        _process_cache = self._process_cache
         for process in self._process_cache.unfound.copy():
-            is_finished, job = self._finish_process(process)
+            is_finished, job = _finish_process(process)
             if is_finished:
-                self._process_cache.unfound.discard(process)
+                _process_cache.unfound.discard(process)
             else:
                 # try to load job from data_source
                 job_object = Job(
@@ -97,52 +100,50 @@ class ProcessStreamParser(DataParser):
                         if job is not None and job.job_id:
                             job_object = job
                             job_object.add_process(process=process)
-                            self._process_cache.unfound.discard(process)
+                            _process_cache.unfound.discard(process)
 
     def clear_caches(self):
         self._data.clear()
         self._process_cache.clear()
 
     def _piece_from_dict(self, piece=None):
-        process = Process()
-        process.addProcessEvent(**piece)
-        return process
+        return piece
 
-    def _add_piece(self, process=None):
+    def _add_piece(self, process_dict=None):
         self._changed = True
-        if process.gpid > 0:
-            if "exit" in process.state:
-                # look for matching piece
+        _process_cache = self._process_cache
+        if int(process_dict.get("gpid", 0)) > 0:
+            if "exit" in process_dict.get("state", None):
                 try:
-                    object_index = self._process_cache.data_index(
-                        value=process.exit_tme,
-                        key=process.pid
+                    matching_process = _process_cache.get_data(
+                        value=int(process_dict.get("tme", 0)),  # we are in event, so tme means exit_tme
+                        key=int(process_dict.get("pid", 0))
                     )
                 except DataNotInCacheException:
-                    self._process_cache.add_data(data=process)
-                # load process object from cache
+                    _process_cache.add_data(data=Process.from_process_event(**process_dict))
                 else:
-                    try:
-                        matching_process = self._process_cache.object_cache[process.pid][object_index]
-                        process.addProcessEvent(**matching_process.toProcessEvent())
-                    except KeyError as exception:
-                        # exit state received first
-                        logging.getLogger(self.__class__.__name__).warning(
-                            "received exit event of process before actual start event: %s", exception
-                        )
-                        self._process_cache.add_data(data=process)
-                    except ProcessMismatchException as exception:
-                        logging.getLogger(self.__class__.__name__).warning(exception)
-                        self._process_cache.add_data(data=process)
+                    if matching_process is not None:
+                        try:
+                            matching_process.addProcessEvent(**process_dict)
+                        except ProcessMismatchException as exception:
+                            logging.getLogger(self.__class__.__name__).warning(exception)
+                            _process_cache.add_data(data=Process.from_process_event(**process_dict))
+                        else:
+                            _process_cache.remove_data(data=matching_process, key=matching_process.pid)
+                            is_finished, job = self._finish_process(process=matching_process)
+                            if not is_finished and job is None:
+                                _process_cache.unfound.add(matching_process)
+                            elif is_finished:
+                                self._data.remove_data(data=job, key=job.gpid)
+                                return job
                     else:
-                        self._process_cache.remove_data(data=matching_process, key=matching_process.pid)
-                        is_finished, job = self._finish_process(process=process)
-                        if not is_finished and job is None:
-                            self._process_cache.unfound.add(process)
-                        elif is_finished:
-                            self._data.remove_data(data=job, key=job.gpid)
-                            return job
+                        process = Process.from_process_event(**process_dict)
+                        logging.getLogger(self.__class__.__name__).warning(
+                            "received exit event of process before actual start event: %s" % process
+                        )
+                        _process_cache.add_data(data=process)
             else:
+                process = Process.from_process_event(**process_dict)
                 if self.job_root_name in process.name:
                     # create new dummy job
                     self._data.add_data(
@@ -155,7 +156,7 @@ class ProcessStreamParser(DataParser):
                                  data_source=self.data_source),
                         key=process.gpid,
                         value=process.tme)
-                self._process_cache.add_data(data=process)
+                _process_cache.add_data(data=process)
 
     def _finish_process(self, process=None):
         try:
