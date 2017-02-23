@@ -301,13 +301,18 @@ class FileDataSource(DataSource):
         if stateful:
             converter.parser.archive_state(path=path)
 
-    def read_job(self, path=None, name=None, converter=CSVReader()):
+    def read_job(self, **kwargs):
         """
         :param path:
         :param name:
         :param converter:
         :return:
         """
+        path = kwargs.get("path", None)
+        name = kwargs.get("name", None)
+        converter = kwargs.get("converter", CSVReader())
+        if name is None:
+            return None
         parser = JobParser(
             data_source=self,
             data_reader=converter,
