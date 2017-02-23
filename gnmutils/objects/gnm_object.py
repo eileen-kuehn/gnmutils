@@ -10,9 +10,7 @@ def check_id(value=None):
     """
     try:
         return int(value)
-    except TypeError:
-        return 0
-    except ValueError:
+    except (TypeError, ValueError):
         return 0
 
 
@@ -25,9 +23,7 @@ def check_tme(value=None):
     """
     try:
         return int(value)
-    except TypeError:
-        return 0
-    except ValueError:
+    except (TypeError, ValueError):
         return 0
 
 
@@ -80,10 +76,7 @@ class GNMObject(object):
         try:
             result = self.default_key_type[key](value)
         except TypeError:
-            if not value:
-                result = self.default_key_type[key]()
-            else:
-                raise
+            result = self.default_key_type[key]()
         except ValueError:
             # FIXME: trying to fix trees that currently have no initialised tree depth
             if "tree_depth" in key:
