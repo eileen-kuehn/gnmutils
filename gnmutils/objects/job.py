@@ -328,7 +328,8 @@ class Job(object):
         """
         tree = self.tree
         if tree is not None:
-            for node, _ in tree.walkDFS():
+            for node, depth in tree.walkDFS():
+                node.value.tree_depth = depth
                 yield node.value
         else:
             logging.getLogger(self.__class__.__name__).warning("There is no tree for current job")
@@ -345,23 +346,22 @@ class Job(object):
         :return: process generator of the job
         """
         tree = self.tree
-        processes = []
-        processes_in_order = []
         # create the actual array
-        for node, _ in tree.walkDFS():
-            processes.append(node.value)
+        processes = [node.value for node, _ in tree.walkDFS()]
+        processes_in_order = []
         processes.sort(key=lambda x: x.tme)
         current_tme = processes[0].tme
         current_processes = []
         current_pid = processes[0].gpid - 1  # to also include first pid in correct order
         current_pid_tme = processes[0].tme
         current_pid_exit_tme = processes[0].exit_tme
+        _create_order = self._create_order
         while processes:
             if processes[0].tme == current_tme:
                 current_processes.append(processes.pop(0))
             else:
                 # do sorting
-                ordered = self._create_order(current_processes, current_pid, current_pid_tme, current_pid_exit_tme)
+                ordered = _create_order(current_processes, current_pid, current_pid_tme, current_pid_exit_tme)
                 # reset values
                 current_tme = processes[0].tme
                 current_pid = ordered[-1].pid
@@ -370,7 +370,7 @@ class Job(object):
                 processes_in_order.extend(ordered)
                 current_processes = []
         if current_processes:
-            ordered = self._create_order(current_processes, current_pid, current_pid_tme, current_pid_exit_tme)
+            ordered = _create_order(current_processes, current_pid, current_pid_tme, current_pid_exit_tme)
             processes_in_order.extend(ordered)
         for process in processes_in_order:
             yield process
@@ -461,37 +461,38 @@ class Job(object):
                         node.children = []
             self._initialize_tree()
             self._tree_initialized = True
-        if self._tree is None:
-            if (len(self._process_cache.faulty_nodes) <= 1 and self._root and
-                    (Tree(self._root).getVertexCount() == self.process_count())):
-                self._tree = Tree(self._root)
-        logging.getLogger(self.__class__.__name__).info(
-            "faulty nodes: %s", self._process_cache.faulty_nodes
-        )
+            if self._tree is None:
+                if (len(self._process_cache.faulty_nodes) <= 1 and self._root and
+                       (Tree(self._root).getVertexCount() == self.process_count())):
+                    self._tree = Tree(self._root)
+            logging.getLogger(self.__class__.__name__).info(
+                "faulty nodes: %s", self._process_cache.faulty_nodes
+            )
         return self._tree
 
-    @staticmethod
-    def _add_function(child, children, tmes, pids):
-        tme_index = bisect.bisect_left(tmes, child.value.tme)
-        # check for equality of following element
-        # FIXME: removed, because now I have special function for orderings
-        if tmes[tme_index] == child.value.tme or tmes[tme_index + 1] == child.value.tme \
-                if len(children) > tme_index + 1 else True:
-            right_index = bisect.bisect_right(tmes, child.value.tme)
-            pid_range = pids[tme_index:right_index]
-            # I also need to do a sorting regarding pid
-            # so first filter relevant elements with same tme
-            pid_index = bisect.bisect_left(pid_range, child.value.pid)
-            return tme_index + pid_index
-        return tme_index
+    # @staticmethod
+    # def _add_function(child, children, tmes, pids):
+    #     tme_index = bisect.bisect_left(tmes, child.value.tme)
+    #     # check for equality of following element
+    #     # FIXME: removed, because now I have special function for orderings
+    #     if tmes[tme_index] == child.value.tme or tmes[tme_index + 1] == child.value.tme \
+    #             if len(children) > tme_index + 1 else True:
+    #         right_index = bisect.bisect_right(tmes, child.value.tme)
+    #         pid_range = pids[tme_index:right_index]
+    #         # I also need to do a sorting regarding pid
+    #         # so first filter relevant elements with same tme
+    #         pid_index = bisect.bisect_left(pid_range, child.value.pid)
+    #         return tme_index + pid_index
+    #     return tme_index
 
     def _initialize_tree(self):
         logging.getLogger(self.__class__.__name__).info("Initializing tree structure")
         # rebind to local variables for faster lookup
-        process_cache = self.process_cache
+        process_cache = self.process_cache  # object cache
+        _process_cache = self._process_cache
         self_process_cache_get_data = self._process_cache.get_data
         # sort the keys first to get the correct ordering in the final tree
-        for pid in sorted(process_cache.keys(), key=lambda item: int(item)):
+        for pid in process_cache.keys():
             for node in process_cache[pid][:]:
                 try:
                     parent = self_process_cache_get_data(
@@ -508,19 +509,18 @@ class Job(object):
                                 node.value.exit_tme > self._root.value.exit_tme):
                         # skip it manually
                         # it is valid here to remove the nodes...
-                        self._process_cache.remove_data(node, node.value.pid, node.value.tme)
-                        self._process_cache.faulty_nodes.remove(node.value.ppid)
+                        _process_cache.remove_data(node, node.value.pid, node.value.tme)
+                        _process_cache.faulty_nodes.remove(node.value.ppid)
+                    else:
+                        logging.getLogger(self.__class__.__name__).warning("Skipping tree generation")
+                        return
                 else:
                     if parent:
-                        parent.add(node, orderPosition=self._add_function)
+                        #parent.add(node, orderPosition=self._add_function)
+                        parent.add(node)
         logging.getLogger(self.__class__.__name__).info(
             "no parents found for %d nodes", len(self._process_cache.faulty_nodes)
         )
-
-        if len(self._process_cache.faulty_nodes) <= 1 and self._root:
-            # set depth
-            for node, depth in Tree(self._root).walkDFS():
-                node.value.tree_depth = depth
 
     def __repr__(self):
         return "%s: db_id (%s), job_id (%s), gpid (%d), workernode (%s), configuration (%s), " \
