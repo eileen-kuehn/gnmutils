@@ -163,7 +163,7 @@ class ProcessParser(DataParser):
                 self._finish_process(job=job, process=process)
                 self._process_cache.unfound.discard(process)
 
-        for jid in self._job_cache.object_cache.keys():
+        for jid in self._job_cache.object_cache:
             for job_parser in self._job_cache.object_cache[jid][:]:
                 if jid == 0:
                     self._save_raw_processes(job_parser=job_parser, job_id=jid)
