@@ -492,7 +492,7 @@ class Job(object):
         _process_cache = self._process_cache
         self_process_cache_get_data = self._process_cache.get_data
         # sort the keys first to get the correct ordering in the final tree
-        for pid in process_cache:
+        for pid in process_cache.keys():
             for node in process_cache[pid][:]:
                 try:
                     parent = self_process_cache_get_data(
