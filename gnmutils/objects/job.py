@@ -492,7 +492,7 @@ class Job(object):
         _process_cache = self._process_cache
         self_process_cache_get_data = self._process_cache.get_data
         # sort the keys first to get the correct ordering in the final tree
-        for pid in process_cache.keys():
+        for pid in process_cache:
             for node in process_cache[pid][:]:
                 try:
                     parent = self_process_cache_get_data(
@@ -512,6 +512,8 @@ class Job(object):
                         _process_cache.remove_data(node, node.value.pid, node.value.tme)
                         _process_cache.faulty_nodes.remove(node.value.ppid)
                     else:
+                        if node is self._root:
+                            continue
                         logging.getLogger(self.__class__.__name__).warning("Skipping tree generation")
                         return
                 else:
