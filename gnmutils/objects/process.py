@@ -3,10 +3,9 @@ This module implements a single process that is tracked by GNM tool
 """
 import logging
 
-from evenmoreutils import strings as stringutils
-
 from gnmutils.objects.gnm_object import GNMObject, check_id, check_tme
-from gnmutils.exceptions import ProcessMismatchException, ArgumentNotDefinedException
+from gnmutils.exceptions import ProcessMismatchException
+from ..utility import  strings as stringutils
 
 
 class Process(GNMObject):

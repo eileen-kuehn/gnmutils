@@ -1,8 +1,8 @@
 import os
 import re
 
-from evenmoreutils import path as pathutils
 from gnmutils.exceptions import NoGNMDirectoryStructure
+from gnmutils.utility import path as pathutils
 
 
 BASE_LEVEL = object()

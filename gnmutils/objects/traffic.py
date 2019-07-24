@@ -6,8 +6,7 @@ import logging
 
 from gnmutils.objects.gnm_object import GNMObject, check_tme, check_id
 from gnmutils.exceptions import ArgumentNotDefinedException, TrafficMismatchException
-
-from evenmoreutils import strings as stringutils
+from gnmutils.utility import strings as stringutils
 
 
 class Traffic(GNMObject):

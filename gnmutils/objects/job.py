@@ -5,8 +5,7 @@ from gnmutils.objectcache import ObjectCache
 from gnmutils.monitoringconfiguration import MonitoringConfiguration
 from gnmutils.exceptions import NonUniqueRootException, DataNotInCacheException, \
     NoDataSourceException, FilePathException, ObjectIsRootException
-
-from evenmoreutils.tree import Tree, Node
+from gnmutils.utility.tree import Tree, Node
 
 
 class Job(object):
@@ -15,7 +14,7 @@ class Job(object):
     It allows access to the job tree.
     """
     def __init__(self, db_id=None, job_id=None, workernode=None, run=None, tme=None, gpid=None,
-                 configuration=None, last_tme=None, **kwargs):
+                 configuration=None, last_tme=0, **kwargs):
         self._db_id = db_id
         self._job_id = job_id
         self.workernode = workernode
@@ -384,9 +383,9 @@ class Job(object):
             ppid_list = [element.ppid for element in elements]
             try:
                 candidate_generator = (element for element in elements if element.pid in ppid_list)
-                candidate = candidate_generator.next()
+                candidate = next(candidate_generator)
                 while candidate.pid in ppid_list:
-                    candidate = candidate_generator.next()
+                    candidate = next(candidate_generator)
             except StopIteration:
                 candidate = None
             if candidate is not None:

@@ -36,7 +36,7 @@ class DataSource(object):
             data_source = DBBackedFileDataSource()
             if data_source.is_available():
                 return data_source
-        from filedatasource import FileDataSource
+        from .filedatasource import FileDataSource
         return FileDataSource()
 
     def object_data(self, **kwargs):

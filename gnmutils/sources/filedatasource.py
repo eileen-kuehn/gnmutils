@@ -19,9 +19,8 @@ from gnmutils.parser.trafficparser import TrafficParser
 from gnmutils.parser.networkstatisticsparser import NetworkStatisticsParser
 from gnmutils.utils import relevant_directories
 from gnmutils.exceptions import FilePathException
-
-from evenmoreutils import path as pathutils
-from evenmoreutils import csv as csvutils
+from gnmutils.utility import path as pathutils
+from gnmutils.utility import csv as csvutils
 
 
 class FileDataSource(DataSource):

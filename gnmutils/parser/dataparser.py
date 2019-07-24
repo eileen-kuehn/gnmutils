@@ -3,9 +3,8 @@ Module offers abstract definition of a :py:class:`DataParser`.
 """
 import logging
 
-from gnmutils.exceptions import ParserNotInitializedException, FilePathException
-
-from evenmoreutils.tree import Node
+from ..exceptions import ParserNotInitializedException, FilePathException
+from ..utility.tree import Node
 
 
 class DataParser(object):
