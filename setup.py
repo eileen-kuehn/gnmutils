@@ -7,7 +7,6 @@ from distutils.core import setup
 INSTALL_REQUIRES = []
 if 'pypy' not in platform.python_implementation().lower():
     INSTALL_REQUIRES.append('psycopg2')
-    INSTALL_REQUIRES.append('dbutils==0.1')
 
 setup(
         name="gnmutils",
@@ -17,7 +16,7 @@ setup(
         author_email="eileen.kuehn@kit.edu",
         url="https://bitbucket.org/eileenkuehn/gnmutils",
         packages=setuptools.find_packages(),
-        dependency_links = ['git+ssh://git@bitbucket.org/eileenkuehn/dbutils.git@master#egg=dbutils-0.1'],
+        dependency_links = [],
         install_requires=INSTALL_REQUIRES,
         # unit tests
         test_suite='gnmutils_tests',
